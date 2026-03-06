@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== Design Tokens ===== */
+:root {
+  --bg: #ffffff;
+  --fg: #0a0a0a;
+  --muted: #6b7280;
+
+  /* eine Quelle für Blau / Rot */
+  --brand-blue: #A8170B;        /* helles Blau (Sektionen, Karten) */
+  --brand-blue-dark: #3B3B3B;   /* DUNKELBLAU (Hero + Buttons) */
+  --brand-red: #ea4335;
+
+  --card: #ffffff;
+  --card-border: #e5e7eb;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0) }
+  100% { transform: translateX(-50%) }
+}
+.animate-marquee {
+  animation: marquee var(--speed, 20s) linear infinite;
+}
+
+html { scroll-behavior: smooth; }
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* ⬇️ Schrift geändert */
+  font-family: var(--font-dosis), system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+/* ===== Layout Helpers ===== */
+.container { width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+.section { padding: clamp(40px, 6vw, 96px) 0; }
+
+/* Hero dunkelblau – bleibt als Utility für Buttons etc. */
+.hero-band {
+  background: var(--brand-blue-dark);
+  color: #fff;
+}
+
+/* Quiz überlappt Hero-Bild – jetzt etwas stärker */
+.quiz-wrap { position: relative; z-index: 2; margin-top: -96px; }
+@media (max-width: 640px) { .quiz-wrap { margin-top: -72px; } }
+
+/* Karten */
+.card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+/* Einheitliche Marken-Buttons */
+.btn-brand {
+  background: var(--brand-blue-dark) !important;
+  color: #fff !important;
+  border-color: var(--brand-blue-dark) !important;
+}
+.btn-brand:hover { filter: brightness(1.05); }
+
+/* Marquee (endetlos) */
+.marquee { overflow: hidden; position: relative; }
+.marquee__mask {
+  -webkit-mask-image: linear-gradient(to right, transparent, black 48px, black calc(100% - 48px), transparent);
+          mask-image: linear-gradient(to right, transparent, black 48px, black calc(100% - 48px), transparent);
+}
+.marquee__track {
+  display: flex;
+  gap: 48px;
+  padding: 12px 0;
+  white-space: nowrap;
+  will-change: transform;
+  animation: marquee 24s linear infinite;
+  color: #111827; font-weight: 700; letter-spacing: .2px;
+}
+@keyframes marquee {
+  0% { transform: translateX(0) }
+  100% { transform: translateX(-50%) }
+}
+
+/* Garantie – Bildplatzhalter */
+.guarantee-img {
+  aspect-ratio: 16/9;
+  border-radius: 16px;
+  border: 1px solid var(--card-border);
+  background: linear-gradient(180deg, #f9fafb 0%, #eef1f5 100%);
+  box-shadow: 0 10px 30px rgba(17, 24, 39, .08);
+}
+
+/* Optional: dezentes Hero-Image */
+.hero__image {
+  min-height: 260px;
+  border-radius: 16px;
+  border: 1px solid var(--card-border);
+  background: linear-gradient(180deg, #f9fafb 0%, #eef1f5 100%);
+}
