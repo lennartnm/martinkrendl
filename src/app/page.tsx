@@ -1025,7 +1025,7 @@ export default function Page() {
         >
           <div className="relative aspect-video overflow-hidden rounded-[4px]">
             <Image
-              src="/final-cta-image.jpg"
+              src="/martin5.jpg"
               alt="Gesangsunterricht in Steyr"
               fill
               className="object-cover"
