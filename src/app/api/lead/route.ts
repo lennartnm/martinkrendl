@@ -24,7 +24,7 @@ type LeadIn = {
   bundesland?: string;
 };
 
-const WEBHOOK = 'https://hook.eu2.make.com/ygifpwo3fcvjhp6k8grh21r5tsy8m89t';
+const WEBHOOK = 'https://hook.eu2.make.com/';
 
 function isValidEmail(e: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
