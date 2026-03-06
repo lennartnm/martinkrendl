@@ -2,6 +2,8 @@
 
 // src/app/admin/layout.tsx
 // Shared Layout mit Sidebar für alle Admin-Seiten
+// @ts-ignore
+import '../globals.css';
 
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -58,7 +60,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: '#F7F4F4' }}>
+    <div className="flex min-h-screen" style={{ backgroundColor: '#F7F4F4', fontFamily: "'Open Sans', sans-serif" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap'); .admin-root, .admin-root * { font-family: 'Open Sans', sans-serif !important; }`}</style>
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
