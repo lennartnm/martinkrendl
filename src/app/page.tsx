@@ -27,8 +27,7 @@ const sectionWidth = "mx-auto w-full max-w-[1200px] px-4 md:px-6";
 const logos = [
   "/logo1.jpg",
   "/logo2.jpg",
-  "/logo3.jpg",
-  "/logo4.jpg",
+ 
 ];
 
 const featureCards = [
