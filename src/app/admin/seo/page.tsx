@@ -1,8 +1,8 @@
 'use client';
 // src/app/admin/seo/page.tsx
 
-import { useEffect, useState, useCallback } from 'react';
-import { Save, CheckCircle, AlertCircle, Loader2, ExternalLink, Info } from 'lucide-react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { Save, CheckCircle, AlertCircle, Loader2, ExternalLink, ChevronDown } from 'lucide-react';
 
 const brand = '#884A4A';
 type SeoMap = Record<string, string>;
@@ -26,44 +26,51 @@ type SeoGroup = {
 const SEO_GROUPS: SeoGroup[] = [
   {
     title: 'Allgemein',
-    description: 'Grundlegende SEO-Einstellungen die in Suchmaschinen erscheinen.',
+    description: 'Diese Felder bestimmen, wie deine Seite in Google-Suchergebnissen erscheint.',
     fields: [
-      { key: 'title',       label: 'Seiten-Titel',    type: 'text',     maxLen: 60,  hint: 'Wird im Browser-Tab und in Google-Suchergebnissen angezeigt', recommended: '50–60 Zeichen' },
-      { key: 'description', label: 'Meta-Description',type: 'textarea', maxLen: 160, hint: 'Kurze Beschreibung der Seite für Suchmaschinen', recommended: '120–160 Zeichen' },
-      { key: 'keywords',    label: 'Keywords',        type: 'text',     hint: 'Kommagetrennte Suchbegriffe (für moderne SEO weniger relevant, schadet aber nicht)' },
-      { key: 'author',      label: 'Autor',           type: 'text' },
-      { key: 'robots',      label: 'Robots',          type: 'select',   options: ['index, follow', 'noindex, nofollow', 'index, nofollow', 'noindex, follow'], hint: 'Steuert ob Suchmaschinen die Seite indexieren' },
-      { key: 'canonical_url', label: 'Canonical URL', type: 'url',      hint: 'Haupt-URL der Seite – verhindert Duplicate Content' },
+      { key: 'title',       label: 'Seiten-Titel',     type: 'text',     maxLen: 60,  hint: 'Erscheint im Browser-Tab und in Google-Suchergebnissen.', recommended: '50–60 Zeichen' },
+      { key: 'description', label: 'Meta-Description', type: 'textarea', maxLen: 160, hint: 'Kurze Beschreibung deiner Seite – Google zeigt sie oft unter dem Titel an.', recommended: '120–160 Zeichen' },
+      { key: 'keywords',    label: 'Keywords',         type: 'text',     hint: 'Kommagetrennte Suchbegriffe (z.B. „Gesangsunterricht, Steyr, Online").' },
+      { key: 'author',      label: 'Autor',            type: 'text' },
+      { key: 'robots',      label: 'Suchmaschinen-Indexierung', type: 'select', options: ['index, follow', 'noindex, nofollow', 'index, nofollow', 'noindex, follow'], hint: 'Wähle „index, follow" damit Google die Seite findet und verfolgt.' },
+      { key: 'canonical_url', label: 'Haupt-URL der Seite', type: 'url', hint: 'Verhindert doppelte Inhalte, wenn die Seite unter mehreren URLs erreichbar ist.' },
     ],
   },
   {
     title: 'Open Graph (Social Media)',
-    description: 'Wie die Seite aussieht wenn sie auf Facebook, LinkedIn oder WhatsApp geteilt wird.',
+    description: 'So sieht deine Seite aus, wenn sie auf Facebook, WhatsApp oder LinkedIn geteilt wird.',
     fields: [
-      { key: 'og_title',       label: 'OG Titel',       type: 'text',    maxLen: 60  },
-      { key: 'og_description', label: 'OG Beschreibung',type: 'textarea',maxLen: 160 },
-      { key: 'og_image',       label: 'OG Bild (URL)',  type: 'url',     hint: 'Empfohlen: 1200×630px – wird beim Teilen als Vorschaubild angezeigt' },
-      { key: 'og_url',         label: 'OG URL',         type: 'url' },
+      { key: 'og_title',       label: 'Titel',       type: 'text',    maxLen: 60  },
+      { key: 'og_description', label: 'Beschreibung',type: 'textarea',maxLen: 160 },
+      { key: 'og_image',       label: 'Vorschaubild (URL)', type: 'url', hint: 'Wird beim Teilen als Bild angezeigt – empfohlen: 1200×630px.' },
+      { key: 'og_url',         label: 'URL',         type: 'url' },
     ],
   },
   {
     title: 'Twitter / X Card',
-    description: 'Vorschau-Einstellungen für Twitter und X.',
+    description: 'Einstellungen für die Vorschau wenn deine Seite auf Twitter oder X geteilt wird.',
     fields: [
-      { key: 'twitter_card',        label: 'Card-Typ',     type: 'select', options: ['summary_large_image', 'summary', 'app', 'player'] },
+      { key: 'twitter_card',        label: 'Card-Typ',     type: 'select', options: ['summary_large_image', 'summary', 'app', 'player'], hint: '„summary_large_image" zeigt ein großes Bild – empfehlenswert.' },
       { key: 'twitter_title',       label: 'Titel',        type: 'text',   maxLen: 70 },
       { key: 'twitter_description', label: 'Beschreibung', type: 'textarea', maxLen: 200 },
     ],
   },
   {
-    title: 'Verifikation & Schema',
-    description: 'Suchmaschinen-Verifikation und strukturierte Daten (Schema.org).',
+    title: 'Meta Pixel (Facebook / Instagram Werbung)',
+    description: 'Trage hier deine Facebook Pixel-ID ein, damit Conversions für Facebook- und Instagram-Anzeigen getrackt werden.',
     fields: [
-      { key: 'google_verification', label: 'Google Verification Code', type: 'text', hint: 'Nur den Code aus dem Meta-Tag – z.B. "abcdef123456"' },
-      { key: 'schema_name',         label: 'Schema Name',              type: 'text', hint: 'Name des Unternehmens' },
-      { key: 'schema_type',         label: 'Schema Typ',               type: 'select', options: ['MusicSchool', 'LocalBusiness', 'Person', 'Organization', 'EducationalOrganization'] },
-      { key: 'schema_telephone',    label: 'Schema Telefon',           type: 'text', hint: '+43 ...' },
-      { key: 'schema_address',      label: 'Schema Adresse',           type: 'text', hint: 'z.B. "Steyr, Österreich"' },
+      { key: 'meta_pixel_id', label: 'Facebook Pixel-ID', type: 'text', hint: 'Die ID findest du im Facebook Events Manager – nur die Zahlenkombination eintragen (z.B. „123456789012345").' },
+    ],
+  },
+  {
+    title: 'Verifikation & Schema',
+    description: 'Google-Verifikation und strukturierte Daten helfen Suchmaschinen, dein Unternehmen besser zu verstehen.',
+    fields: [
+      { key: 'google_verification', label: 'Google Verification Code', type: 'text', hint: 'Nur den Code aus dem Meta-Tag eintragen (z.B. „abc123xyz").' },
+      { key: 'schema_name',         label: 'Unternehmensname',         type: 'text' },
+      { key: 'schema_type',         label: 'Unternehmenstyp',          type: 'select', options: ['MusicSchool', 'LocalBusiness', 'Person', 'Organization', 'EducationalOrganization'] },
+      { key: 'schema_telephone',    label: 'Telefonnummer',            type: 'text', hint: 'Format: +43 ...' },
+      { key: 'schema_address',      label: 'Adresse',                  type: 'text', hint: 'z.B. „Steyr, Österreich"' },
     ],
   },
 ];
@@ -76,6 +83,55 @@ function CharCount({ value, max }: { value: string; max: number }) {
     <span className={`text-[10px] font-mono ${over ? 'text-red-500' : warn ? 'text-amber-500' : 'text-[#6B6B6B]'}`}>
       {len}/{max}
     </span>
+  );
+}
+
+// Modern custom select dropdown
+function SelectField({ value, options, onChange, isDirty }: { value: string; options: string[]; onChange: (v: string) => void; isDirty: boolean }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="flex h-10 w-full items-center justify-between rounded-[4px] border px-3 text-sm text-[#2F2F2F] transition hover:border-[#884A4A] outline-none"
+        style={{ borderColor: isDirty ? '#F59E0B' : '#E5E7EB' }}
+      >
+        <span>{value || options[0]}</span>
+        <ChevronDown className={`h-4 w-4 text-[#6B6B6B] transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-[4px] border border-neutral-200 bg-white shadow-lg">
+          {options.map(opt => (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => { onChange(opt); setOpen(false); }}
+              className={`flex w-full items-center justify-between px-3 py-2.5 text-sm transition hover:bg-[#FDF8F8] ${value === opt ? 'font-semibold text-[#884A4A] bg-[#FDF8F8]' : 'text-[#2F2F2F]'}`}
+            >
+              {opt}
+              {value === opt && <CheckCircle className="h-3.5 w-3.5 text-[#884A4A]" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CheckCircle2({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" /><polyline points="9 12 11 14 15 10" />
+    </svg>
   );
 }
 
@@ -124,7 +180,6 @@ export default function SeoPage() {
     }
   };
 
-  // Live Google-Vorschau
   const previewTitle = seo['title'] || 'Seiten-Titel';
   const previewDesc  = seo['description'] || 'Meta-Beschreibung erscheint hier...';
   const previewUrl   = seo['canonical_url'] || 'https://martinkrendl.vercel.app';
@@ -144,7 +199,7 @@ export default function SeoPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-extrabold text-[#2F2F2F]">SEO Einstellungen</h1>
-            <p className="mt-0.5 text-sm text-[#6B6B6B]">Suchmaschinen-Optimierung und Social Media Vorschau.</p>
+            <p className="mt-0.5 text-sm text-[#6B6B6B]">Hier steuerst du, wie deine Website in Suchmaschinen und beim Teilen in sozialen Netzwerken aussieht.</p>
           </div>
           <div className="flex items-center gap-3">
             {savedAt && dirty.size === 0 && (
@@ -176,16 +231,13 @@ export default function SeoPage() {
 
         {/* Google Vorschau */}
         <div className="rounded-[4px] border border-neutral-200 bg-white p-5 shadow-sm">
-          <p className="mb-3 text-xs font-bold uppercase tracking-widest text-[#6B6B6B]">Google Vorschau</p>
+          <p className="mb-3 text-xs font-bold uppercase tracking-widest text-[#6B6B6B]">Vorschau in Google</p>
           <div className="rounded-[4px] border border-neutral-100 bg-neutral-50 p-4">
             <p className="mb-0.5 truncate text-xs text-[#006621]">{previewUrl}</p>
             <p className="text-lg font-medium text-[#1a0dab] hover:underline cursor-pointer truncate">{previewTitle}</p>
             <p className="mt-1 text-sm text-[#545454] line-clamp-2">{previewDesc}</p>
           </div>
-          <p className="mt-2 flex items-center gap-1 text-xs text-[#6B6B6B]">
-            <Info className="h-3 w-3" />
-            Vorschau kann vom tatsächlichen Ergebnis abweichen – Google passt Snippets dynamisch an.
-          </p>
+          <p className="mt-2 text-xs text-[#6B6B6B]">Die Vorschau zeigt eine Annäherung – Google kann Titel und Beschreibung dynamisch anpassen.</p>
         </div>
 
         {/* SEO Groups */}
@@ -218,11 +270,7 @@ export default function SeoPage() {
                     {field.hint && <p className="mb-1.5 text-xs text-[#6B6B6B]">{field.hint}</p>}
 
                     {field.type === 'select' ? (
-                      <select value={val} onChange={(e) => handleChange(field.key, e.target.value)}
-                        className="h-10 w-full rounded-[4px] border px-3 text-sm text-[#2F2F2F] outline-none transition focus:border-[#884A4A]"
-                        style={{ borderColor: isDirty ? '#F59E0B' : '#E5E7EB' }}>
-                        {field.options?.map((o) => <option key={o} value={o}>{o}</option>)}
-                      </select>
+                      <SelectField value={val} options={field.options!} onChange={(v) => handleChange(field.key, v)} isDirty={isDirty} />
                     ) : field.type === 'textarea' ? (
                       <textarea value={val} onChange={(e) => handleChange(field.key, e.target.value)}
                         rows={3} maxLength={field.maxLen ? field.maxLen + 50 : undefined}
@@ -253,18 +301,6 @@ export default function SeoPage() {
             </div>
           </div>
         ))}
-
-        {/* Info Box */}
-        <div className="rounded-[4px] border border-blue-100 bg-blue-50 p-4">
-          <p className="flex items-center gap-2 text-sm font-semibold text-blue-700">
-            <Info className="h-4 w-4 shrink-0" />
-            Damit SEO-Änderungen live werden, müssen sie in layout.tsx ausgelesen werden.
-          </p>
-          <p className="mt-1 pl-6 text-xs text-blue-600">
-            Die SEO-Werte werden in der <code className="rounded bg-blue-100 px-1">src/app/layout.tsx</code> via Supabase geladen.
-            Lass dir dafür die aktualisierte layout.tsx ausgeben – einmalige Einrichtung.
-          </p>
-        </div>
       </div>
     </>
   );
