@@ -264,7 +264,7 @@ export default function Quiz() {
         }
       `}</style>
 
-      <div className="quiz-open-sans rounded-[4px] bg-white">
+<div className="quiz-open-sans rounded-[4px] bg-[#f7f7f7]">
         {step !== 4 && <ProgressBar step={step} />}
 
         <div className="mt-6 md:mt-8">
