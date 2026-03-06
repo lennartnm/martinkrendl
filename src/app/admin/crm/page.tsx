@@ -3,7 +3,8 @@
 // src/app/admin/crm/page.tsx
 // Vollständiges CRM für Quiz-Leads
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 const brand = '#884A4A';
 
@@ -36,6 +37,52 @@ const STATUS_STYLES: Record<string, { label: string; bg: string; text: string }>
   qualified: { label: 'Qualifiziert', bg: '#ECFDF5', text: '#059669' },
   closed: { label: 'Abgeschlossen', bg: '#F3F4F6', text: '#6B7280' },
 };
+
+// Modern status dropdown component
+function StatusDropdown({ value, onChange, onClick, wide }: { value: string; onChange: (v: string) => void; onClick?: (e: React.MouseEvent) => void; wide?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const s = STATUS_STYLES[value] || STATUS_STYLES.new;
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div ref={ref} className={`relative ${wide ? 'w-full' : 'inline-block'}`} onClick={onClick}>
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition hover:opacity-90 ${wide ? 'w-full justify-between rounded-[4px] border border-neutral-200 bg-white px-3 py-2 text-sm' : ''}`}
+        style={wide ? { color: s.text } : { backgroundColor: s.bg, color: s.text }}
+      >
+        <span className="flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: s.text }} />
+          {s.label}
+        </span>
+        <ChevronDown className={`h-3 w-3 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full z-50 mt-1 min-w-[160px] overflow-hidden rounded-[4px] border border-neutral-200 bg-white shadow-lg">
+          {Object.entries(STATUS_STYLES).map(([val, style]) => (
+            <button
+              key={val}
+              type="button"
+              onClick={() => { onChange(val); setOpen(false); }}
+              className={`flex w-full items-center gap-2 px-3 py-2.5 text-sm transition hover:bg-neutral-50 ${value === val ? 'font-semibold' : ''}`}
+            >
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: style.text }} />
+              <span style={{ color: value === val ? style.text : '#2F2F2F' }}>{style.label}</span>
+              {value === val && <span className="ml-auto text-xs">✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CrmPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -129,7 +176,8 @@ export default function CrmPage() {
       <div>
         <h1 className="text-2xl font-extrabold text-[#2F2F2F]">CRM / Leads</h1>
         <p className="mt-1 text-sm text-[#6B6B6B]">
-          {total} Lead{total !== 1 ? 's' : ''} aus dem Quiz
+          Hier siehst du alle Anfragen aus dem Quiz – filtern, suchen und Status direkt per Klick ändern.
+          {total > 0 && <span className="ml-2 font-semibold text-[#2F2F2F]">{total} Lead{total !== 1 ? 's' : ''} gesamt.</span>}
         </p>
       </div>
 
@@ -225,19 +273,12 @@ export default function CrmPage() {
                           </span>
                         )}
                       </div>
-                      <div className="mt-2 md:mt-0">
-                        <select
+                      <div className="mt-2 md:mt-0 relative">
+                        <StatusDropdown
                           value={lead.status}
+                          onChange={(val) => handleUpdateStatus(lead.id, val)}
                           onClick={(e) => e.stopPropagation()}
-                          onChange={(e) => handleUpdateStatus(lead.id, e.target.value)}
-                          className="rounded-full px-2.5 py-1 text-xs font-semibold border-0 outline-none cursor-pointer"
-                          style={{ backgroundColor: s.bg, color: s.text }}
-                        >
-                          <option value="new">Neu</option>
-                          <option value="contacted">Kontaktiert</option>
-                          <option value="qualified">Qualifiziert</option>
-                          <option value="closed">Abgeschlossen</option>
-                        </select>
+                        />
                       </div>
                       <div className="hidden md:flex justify-end">
                         <svg className="h-4 w-4 text-[#6B6B6B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -339,17 +380,11 @@ export default function CrmPage() {
                 {/* Status */}
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-[#6B6B6B] mb-2">Status</p>
-                  <select
+                  <StatusDropdown
                     value={selectedLead.status}
-                    onChange={(e) => handleUpdateStatus(selectedLead.id, e.target.value)}
-                    className="w-full rounded-[4px] border border-neutral-200 bg-white px-3 py-2 text-sm font-semibold outline-none"
-                    style={{ color: STATUS_STYLES[selectedLead.status]?.text || '#2F2F2F' }}
-                  >
-                    <option value="new">Neu</option>
-                    <option value="contacted">Kontaktiert</option>
-                    <option value="qualified">Qualifiziert</option>
-                    <option value="closed">Abgeschlossen</option>
-                  </select>
+                    onChange={(val) => handleUpdateStatus(selectedLead.id, val)}
+                    wide
+                  />
                 </div>
 
                 {/* UTM */}
