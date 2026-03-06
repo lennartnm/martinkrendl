@@ -94,6 +94,8 @@ const carouselVideos = [
   "/80cd8f88-d573-43bb-8238-0eaf3066ca59.mp4",
 ];
 
+const getPreviewSrc = (src: string) => `${src}#t=0.1`;
+
 type VideoState = {
   duration: number;
   currentTime: number;
@@ -125,27 +127,6 @@ export default function Page() {
     );
   };
 
-  const prepareVideoThumbnail = (index: number) => {
-    const video = videoRefs.current[index];
-    if (!video) return;
-
-    const setPreviewFrame = () => {
-      try {
-        if (video.currentTime === 0) {
-          video.currentTime = 0.01;
-        }
-      } catch {
-        // ignore seek issues
-      }
-    };
-
-    if (video.readyState >= 2) {
-      setPreviewFrame();
-    } else {
-      video.addEventListener("loadeddata", setPreviewFrame, { once: true });
-    }
-  };
-
   const handleLoadedMetadata = (index: number) => {
     const video = videoRefs.current[index];
     if (!video) return;
@@ -154,8 +135,6 @@ export default function Page() {
       duration: Number.isFinite(video.duration) ? video.duration : 0,
       currentTime: video.currentTime || 0,
     });
-
-    prepareVideoThumbnail(index);
   };
 
   const handleTimeUpdate = (index: number) => {
@@ -173,12 +152,9 @@ export default function Page() {
 
     if (video.paused) {
       try {
-        if (video.currentTime <= 0.01) {
-          video.currentTime = 0;
-        }
         await video.play();
       } catch {
-        // ignore autoplay/play promise issues
+        // ignore play promise issues
       }
     } else {
       video.pause();
@@ -327,10 +303,7 @@ export default function Page() {
 
                 <div className="mt-6">
                   <a href="#quiz">
-                    <Button
-                      variant="secondary"
-                      className="rounded-[4px] px-6 py-3 font-semibold text-white"
-                    >
+                    <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
                       Kostenloses Kennenlerngespräch anfragen
                     </Button>
                   </a>
@@ -519,10 +492,9 @@ export default function Page() {
                             ref={(el) => {
                               videoRefs.current[i] = el;
                             }}
-                            src={video}
+                            src={getPreviewSrc(video)}
                             playsInline
-                            muted
-                            preload="auto"
+                            preload="metadata"
                             className="h-full w-full object-cover"
                             onLoadedMetadata={() => handleLoadedMetadata(i)}
                             onTimeUpdate={() => handleTimeUpdate(i)}
@@ -532,6 +504,7 @@ export default function Page() {
                             onPause={() =>
                               updateVideoState(i, { isPlaying: false })
                             }
+                            controlsList="nodownload"
                           />
                         </div>
                       </button>
@@ -611,10 +584,9 @@ export default function Page() {
                             ref={(el) => {
                               videoRefs.current[videoIndex] = el;
                             }}
-                            src={video}
+                            src={getPreviewSrc(video)}
                             playsInline
-                            muted
-                            preload="auto"
+                            preload="metadata"
                             className="h-full w-full object-cover"
                             onLoadedMetadata={() =>
                               handleLoadedMetadata(videoIndex)
@@ -626,6 +598,7 @@ export default function Page() {
                             onPause={() =>
                               updateVideoState(videoIndex, { isPlaying: false })
                             }
+                            controlsList="nodownload"
                           />
                         </div>
                       </button>
@@ -815,10 +788,10 @@ export default function Page() {
             <div className="overflow-hidden rounded-[4px] border border-neutral-200 bg-white">
               <div className="relative aspect-video">
                 <video
-                  src="/review-video-1.mp4"
+                  src={getPreviewSrc("/review-video-1.mp4")}
                   controls
                   playsInline
-                  preload="auto"
+                  preload="metadata"
                   className="h-full w-full object-cover"
                 />
               </div>
@@ -855,10 +828,10 @@ export default function Page() {
             <div className="order-1 overflow-hidden rounded-[4px] border border-neutral-200 bg-white md:order-2">
               <div className="relative aspect-video">
                 <video
-                  src="/review-video-2.mp4"
+                  src={getPreviewSrc("/review-video-2.mp4")}
                   controls
                   playsInline
-                  preload="auto"
+                  preload="metadata"
                   className="h-full w-full object-cover"
                 />
               </div>
@@ -895,8 +868,8 @@ export default function Page() {
               Technik und Unterricht grundlegend verändert.
             </p>
             <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">
-              2009 begann meine Ausbildung, 2012 eröffnete ich mein
-              eigenes Voiceation Studio. Heute arbeite ich mit Anfängern,
+              2009 begann meine Ausbildung, 2012 eröffnete ich mein eigenes
+              Voiceation Studio. Heute arbeite ich mit Anfängern,
               Fortgeschrittenen und Profis, gebe Workshops für Chöre und
               Ensembles und unterrichte live im Studio oder via Zoom.
             </p>
@@ -972,7 +945,10 @@ export default function Page() {
 
             <div className="mt-8">
               <a href="#quiz">
-                <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+                <Button
+                  variant="secondary"
+                  className="rounded-[4px] px-6 py-3 font-semibold text-white"
+                >
                   Jetzt Kennenlerngespräch anfragen
                 </Button>
               </a>
