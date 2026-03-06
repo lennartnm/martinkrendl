@@ -4,21 +4,18 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border shadow-sm",
+  "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-none focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 shadow-sm",
   {
     variants: {
       variant: {
-        // Default-Stil: bleibt auch bei Hover/Klick gleich
         default:
-          "bg-[#2545F0] text-white border-[#2545F0] hover:bg-[#2545F0] hover:text-white active:bg-[#2545F0] active:text-white focus:text-white hover:shadow-none",
+          "bg-[#884A4A] text-white hover:bg-[#884A4A] active:bg-[#884A4A] focus:bg-[#884A4A]",
 
-        // Outline bleibt transparent, aber ohne Farbänderung
         outline:
-          "bg-transparent text-[#2545F0] border-[#2545F0] hover:bg-transparent hover:text-[#2545F0] hover:shadow-none",
+          "bg-transparent text-[#884A4A] hover:bg-transparent",
 
-        // Ghost minimal, aber ohne Farbänderung der Schrift
         ghost:
-          "bg-transparent text-[#2545F0] hover:bg-slate-100 hover:text-[#2545F0]",
+          "bg-transparent text-[#884A4A]",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -33,7 +30,6 @@ const buttonVariants = cva(
         full: "rounded-full",
       },
     },
-    // Standard bleibt default variant
     defaultVariants: { variant: "default", size: "default", radius: "full" },
   }
 );
