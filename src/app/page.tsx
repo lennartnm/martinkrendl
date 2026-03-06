@@ -24,22 +24,18 @@ const darkGray = "#4A4A4A";
 const lightGray = "#6B6B6B";
 const sectionWidth = "mx-auto w-full max-w-[1200px] px-4 md:px-6";
 
-const logos = [
-  "/logo1.jpg",
-  "/logo2.jpg",
- 
-];
+const logos = ["/logo1.jpg", "/logo2.jpg"];
 
 const featureCards = [
   {
     icon: GraduationCap,
-    title: "Individuelles Vocal Coaching",
+    title: "Individueller Gesangsunterricht",
     text: "Kein Unterricht von der Stange, sondern ein klar auf dich und deine Stimme abgestimmter Weg.",
   },
   {
     icon: Trophy,
     title: "Erprobte Methode",
-    text: "Du arbeitest mit einer Methode, die vielen Sänger:innen geholfen hat, freier, sicherer und klangvoller zu singen.",
+    text: "Du arbeitest mit einer Methode, die vielen Menschen geholfen hat, freier, sicherer und klangvoller zu singen.",
   },
   {
     icon: ShieldCheck,
@@ -52,7 +48,7 @@ const secondFeatureCards = [
   {
     icon: Users,
     title: "Für jedes Level",
-    text: "Ob Anfänger:in, Wiedereinsteiger:in oder Profi – du wirst dort abgeholt, wo du gerade stehst.",
+    text: "Ob Anfänger, Wiedereinsteiger oder Profi – du wirst dort abgeholt, wo du gerade stehst.",
   },
   {
     icon: Award,
@@ -92,7 +88,11 @@ const reviews = [
   },
 ];
 
-const carouselVideos = ["/5030c62f-ea92-45de-bab1-7f8aeda2f40c.mp4", "/85052189-16cf-4fe2-aa49-b46f0d96a05f.mp4", "/80cd8f88-d573-43bb-8238-0eaf3066ca59.mp4"];
+const carouselVideos = [
+  "/5030c62f-ea92-45de-bab1-7f8aeda2f40c.mp4",
+  "/85052189-16cf-4fe2-aa49-b46f0d96a05f.mp4",
+  "/80cd8f88-d573-43bb-8238-0eaf3066ca59.mp4",
+];
 
 type VideoState = {
   duration: number;
@@ -125,6 +125,27 @@ export default function Page() {
     );
   };
 
+  const prepareVideoThumbnail = (index: number) => {
+    const video = videoRefs.current[index];
+    if (!video) return;
+
+    const setPreviewFrame = () => {
+      try {
+        if (video.currentTime === 0) {
+          video.currentTime = 0.01;
+        }
+      } catch {
+        // ignore seek issues
+      }
+    };
+
+    if (video.readyState >= 2) {
+      setPreviewFrame();
+    } else {
+      video.addEventListener("loadeddata", setPreviewFrame, { once: true });
+    }
+  };
+
   const handleLoadedMetadata = (index: number) => {
     const video = videoRefs.current[index];
     if (!video) return;
@@ -133,6 +154,8 @@ export default function Page() {
       duration: Number.isFinite(video.duration) ? video.duration : 0,
       currentTime: video.currentTime || 0,
     });
+
+    prepareVideoThumbnail(index);
   };
 
   const handleTimeUpdate = (index: number) => {
@@ -144,12 +167,19 @@ export default function Page() {
     });
   };
 
-  const handleTogglePlay = (index: number) => {
+  const handleTogglePlay = async (index: number) => {
     const video = videoRefs.current[index];
     if (!video) return;
 
     if (video.paused) {
-      video.play();
+      try {
+        if (video.currentTime <= 0.01) {
+          video.currentTime = 0;
+        }
+        await video.play();
+      } catch {
+        // ignore autoplay/play promise issues
+      }
     } else {
       video.pause();
     }
@@ -255,7 +285,10 @@ export default function Page() {
           </div>
 
           <a href="#quiz">
-            <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+            <Button
+              variant="secondary"
+              className="rounded-[4px] px-6 py-3 font-semibold text-white"
+            >
               Kostenloses Kennenlernen
             </Button>
           </a>
@@ -287,14 +320,17 @@ export default function Page() {
                 </p>
 
                 <p className="mt-4 text-sm text-white/85 md:text-lg">
-                  Im Vocal Coaching mit Martin Krendl arbeitest du gezielt an
+                  Im Gesangsunterricht mit Martin Krendl arbeitest du gezielt an
                   Klang, Höhe, Leichtigkeit und Ausdruck – persönlich in Steyr
                   oder online via Zoom.
                 </p>
 
                 <div className="mt-6">
                   <a href="#quiz">
-                    <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+                    <Button
+                      variant="secondary"
+                      className="rounded-[4px] px-6 py-3 font-semibold text-white"
+                    >
                       Kostenloses Kennenlerngespräch anfragen
                     </Button>
                   </a>
@@ -310,7 +346,7 @@ export default function Page() {
                     ))}
                   </div>
                   <p className="text-sm font-semibold text-white/90">
-                    Persönliches Vocal Coaching mit Herz, Struktur und Erfahrung
+                    Persönlicher Gesangsunterricht mit Herz, Struktur und Erfahrung
                   </p>
                 </div>
               </div>
@@ -324,7 +360,7 @@ export default function Page() {
         <div className={sectionWidth}>
           <div className="mx-auto mb-8 max-w-3xl text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--brand)]">
-              Bekannt aus Coaching, Bühne und Ausbildung
+              Bekannt aus Unterricht, Bühne und Ausbildung
             </p>
           </div>
 
@@ -392,9 +428,9 @@ export default function Page() {
               Deine Stimme kann mehr, als du vielleicht gerade glaubst
             </h2>
             <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">
-              Viele Sänger:innen kämpfen mit Unsicherheit, engen Höhen,
+              Viele Menschen kämpfen mit Unsicherheit, engen Höhen,
               fehlender Kraft oder dem Gefühl, nicht so zu klingen, wie sie es
-              eigentlich möchten. Genau hier setzt das Coaching an:
+              eigentlich möchten. Genau hier setzt der Gesangsunterricht an:
               verständlich, individuell und mit Fokus auf echte Veränderung.
             </p>
 
@@ -452,16 +488,14 @@ export default function Page() {
       {/* Video carousel */}
       <section className="py-14 md:py-20">
         <div className={sectionWidth}>
-          <div className="mb-8 flex items-end justify-between gap-4">
-            <div>
-              <h2 className="text-3xl font-extrabold md:text-4xl">
-                Hör und sieh selbst
-              </h2>
-              <p className="mt-3 max-w-2xl text-[color:var(--lightGray)]">
-                Die Videos zeigen mich direkt beim Singen – damit du ein Gefühl
-                dafür bekommst, wer dich im Coaching begleitet.
-              </p>
-            </div>
+          <div className="mx-auto mb-8 max-w-3xl text-center">
+            <h2 className="text-3xl font-extrabold md:text-4xl">
+              Hör und sieh selbst
+            </h2>
+            <p className="mt-3 text-[color:var(--lightGray)]">
+              Die Videos zeigen mich direkt beim Singen – damit du ein Gefühl
+              dafür bekommst, wer dich im Gesangsunterricht begleitet.
+            </p>
           </div>
 
           {/* Mobile */}
@@ -487,7 +521,8 @@ export default function Page() {
                             }}
                             src={video}
                             playsInline
-                            preload="metadata"
+                            muted
+                            preload="auto"
                             className="h-full w-full object-cover"
                             onLoadedMetadata={() => handleLoadedMetadata(i)}
                             onTimeUpdate={() => handleTimeUpdate(i)}
@@ -578,7 +613,8 @@ export default function Page() {
                             }}
                             src={video}
                             playsInline
-                            preload="metadata"
+                            muted
+                            preload="auto"
                             className="h-full w-full object-cover"
                             onLoadedMetadata={() =>
                               handleLoadedMetadata(videoIndex)
@@ -662,7 +698,7 @@ export default function Page() {
         >
           <div className="order-2 md:order-1">
             <h2 className="text-3xl font-extrabold md:text-4xl">
-              Coaching, das dich musikalisch und stimmlich weiterbringt
+              Gesangsunterricht, der dich musikalisch und stimmlich weiterbringt
             </h2>
             <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">
               Es geht nicht darum, dich in ein starres System zu pressen. Es
@@ -699,7 +735,7 @@ export default function Page() {
           <div className="order-1 relative aspect-square overflow-hidden rounded-[4px] md:order-2">
             <Image
               src="/martin2.jpg"
-              alt="Martin Krendl im Vocal Coaching"
+              alt="Martin Krendl im Gesangsunterricht"
               fill
               className="object-cover"
             />
@@ -712,7 +748,7 @@ export default function Page() {
         <div className={sectionWidth}>
           <div className="mx-auto mb-10 max-w-3xl text-center">
             <h2 className="text-3xl font-extrabold md:text-4xl">
-              Was dich im Coaching erwartet
+              Was dich im Gesangsunterricht erwartet
             </h2>
             <p className="mt-4 text-[color:var(--lightGray)]">
               Klarer Unterricht, persönliche Aufmerksamkeit und ein Ansatz, der
@@ -782,6 +818,7 @@ export default function Page() {
                   src="/review-video-1.mp4"
                   controls
                   playsInline
+                  preload="auto"
                   className="h-full w-full object-cover"
                 />
               </div>
@@ -821,6 +858,7 @@ export default function Page() {
                   src="/review-video-2.mp4"
                   controls
                   playsInline
+                  preload="auto"
                   className="h-full w-full object-cover"
                 />
               </div>
@@ -848,17 +886,17 @@ export default function Page() {
               Über Martin
             </p>
             <h2 className="mt-3 text-3xl font-extrabold md:text-4xl">
-              Von der eigenen Suche zur Arbeit mit Sänger:innen
+              Von der eigenen Suche zur Arbeit mit Sängern
             </h2>
             <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">
               Mein eigener Wendepunkt kam, als mir Robin D. in kurzer Zeit etwas
-              gezeigt hat, das ich nach Monaten bei anderen Lehrer:innen nicht
+              gezeigt hat, das ich nach Monaten bei anderen Lehrern nicht
               geschafft hatte. Diese Erfahrung hat meinen Blick auf Stimme,
               Technik und Unterricht grundlegend verändert.
             </p>
             <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">
-              2009 begann meine Coaching-Ausbildung, 2012 eröffnete ich mein
-              eigenes Voiceation Studio. Heute arbeite ich mit Anfänger:innen,
+              2009 begann meine Ausbildung, 2012 eröffnete ich mein
+              eigenes Voiceation Studio. Heute arbeite ich mit Anfängern,
               Fortgeschrittenen und Profis, gebe Workshops für Chöre und
               Ensembles und unterrichte live im Studio oder via Zoom.
             </p>
@@ -875,7 +913,7 @@ export default function Page() {
         <div className={sectionWidth}>
           <div className="mx-auto mb-10 max-w-2xl text-center">
             <h2 className="text-3xl font-extrabold md:text-4xl">
-              Stimmen von Schüler:innen
+              Stimmen von Schülern
             </h2>
           </div>
 
@@ -915,7 +953,7 @@ export default function Page() {
           <div className="relative aspect-video overflow-hidden rounded-[4px]">
             <Image
               src="/final-cta-image.jpg"
-              alt="Vocal Coaching in Steyr"
+              alt="Gesangsunterricht in Steyr"
               fill
               className="object-cover"
             />
