@@ -92,15 +92,15 @@ const reviews = [
 const carouselVideos = [
   {
     src: "/5030c62f-ea92-45de-bab1-7f8aeda2f40c.mp4",
-    thumbnail: "/5030c62f-ea92-45de-bab1-7f8aeda2f40c-thumb.jpg",
+    thumbnail: "/thumb11.jpg",
   },
   {
     src: "/85052189-16cf-4fe2-aa49-b46f0d96a05f.mp4",
-    thumbnail: "/85052189-16cf-4fe2-aa49-b46f0d96a05f-thumb.jpg",
+    thumbnail: "/thumb22.jpg",
   },
   {
     src: "/80cd8f88-d573-43bb-8238-0eaf3066ca59.mp4",
-    thumbnail: "/80cd8f88-d573-43bb-8238-0eaf3066ca59-thumb.jpg",
+    thumbnail: "/thumb33.jpg",
   },
 ];
 
