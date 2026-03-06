@@ -90,9 +90,29 @@ const reviews = [
 ];
 
 const carouselVideos = [
-  "/5030c62f-ea92-45de-bab1-7f8aeda2f40c.mp4",
-  "/85052189-16cf-4fe2-aa49-b46f0d96a05f.mp4",
-  "/80cd8f88-d573-43bb-8238-0eaf3066ca59.mp4",
+  {
+    src: "/5030c62f-ea92-45de-bab1-7f8aeda2f40c.mp4",
+    thumbnail: "/5030c62f-ea92-45de-bab1-7f8aeda2f40c-thumb.jpg",
+  },
+  {
+    src: "/85052189-16cf-4fe2-aa49-b46f0d96a05f.mp4",
+    thumbnail: "/85052189-16cf-4fe2-aa49-b46f0d96a05f-thumb.jpg",
+  },
+  {
+    src: "/80cd8f88-d573-43bb-8238-0eaf3066ca59.mp4",
+    thumbnail: "/80cd8f88-d573-43bb-8238-0eaf3066ca59-thumb.jpg",
+  },
+];
+
+const testimonialVideos = [
+  {
+    src: "/review-video-1.mp4",
+    thumbnail: "/review-video-1-thumb.jpg",
+  },
+  {
+    src: "/review-video-2.mp4",
+    thumbnail: "/review-video-2-thumb.jpg",
+  },
 ];
 
 type VideoState = {
@@ -108,29 +128,13 @@ function formatTime(value: number) {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-function VideoThumbnail({
-  src,
-  alt,
-  className = "",
-  videoClassName = "",
-  controls = false,
-  autoPlay = false,
-  muted = false,
-  playsInline = true,
-  preload = "metadata",
-  onVideoRef,
-  onLoadedMetadata,
-  onTimeUpdate,
-  onPlay,
-  onPause,
-}: {
+type ThumbnailVideoProps = {
   src: string;
+  thumbnail: string;
   alt: string;
   className?: string;
   videoClassName?: string;
   controls?: boolean;
-  autoPlay?: boolean;
-  muted?: boolean;
   playsInline?: boolean;
   preload?: "none" | "metadata" | "auto";
   onVideoRef?: (el: HTMLVideoElement | null) => void;
@@ -138,141 +142,54 @@ function VideoThumbnail({
   onTimeUpdate?: () => void;
   onPlay?: () => void;
   onPause?: () => void;
-}) {
-  const visibleVideoRef = useRef<HTMLVideoElement | null>(null);
-  const [thumbnail, setThumbnail] = useState<string | null>(null);
-  const [thumbReady, setThumbReady] = useState(false);
+};
 
-  useEffect(() => {
-    let cancelled = false;
-    const probeVideo = document.createElement("video");
-
-    probeVideo.src = src;
-    probeVideo.preload = "auto";
-    probeVideo.muted = true;
-    probeVideo.playsInline = true;
-    probeVideo.crossOrigin = "anonymous";
-
-    const cleanup = () => {
-      probeVideo.pause();
-      probeVideo.removeAttribute("src");
-      probeVideo.load();
-    };
-
-    const captureFrame = () => {
-      if (cancelled) return;
-
-      const width = probeVideo.videoWidth;
-      const height = probeVideo.videoHeight;
-
-      if (!width || !height) {
-        setThumbReady(true);
-        return;
-      }
-
-      try {
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-
-        if (!ctx) {
-          setThumbReady(true);
-          return;
-        }
-
-        ctx.drawImage(probeVideo, 0, 0, width, height);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
-
-        if (!cancelled) {
-          setThumbnail(dataUrl);
-          setThumbReady(true);
-        }
-      } catch {
-        if (!cancelled) {
-          setThumbReady(true);
-        }
-      } finally {
-        cleanup();
-      }
-    };
-
-    const handleLoadedData = () => {
-      const seekTarget =
-        probeVideo.duration && Number.isFinite(probeVideo.duration)
-          ? Math.min(0.05, Math.max(probeVideo.duration - 0.01, 0))
-          : 0;
-
-      if (seekTarget === 0) {
-        captureFrame();
-        return;
-      }
-
-      const onSeeked = () => {
-        probeVideo.removeEventListener("seeked", onSeeked);
-        captureFrame();
-      };
-
-      probeVideo.addEventListener("seeked", onSeeked, { once: true });
-
-      try {
-        probeVideo.currentTime = seekTarget;
-      } catch {
-        captureFrame();
-      }
-    };
-
-    const handleError = () => {
-      if (!cancelled) {
-        setThumbReady(true);
-      }
-      cleanup();
-    };
-
-    probeVideo.addEventListener("loadeddata", handleLoadedData, { once: true });
-    probeVideo.addEventListener("error", handleError, { once: true });
-    probeVideo.load();
-
-    return () => {
-      cancelled = true;
-      cleanup();
-    };
-  }, [src]);
+function ThumbnailVideo({
+  src,
+  thumbnail,
+  alt,
+  className = "",
+  videoClassName = "",
+  controls = false,
+  playsInline = true,
+  preload = "metadata",
+  onVideoRef,
+  onLoadedMetadata,
+  onTimeUpdate,
+  onPlay,
+  onPause,
+}: ThumbnailVideoProps) {
+  const [showThumbnail, setShowThumbnail] = useState(true);
 
   return (
     <div className={`relative ${className}`}>
-      {!controls && !autoPlay && thumbnail && (
-        <img
-          src={thumbnail}
-          alt={alt}
-          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
-            thumbReady ? "opacity-100" : "opacity-0"
-          }`}
-        />
+      {showThumbnail && (
+        <div className="pointer-events-none absolute inset-0 z-10">
+          <Image src={thumbnail} alt={alt} fill className="object-cover" />
+          <div className="absolute inset-0 bg-black/10" />
+        </div>
       )}
 
       <video
-        ref={(el) => {
-          visibleVideoRef.current = el;
-          onVideoRef?.(el);
-        }}
+        ref={onVideoRef}
         src={src}
         controls={controls}
-        autoPlay={autoPlay}
-        muted={muted}
         playsInline={playsInline}
         preload={preload}
-        className={videoClassName}
+        poster={thumbnail}
+        className={`${videoClassName} relative z-20`}
         onLoadedMetadata={onLoadedMetadata}
         onTimeUpdate={onTimeUpdate}
-        onPlay={onPlay}
+        onPlay={() => {
+          setShowThumbnail(false);
+          onPlay?.();
+        }}
         onPause={onPause}
+        onLoadedData={() => {
+          // poster bleibt erhalten bis abgespielt wird
+        }}
         controlsList="nodownload"
       />
-
-      {!controls && !autoPlay && thumbnail && (
-        <div className="pointer-events-none absolute inset-0 bg-black/5" />
-      )}
     </div>
   );
 }
@@ -292,7 +209,7 @@ function CarouselVideoCard({
   onPause,
   videoRef,
 }: {
-  video: string;
+  video: { src: string; thumbnail: string };
   index: number;
   state: VideoState;
   brandColor: string;
@@ -322,8 +239,9 @@ function CarouselVideoCard({
         aria-label={`Video ${index + 1} auswählen`}
       >
         <div className="relative aspect-video bg-black">
-          <VideoThumbnail
-            src={video}
+          <ThumbnailVideo
+            src={video.src}
+            thumbnail={video.thumbnail}
             alt={`Vorschaubild Video ${index + 1}`}
             className="h-full w-full"
             videoClassName="h-full w-full object-cover"
@@ -758,7 +676,7 @@ export default function Page() {
           <div className="overflow-x-auto pb-4 [scrollbar-width:none] md:hidden">
             <div className="flex snap-x snap-mandatory gap-4">
               {carouselVideos.map((video, i) => (
-                <div key={video} className="min-w-[88%] snap-center">
+                <div key={video.src} className="min-w-[88%] snap-center">
                   <CarouselVideoCard
                     video={video}
                     index={i}
@@ -790,7 +708,7 @@ export default function Page() {
 
                 return (
                   <div
-                    key={`${video}-${position}`}
+                    key={`${video.src}-${position}`}
                     className={`transition-all duration-300 ${
                       isCenter
                         ? "w-[52%] lg:w-[56%]"
@@ -971,8 +889,9 @@ export default function Page() {
           <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
             <div className="overflow-hidden rounded-[4px] border border-neutral-200 bg-white">
               <div className="relative aspect-video bg-black">
-                <VideoThumbnail
-                  src="/review-video-1.mp4"
+                <ThumbnailVideo
+                  src={testimonialVideos[0].src}
+                  thumbnail={testimonialVideos[0].thumbnail}
                   alt="Vorschaubild Review Video 1"
                   className="h-full w-full"
                   videoClassName="h-full w-full object-cover"
@@ -1012,8 +931,9 @@ export default function Page() {
 
             <div className="order-1 overflow-hidden rounded-[4px] border border-neutral-200 bg-white md:order-2">
               <div className="relative aspect-video bg-black">
-                <VideoThumbnail
-                  src="/review-video-2.mp4"
+                <ThumbnailVideo
+                  src={testimonialVideos[1].src}
+                  thumbnail={testimonialVideos[1].thumbnail}
                   alt="Vorschaubild Review Video 2"
                   className="h-full w-full"
                   videoClassName="h-full w-full object-cover"
