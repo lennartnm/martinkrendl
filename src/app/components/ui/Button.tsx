@@ -9,7 +9,10 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-[#884A4A] text-white hover:bg-[#884A4A] active:bg-[#884A4A] focus:bg-[#884A4A]",
+          "bg-[#884A4A] text-white hover:bg-[#7a4040] active:bg-[#6d3838] focus:bg-[#7a4040]",
+
+        secondary:
+          "bg-[#67a6cb] text-white hover:bg-[#5a95b6] active:bg-[#4f839f] focus:bg-[#5a95b6]",
 
         outline:
           "bg-transparent text-[#884A4A] hover:bg-transparent",
@@ -30,7 +33,11 @@ const buttonVariants = cva(
         full: "rounded-full",
       },
     },
-    defaultVariants: { variant: "default", size: "default", radius: "full" },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+      radius: "full",
+    },
   }
 );
 
@@ -43,6 +50,7 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, radius, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
+
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, radius }), className)}
