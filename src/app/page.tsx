@@ -1,305 +1,648 @@
-import { Button } from '@/components/ui/Button';
-import Quiz from '@/components/quiz';
+import Image from "next/image";
+import { Button } from "@/components/ui/Button";
+import Quiz from "@/components/quiz";
+import {
+  Award,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  GraduationCap,
+  ShieldCheck,
+  Star,
+  Trophy,
+  Users,
+  Video,
+} from "lucide-react";
+
+const brand = "#884A4A";
+const graphite = "#2F2F2F";
+const darkGray = "#4A4A4A";
+const lightGray = "#6B6B6B";
+const sectionWidth = "mx-auto w-full max-w-[1200px] px-4 md:px-6";
+
+const logos = [
+  "/logo1.jpg",
+  "/logo2.jpg",
+  "/logo3.jpg",
+  "/logo4.jpg",
+];
+
+const featureCards = [
+  {
+    icon: GraduationCap,
+    title: "Individuelle Betreuung",
+    text: "Persönlich abgestimmtes Coaching für nachhaltige Fortschritte und messbare Ergebnisse.",
+  },
+  {
+    icon: Trophy,
+    title: "Erprobte Methode",
+    text: "Strukturiertes Lernen mit klarem Fokus auf Verständnis, Sicherheit und langfristigen Erfolg.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Verlässlich & klar",
+    text: "Transparente Begleitung mit klaren Schritten, ehrlichem Feedback und motivierender Unterstützung.",
+  },
+];
+
+const secondFeatureCards = [
+  {
+    icon: Users,
+    title: "Persönlich",
+    text: "Nahbare Zusammenarbeit mit Fokus auf Vertrauen, Klarheit und individueller Förderung.",
+  },
+  {
+    icon: Award,
+    title: "Erfolgsorientiert",
+    text: "Gezielte Strategien, die auf echte Fortschritte und sichtbare Ergebnisse ausgelegt sind.",
+  },
+  {
+    icon: Video,
+    title: "Modern",
+    text: "Zeitgemäße Inhalte und Formate, die auf allen Geräten überzeugend funktionieren.",
+  },
+  {
+    icon: Star,
+    title: "Wertschätzend",
+    text: "Lernen in einer motivierenden Atmosphäre mit echter Aufmerksamkeit für jede Person.",
+  },
+];
+
+const bulletPoints = [
+  "Persönliche Begleitung auf Augenhöhe",
+  "Klare Struktur für schnelle Fortschritte",
+  "Nachhaltige Unterstützung mit Fokus auf Ergebnisse",
+];
+
+const reviews = [
+  "Ich habe mich vom ersten Moment an bestens aufgehoben gefühlt. Die Betreuung war klar, motivierend und sehr professionell.",
+  "Unglaublich wertvolle Unterstützung. Inhalte wurden verständlich erklärt und individuell auf mich abgestimmt.",
+  "Man merkt sofort die Erfahrung und die Ruhe in der Begleitung. Absolute Empfehlung für alle, die wirklich weiterkommen wollen.",
+  "Die Zusammenarbeit war strukturiert, persönlich und effektiv. Genau die richtige Mischung aus Motivation und Klarheit.",
+  "Hier wird nicht einfach nur begleitet, sondern wirklich verstanden, worauf es ankommt. Das hat einen riesigen Unterschied gemacht.",
+  "Sehr hochwertiger Auftritt, starke Inhalte und eine Betreuung, die Vertrauen schafft. Ich würde es jederzeit wieder machen.",
+  "Besonders beeindruckt hat mich die individuelle Herangehensweise. Ich habe mich ernst genommen und gefördert gefühlt.",
+  "Modern, klar und menschlich. Genau die Art von Unterstützung, die man sich wünscht, wenn man echte Fortschritte erzielen möchte.",
+  "Von Anfang bis Ende professionell und angenehm. Man spürt die Qualität in jedem Detail.",
+];
+
+const scrollToQuiz = `
+  const el = document.getElementById('quiz');
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+`;
 
 export default function Page() {
   return (
-    <>
-      {/* HERO */}
-      <section id="top" className="relative z-0">
-        {/* Hero Mobile */}
-        <div className="relative aspect-[4/5] sm:hidden">
-          <div className="absolute inset-0">
-            <img
-              src="/fotobox-mobile.jpg"
-              alt="Party-Gäste haben Spaß an einer Fotobox"
-              className="h-full w-full object-cover"
-              loading="eager"
-              fetchPriority="high"
-              sizes="100vw"
-            />
-            <div className="absolute inset-0 bg-black/70 pointer-events-none" aria-hidden="true" />
-          </div>
+    <main
+      className="min-h-screen bg-white text-[color:var(--graphite)]"
+      style={
+        {
+          "--brand": brand,
+          "--graphite": graphite,
+          "--darkGray": darkGray,
+          "--lightGray": lightGray,
+        } as React.CSSProperties
+      }
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap');
 
-          {/* Logo oben mittig (Mobile) */}
-          <div className="absolute left-1/2 top-4 z-20 -translate-x-1/2 px-4">
-            <img
-              src="/Logo.png.webp"
-              alt="Ihr Logo"
-              className="w-44 sm:w-48 h-auto block drop-shadow-[0_0_10px_rgba(0,0,0,0.9)]"
-              loading="eager"
-              sizes="40vw"
-            />
-          </div>
+        html {
+          scroll-behavior: smooth;
+        }
 
-          {/* Overlay-Content */}
-          <div className="absolute inset-0 z-10 grid place-items-center">
-            <div className="mx-auto -translate-y-1 text-center text-white drop-shadow-[0_1px_8px_rgba(0,0,0,.35)] px-6">
-              <h1 className="text-3xl xs:text-4xl font-semibold tracking-tight leading-tight">
-                <strong>Die Fotobox für Deine unvergessliche Party<br /> im Salzburger Land 🕺</strong>
-              </h1>
-              <p className="mt-4 text-white/90 text-base leading-relaxed">
-                Lachen, posieren, feiern: Mach Deine Weihnachtsfeier, Deinen Geburtstag oder Deine Hochzeit zum absoluten Highlight 📷
-              </p>
-              <div className="mt-8" />
-            </div>
-          </div>
-        </div>
+        body {
+          font-family: 'Open Sans', sans-serif;
+          color: var(--graphite);
+          background: #ffffff;
+        }
+      `}</style>
 
-        {/* Hero Desktop */}
-        <div className="relative hidden aspect-[16/6] sm:block">
-          <div className="absolute inset-0">
-            <img
-              src="/fotobox-desktop.jpg"
-              alt="Party-Gäste haben Spaß an einer Fotobox"
-              className="h-full w-full object-cover"
-              loading="eager"
-              fetchPriority="high"
-              sizes="100vw"
-            />
-            <div className="absolute inset-0 bg-black/70 pointer-events-none" aria-hidden="true" />
-          </div>
-
-          <div className="absolute left-1/2 top-6 z-20 -translate-x-1/2">
-            <img
-              src="/Logo.png.webp"
-              alt="Ihr Logo"
-              className="h-12 w-auto lg:h-14 drop-shadow-[0_0_12px_rgba(0,0,0,0.9)]"
-              loading="eager"
-              sizes="20vw"
-            />
-          </div>
-
-          <div className="absolute inset-0 z-10 grid place-items-center">
-            <div className="mx-auto -translate-y-6 text-center text-white drop-shadow-[0_1px_8px_rgba(0,0,0,.35)] lg:-translate-y-10 px-6">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight">
-                <strong>Die Fotobox für Deine unvergessliche Party<br className="inline lg:hidden" /> im Salzburger Land 🕺</strong>
-              </h1>
-              <p className="mt-4 text-white/90">
-                Lachen, posieren, feiern: Mach Deine Weihnachtsfeier, Deinen Geburtstag oder Deine Hochzeit zum absoluten Highlight 📷
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* QUIZ (Offer-Fokus) – mobil normal, ab sm überlappend */}
-      <section
-        id="quiz"
-        className="
-          quiz-wrap relative z-10
-          mt-12                 /* Mobile: normaler Abstand */
-          sm:-mt-24 md:-mt-32 lg:-mt-40  /* Desktop: Überlappung mit dem Hero */
-          px-5
-        "
+      {/* Header */}
+      <header
+        className="sticky top-0 z-50 border-b border-white/10"
+        style={{ backgroundColor: brand }}
       >
-        <div className="container">
-          <div className="mx-auto w-full max-w-3xl rounded-lg border border-blue-200 bg-white p-7 sm:p-8 text-center shadow-xl">
-            <p className="text-base sm:text-lg text-gray-700 mb-5 sm:mb-6">
-              Jetzt unverbindliches Angebot für Deine Party-Fotobox anfordern, und den Abend unvergesslich machen 🙌 (kostenlos & unverbindlich)
-            </p>
-            <Quiz />
+        <div className={`${sectionWidth} flex h-20 items-center justify-between`}>
+          <div className="text-left text-lg font-extrabold tracking-[0.18em] text-white md:text-xl">
+            MARTIN KRENDL
           </div>
-        </div>
-      </section>
 
-      {/* STATEMENT */}
-      <section className="bg-white px-5 py-16 sm:py-24 mt-16 sm:mt-24">
-        <div className="container">
-          <p className="mx-auto max-w-3xl text-center text-base sm:text-xl text-gray-800 leading-relaxed">
-            Eine Fotobox ist mehr als nur eine Kamera. Sie ist der <em>Garant</em> für ausgelassene Stimmung und die persönlichsten Erinnerungen an Dein Event – ob <span className="text-[#E63446]">Hochzeit</span>, <span className="text-[#E63446]">Geburtstag</span> oder <span className="text-[#E63446]">Weihnachtsfeier</span>.
-          </p>
-        </div>
-      </section>
-
-     {/* METHODE (Benefits) */}
-<section className="bg-gray-50 px-5 py-16 sm:py-24 mt-16 sm:mt-24">
-  <div className="container">
-    <h2 className="text-center text-xl sm:text-3xl font-bold text-gray-900">
-      Darum werden Deine Gäste eine Fotobox lieben
-    </h2>
-    <div className="mx-auto mt-10 grid max-w-5xl gap-6 sm:gap-7 grid-cols-1 xs:grid-cols-2 lg:grid-cols-4">
-      {[
-        { title: 'Mega-Stimmung', text: 'Deine Gäste sind sofort im Party-Modus und haben Riesenspaß beim Posieren.' },
-        { title: 'Stylische Auswahl', text: 'Wähle aus verschiedenen Stilen – von Vintage bis Modern – passend zu Deinem Event.' },
-        { title: 'Unvergessliche Bilder', text: 'Drucke Deine lustigsten Momente sofort aus oder teile sie digital.' },
-        { title: 'Rundum-Sorglos-Service', text: 'Lieferung, Aufbau und Abbau im Raum Salzburg übernehmen wir für Dich.' },
-      ].map((item, i) => (
-        <div
-          key={i}
-          className="rounded-lg border border-red-200/70 bg-red-50 p-6 text-center shadow-2xl flex flex-col justify-center min-h-[9rem] space-y-2"
-        >
-          <h3 className="text-lg sm:text-xl font-extrabold leading-tight text-gray-900">{item.title}</h3>
-          <p className="text-sm text-gray-600">{item.text}</p>
-        </div>
-      ))}
-    </div>
-    <div className="mt-10 flex justify-center">
-      <Button asChild className="btn-brand rounded-md">
-        <a href="#quiz">Jetzt für Dein Event in Salzburg anfragen!</a>
-      </Button>
-    </div>
-  </div>
-</section>
-
-{/* GARANTIE - SEKTION 1 */}
-<section className="bg-white px-5 py-16 sm:py-24 mt-16 sm:mt-24">
-  <div className="container">
-    <div className="mx-auto grid max-w-5xl items-center gap-8 md:gap-10 md:grid-cols-2">
-      <div className="order-1 rounded-lg bg-white p-7 text-center shadow-2xl md:order-1 space-y-4">
-        <p className="text-lg sm:text-2xl font-extrabold text-gray-900">
-          Kein Stress, nur tolle Fotos: Unser Versprechen an Dich!
-        </p>
-        <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
-          Mit unseren Fotoboxen buchst Du eine garantierte Attraktion, die von der Buchung bis zur Abholung reibungslos läuft. Wir liefern pünktlich in Salzburg und Umgebung, bauen alles auf und sorgen für eine kinderleichte Bedienung.
-        </p>
-      </div>
-
-      <div className="order-2 md:order-2">
-        <img
-          src="/fotobox1.jpg"
-          alt="Fotobox im Einsatz auf einer Feier"
-          className="w-full rounded-lg object-cover"
-          loading="lazy"
-          sizes="(max-width: 768px) 100vw, 50vw"
-        />
-      </div>
-    </div>
-  </div>
-</section>
-
-{/* GARANTIE - SEKTION 2 */}
-<section className="bg-white px-5 py-16 sm:py-24 mt-16 sm:mt-24">
-  <div className="container">
-    <div className="mx-auto grid max-w-5xl items-center gap-8 md:gap-10 md:grid-cols-2">
-      <div className="order-1 rounded-lg bg-white p-7 text-center shadow-2xl md:order-2 space-y-4">
-        <p className="text-lg sm:text-2xl font-extrabold text-gray-900">
-          Beste Qualität und Service – Darauf kannst Du Dich verlassen!
-        </p>
-        <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
-          Wir legen Wert auf hochauflösende Fotos, professionelles Equipment und einen Service, der Dir den Rücken freihält. Genieße Deine Party, wir kümmern uns um die unvergesslichen Bilder.
-        </p>
-      </div>
-
-      <div className="order-2 md:order-1">
-        <img
-          src="/fotobox2.jpg"
-          alt="Fotobox im Einsatz auf einer Feier"
-          className="w-full rounded-lg object-cover"
-          loading="lazy"
-          sizes="(max-width: 768px) 100vw, 50vw"
-        />
-      </div>
-    </div>
-  </div>
-</section>
-
-{/* ANLÄSSE */}
-<section className="bg-gray-50 px-5 py-16 sm:py-24 mt-16 sm:mt-24">
-  <div className="container">
-    <h2 className="text-center text-xl sm:text-3xl font-bold text-gray-900">
-      Für jeden <span className="text-[#E63446]">Anlass</span> der richtige Style
-    </h2>
-  </div>
-  <div className="container">
-    <div className="mx-auto mt-10 grid max-w-5xl gap-6 sm:gap-7 grid-cols-1 sm:grid-cols-3">
-      {[
-        { value: 'Hochzeit', label: 'Romantisch, elegant oder verrückt – unvergessliche Hochzeitsfotos.' },
-        { value: 'Weihnachtsfeier', label: 'Bringt Schwung in die Firmenfeier und lockert die Stimmung.' },
-        { value: 'Geburtstag', label: 'Ob 18 oder 80: Die perfekte Attraktion für alle Altersgruppen.' },
-      ].map((item, i) => (
-        <div
-          key={i}
-          className="flex flex-col items-center justify-center rounded-lg border border-red-200/70 bg-red-50 p-6 text-center shadow-2xl space-y-2"
-        >
-          <p className="text-xl sm:text-3xl font-extrabold leading-tight text-gray-900">
-            {item.value}
-          </p>
-          <p className="text-sm text-gray-600">{item.label}</p>
-        </div>
-      ))}
-    </div>
-
-    <div className="mt-10 flex justify-center">
-      <Button asChild className="btn-brand rounded-md">
-        <a href="#quiz-bottom">Jetzt unverbindlich mehr Informationen erhalten</a>
-      </Button>
-    </div>
-  </div>
-</section>
-
-
-      {/* QUIZ (zweites Mal ganz unten) */}
-      <section id="quiz-bottom" className="bg-white px-5 py-16 sm:py-24 mt-16 sm:mt-24">
-        <div className="container">
-          <div className="mx-auto w-full max-w-3xl rounded-lg border border-blue-200 bg-white p-7 sm:p-8 text-center shadow-xl">
-            <p className="text-base sm:text-lg text-gray-700 mb-5 sm:mb-6">
-              Bereit? Sichere Dir jetzt unverbindlich und kostenlos weitere Informationen zur Fotobox für Deine Party 🙌
-            </p>
-            <Quiz />
-          </div>
-        </div>
-      </section>
-
-      {/* GALERIE - Sektion mit Marquee + Scrollbar auf Mobile */}
-<section className="bg-white px-5 py-16 sm:py-24 mt-16 sm:mt-24">
-  <div className="container">
-   
-
-    {/* Desktop-Galerie */}
-    <div className="hidden sm:grid grid-cols-2 md:grid-cols-4 gap-2 mt-10">
-      {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="aspect-square overflow-hidden rounded-md border border-white">
-          <img
-            src={`/${i}.jpg`}
-            alt={`Fotobox Bild ${i}`}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-        </div>
-      ))}
-    </div>
-
-    {/* Mobile Marquee-Scroll-Galerie */}
-    <div className="sm:hidden mt-10 overflow-x-auto whitespace-nowrap scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-      <div className="flex animate-marquee gap-2">
-        {[1, 2, 3, 4, 1, 2, 3, 4].map((i, idx) => (
-          <div
-            key={idx}
-            className="flex-shrink-0 w-64 h-64 rounded-md overflow-hidden border border-white"
+          <Button
+            onClick={() => {
+              const el = document.getElementById("quiz");
+              if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+            className="rounded-[4px] bg-white px-5 py-2.5 font-semibold text-[color:var(--brand)] hover:bg-neutral-100"
           >
-            <img
-              src={`/${i}.jpg`}
-              alt={`Fotobox Bild ${i}`}
-              className="w-full h-full object-cover"
-              loading="lazy"
+            Zum Quiz
+          </Button>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <section className="relative">
+        <div className="relative aspect-[4/5] w-full md:aspect-[16/8]">
+          <Image
+            src="/hero.jpg"
+            alt="Hero Bild"
+            fill
+            priority
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/10" />
+
+          <div className="absolute inset-x-0 bottom-0">
+            <div className={`${sectionWidth} pb-10 md:pb-14`}>
+              <div className="mx-auto max-w-3xl text-center text-white">
+                <h1 className="text-3xl font-extrabold leading-tight md:text-5xl">
+                  Klarheit, Struktur und echte Fortschritte für deinen nächsten
+                  Schritt
+                </h1>
+                <p className="mt-4 text-sm text-white/85 md:text-lg">
+                  Persönliche Begleitung mit einem modernen, klaren Ansatz –
+                  individuell, motivierend und auf nachhaltige Ergebnisse
+                  ausgerichtet.
+                </p>
+
+                <div className="mt-6">
+                  <Button
+                    onClick={() => {
+                      const el = document.getElementById("quiz");
+                      if (el) {
+                        el.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        });
+                      }
+                    }}
+                    className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95"
+                  >
+                    Jetzt starten
+                  </Button>
+                </div>
+
+                <div className="mt-4 flex flex-col items-center justify-center gap-2">
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className="h-5 w-5 fill-[#D4AF37] text-[#D4AF37]"
+                      />
+                    ))}
+                  </div>
+                  <p className="text-sm font-semibold text-white/90">
+                    100+ Schüler betreut
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Logo section */}
+      <section className="py-14 md:py-20">
+        <div className={sectionWidth}>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+            {logos.map((logo, index) => (
+              <div
+                key={logo}
+                className="flex h-28 items-center justify-center rounded-[4px] border border-neutral-200 bg-white p-4 md:h-32"
+              >
+                <Image
+                  src={logo}
+                  alt={`Logo ${index + 1}`}
+                  width={180}
+                  height={80}
+                  className="max-h-14 w-auto object-contain md:max-h-16"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 3 cards accent */}
+      <section className="py-14 md:py-20">
+        <div className={sectionWidth}>
+          <div className="grid gap-4 md:grid-cols-3 md:gap-6">
+            {featureCards.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.title}
+                  className="rounded-[4px] px-6 py-8 text-center text-white"
+                  style={{ backgroundColor: brand }}
+                >
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[4px] border border-white/20 bg-white/10">
+                    <Icon className="h-7 w-7 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-white/90">
+                    {item.text}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Image + text */}
+      <section className="py-14 md:py-20">
+        <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
+          <div className="relative aspect-square overflow-hidden rounded-[4px]">
+            <Image
+              src="/section-image-1.jpg"
+              alt="Persönliche Betreuung"
+              fill
+              className="object-cover"
             />
           </div>
-        ))}
-      </div>
-    </div>
-  </div>
-</section>
 
-      
+          <div>
+            <h2 className="text-3xl font-extrabold md:text-4xl">
+              Persönlich begleitet. Klar geführt. Nachhaltig gestärkt.
+            </h2>
+            <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">
+              Hier geht es nicht um Standardlösungen, sondern um eine
+              individuelle Begleitung mit echter Aufmerksamkeit für deine
+              Situation. Der Fokus liegt auf Klarheit, Struktur und einem Weg,
+              der sich für dich richtig und machbar anfühlt.
+            </p>
 
-      {/* ÜBER UNS */}
-      <footer className="bg-gray-50 px-5 pt-16 pb-20 sm:pt-24 sm:pb-28 mt-16 sm:mt-24">
-        <div className="container">
-          <div className="mx-auto max-w-xl text-center space-y-5">
-            <img
-              src="/Logo.png.webp"
-              alt="Ihr Logo"
-              className="mx-auto h-16 w-auto mb-1"
-              loading="lazy"
-              sizes="25vw"
+            <div className="mt-6 space-y-3">
+              {bulletPoints.map((point) => (
+                <div key={point} className="flex items-start gap-3">
+                  <div
+                    className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
+                    style={{ backgroundColor: brand }}
+                  >
+                    <Check className="h-3.5 w-3.5 text-white" />
+                  </div>
+                  <p className="text-sm leading-7 text-[color:var(--graphite)]">
+                    {point}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8">
+              <Button
+                onClick={() => {
+                  const el = document.getElementById("quiz");
+                  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+                className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95"
+              >
+                Zum Quiz
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Full width quote image */}
+      <section className="py-14 md:py-20">
+        <div className="relative aspect-[16/8] w-full overflow-hidden">
+          <Image
+            src="/quote-image.jpg"
+            alt="Zitat Hintergrund"
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-black/45" />
+          <div className={`${sectionWidth} absolute inset-0 flex items-center`}>
+            <div className="max-w-2xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">
+                Zitat
+              </p>
+              <blockquote className="mt-4 text-2xl font-bold leading-relaxed text-white md:text-4xl">
+                „Wer mit Klarheit, Vertrauen und der richtigen Begleitung lernt,
+                gewinnt nicht nur Sicherheit – sondern echte Perspektive.“
+              </blockquote>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Video carousel */}
+      <section className="py-14 md:py-20">
+        <div className={sectionWidth}>
+          <div className="mb-8 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-3xl font-extrabold md:text-4xl">
+                Eindrücke im Videoformat
+              </h2>
+              <p className="mt-3 max-w-2xl text-[color:var(--lightGray)]">
+                Moderne, horizontale Video-Slider-Darstellung mit Fokus auf
+                Klarheit, Ruhe und einer markanten Markenführung.
+              </p>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto pb-4 [scrollbar-width:none]">
+            <div className="flex snap-x snap-mandatory gap-4 md:gap-6">
+              {["/video1.mp4", "/video2.mp4", "/video3.mp4"].map((video, i) => (
+                <div
+                  key={video}
+                  className="min-w-[88%] snap-center md:min-w-[48%] lg:min-w-[36%]"
+                >
+                  <div className="overflow-hidden rounded-[4px] border border-neutral-200 bg-white shadow-sm">
+                    <div className="relative aspect-video bg-black">
+                      <video
+                        src={video}
+                        controls
+                        playsInline
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between border-t border-neutral-200 px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <button
+                          aria-label={`Vorheriges Video ${i + 1}`}
+                          className="flex h-9 w-9 items-center justify-center rounded-[4px] border border-neutral-200 bg-white text-[color:var(--brand)]"
+                          type="button"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        <button
+                          aria-label={`Nächstes Video ${i + 1}`}
+                          className="flex h-9 w-9 items-center justify-center rounded-[4px] border border-neutral-200 bg-white text-[color:var(--brand)]"
+                          type="button"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </div>
+
+                      <div className="mx-4 h-1 flex-1 rounded-full bg-neutral-200">
+                        <div
+                          className="h-1 rounded-full"
+                          style={{ width: `${(i + 1) * 25}%`, backgroundColor: brand }}
+                        />
+                      </div>
+
+                      <button
+                        aria-label={`Pause Video ${i + 1}`}
+                        className="rounded-[4px] px-3 py-2 text-sm font-semibold text-white"
+                        style={{ backgroundColor: brand }}
+                        type="button"
+                      >
+                        Pause
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Mirrored image + text */}
+      <section className="py-14 md:py-20">
+        <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
+          <div className="order-2 md:order-1">
+            <h2 className="text-3xl font-extrabold md:text-4xl">
+              Moderne Begleitung mit einem klaren Blick auf das Wesentliche
+            </h2>
+            <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">
+              Ein starker Prozess entsteht dort, wo Erfahrung, Struktur und ein
+              gutes Gespür für Menschen zusammenkommen. Ziel ist eine Umgebung,
+              in der Orientierung entsteht und Fortschritt möglich wird.
+            </p>
+
+            <div className="mt-6 space-y-3">
+              {bulletPoints.map((point) => (
+                <div key={point} className="flex items-start gap-3">
+                  <div
+                    className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
+                    style={{ backgroundColor: brand }}
+                  >
+                    <Check className="h-3.5 w-3.5 text-white" />
+                  </div>
+                  <p className="text-sm leading-7 text-[color:var(--graphite)]">
+                    {point}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8">
+              <Button
+                onClick={() => {
+                  const el = document.getElementById("quiz");
+                  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+                className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95"
+              >
+                Zum Quiz
+              </Button>
+            </div>
+          </div>
+
+          <div className="order-1 relative aspect-square overflow-hidden rounded-[4px] md:order-2">
+            <Image
+              src="/section-image-2.jpg"
+              alt="Moderne Begleitung"
+              fill
+              className="object-cover"
             />
-            <p className="text-sm text-gray-600 leading-relaxed">
-              Wir sind Dein Team für hochwertige Fotoboxen im Salzburger Land. Mit viel Liebe zum Detail,
-              zuverlässigem Service und echtem Party-Feeling sorgen wir für Erinnerungen, die bleiben.
+          </div>
+        </div>
+      </section>
+
+      {/* 4 cards accent + heading + button */}
+      <section className="py-14 md:py-20">
+        <div className={sectionWidth}>
+          <div className="mx-auto mb-10 max-w-2xl text-center">
+            <h2 className="text-3xl font-extrabold md:text-4xl">
+              Was die Zusammenarbeit besonders macht
+            </h2>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 md:gap-6">
+            {secondFeatureCards.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.title}
+                  className="rounded-[4px] px-5 py-7 text-center text-white"
+                  style={{ backgroundColor: brand }}
+                >
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[4px] border border-white/20 bg-white/10">
+                    <Icon className="h-7 w-7 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-white/90">
+                    {item.text}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-8 text-center">
+            <Button
+              onClick={() => {
+                const el = document.getElementById("quiz");
+                if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+              className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95"
+            >
+              Zum Quiz
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Centered flowing text */}
+      <section className="py-14 md:py-20">
+        <div className={sectionWidth}>
+          <div className="mx-auto max-w-4xl text-center">
+            <p className="text-lg leading-9 text-[color:var(--darkGray)] md:text-xl">
+              Gute Begleitung bedeutet, Menschen nicht nur fachlich
+              weiterzubringen, sondern ihnen auch Sicherheit, Orientierung und
+              Vertrauen zu geben. Genau daraus entsteht ein Umfeld, in dem
+              Entwicklung nicht erzwungen, sondern natürlich möglich wird.
             </p>
           </div>
         </div>
-      </footer>
-    </>
+      </section>
+
+      {/* Quiz import */}
+      <section id="quiz" className="scroll-mt-28 py-14 md:py-20">
+        <div className={sectionWidth}>
+          <Quiz />
+        </div>
+      </section>
+
+      {/* 2x video + quote layouts */}
+      <section className="py-14 md:py-20">
+        <div className={`${sectionWidth} space-y-12`}>
+          <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
+            <div className="overflow-hidden rounded-[4px] border border-neutral-200 bg-white">
+              <div className="relative aspect-video">
+                <video
+                  src="/review-video-1.mp4"
+                  controls
+                  playsInline
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            </div>
+
+            <div className="rounded-[4px] bg-neutral-100 p-8">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--brand)]">
+                Bewertung
+              </p>
+              <blockquote className="mt-4 text-2xl font-bold leading-relaxed text-[color:var(--graphite)]">
+                „Professionell, motivierend und dabei immer persönlich. Genau
+                die Unterstützung, die ich gebraucht habe.“
+              </blockquote>
+            </div>
+          </div>
+
+          <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
+            <div className="order-2 rounded-[4px] bg-neutral-100 p-8 md:order-1">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--brand)]">
+                Bewertung
+              </p>
+              <blockquote className="mt-4 text-2xl font-bold leading-relaxed text-[color:var(--graphite)]">
+                „Die Kombination aus Klarheit, Struktur und Menschlichkeit hat
+                für mich den entscheidenden Unterschied gemacht.“
+              </blockquote>
+            </div>
+
+            <div className="order-1 overflow-hidden rounded-[4px] border border-neutral-200 bg-white md:order-2">
+              <div className="relative aspect-video">
+                <video
+                  src="/review-video-2.mp4"
+                  controls
+                  playsInline
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Reviews */}
+      <section className="py-14 md:py-20">
+        <div className={sectionWidth}>
+          <div className="mx-auto mb-10 max-w-2xl text-center">
+            <h2 className="text-3xl font-extrabold md:text-4xl">
+              Du bist in bester Gesellschaft
+            </h2>
+          </div>
+
+          <div className="overflow-x-auto pb-4 [scrollbar-width:none] md:overflow-visible">
+            <div className="flex gap-4 md:grid md:grid-cols-3 md:gap-6">
+              {reviews.map((review, index) => (
+                <div
+                  key={index}
+                  className="min-w-[88%] rounded-[4px] bg-neutral-100 p-6 md:min-w-0"
+                >
+                  <div className="mb-4 flex items-center gap-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className="h-4 w-4 fill-[#D4AF37] text-[#D4AF37]"
+                      />
+                    ))}
+                  </div>
+                  <p className="text-sm leading-7 text-[color:var(--graphite)]">
+                    {review}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Final 3er grid */}
+      <section className="pb-20 pt-14 md:pb-24 md:pt-20">
+        <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-3 md:gap-10`}>
+          <div className="relative aspect-video overflow-hidden rounded-[4px]">
+            <Image
+              src="/final-image.jpg"
+              alt="Abschlussbild"
+              fill
+              className="object-cover"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <h2 className="text-3xl font-extrabold md:text-4xl">
+              Der nächste Schritt beginnt mit einer klaren Entscheidung
+            </h2>
+            <p className="mt-4 max-w-3xl text-base leading-8 text-[color:var(--lightGray)]">
+              Wenn du dir eine Begleitung wünschst, die modern, persönlich und
+              klar aufgebaut ist, dann ist jetzt ein guter Moment, den ersten
+              Schritt zu machen. Ein kurzer Einstieg über das Quiz reicht, um
+              den passenden nächsten Weg sichtbar zu machen.
+            </p>
+
+            <div className="mt-8">
+              <Button
+                onClick={() => {
+                  const el = document.getElementById("quiz");
+                  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+                className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95"
+              >
+                Zum Quiz
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
