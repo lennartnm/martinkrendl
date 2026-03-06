@@ -1,6 +1,5 @@
 // src/app/page.tsx
-// Server Component – lädt Texte aus Supabase CMS
-// Interaktive Teile (Videos) sind in VideoSection.tsx ausgelagert
+// Server Component – lädt alle Inhalte (Texte, Farben, Bilder, Videos, Links) aus Supabase CMS
 
 import type { CSSProperties } from "react";
 import Footer from '@/components/ui/Footer';
@@ -15,16 +14,14 @@ import {
   Trophy, Users, Video, MicVocal,
 } from "lucide-react";
 
-// ── Hilfsfunktion: CMS-Inhalte laden ─────────────────────────────────────────
+// ── CMS laden ─────────────────────────────────────────────────────────────────
 async function getContent(page: string): Promise<Record<string, string>> {
   try {
     const { data, error } = await supabase
       .from("cms_content")
       .select("section_key, field_key, value")
       .eq("page", page);
-
     if (error || !data) return {};
-
     const map: Record<string, string> = {};
     for (const entry of data) {
       map[`${entry.section_key}::${entry.field_key}`] = entry.value;
@@ -35,8 +32,43 @@ async function getContent(page: string): Promise<Record<string, string>> {
   }
 }
 
-// ── Fallback-Werte (werden genutzt wenn DB-Eintrag fehlt) ────────────────────
+// ── Fallbacks ─────────────────────────────────────────────────────────────────
 const FALLBACK: Record<string, string> = {
+  // Farben
+  "colors::brand":      "#884A4A",
+  "colors::graphite":   "#2F2F2F",
+  "colors::dark_gray":  "#4A4A4A",
+  "colors::light_gray": "#6B6B6B",
+  "colors::quiz_bg":    "#F7F7F7",
+  "colors::header_bg":  "#884A4A",
+  // Bilder
+  "images::hero":       "/martin-desktop.jpg",
+  "images::section1":   "/martin3.jpg",
+  "images::quote_bg":   "/martin-zitat.jpg",
+  "images::section2":   "/martin2.jpg",
+  "images::about":      "/martin1.jpg",
+  "images::final_cta":  "/martin5.png",
+  "images::logo1":      "/logo1.jpg",
+  "images::logo2":      "/logo2.jpg",
+  // Videos
+  "videos::carousel_1_src":       "/5030c62f-ea92-45de-bab1-7f8aeda2f40c.mp4",
+  "videos::carousel_1_thumb":     "/thumb11.jpg",
+  "videos::carousel_2_src":       "/85052189-16cf-4fe2-aa49-b46f0d96a05f.mp4",
+  "videos::carousel_2_thumb":     "/thumb22.jpg",
+  "videos::carousel_3_src":       "/80cd8f88-d573-43bb-8238-0eaf3066ca59.mp4",
+  "videos::carousel_3_thumb":     "/thumb33.jpg",
+  "videos::testimonial_1_src":    "/review-video-1.mp4",
+  "videos::testimonial_1_thumb":  "/review-video-1-thumb.jpg",
+  "videos::testimonial_2_src":    "/review-video-2.mp4",
+  "videos::testimonial_2_thumb":  "/review-video-2-thumb.jpg",
+  // Links
+  "links::header_cta":       "#quiz",
+  "links::hero_cta":         "#quiz",
+  "links::image_text_1_cta": "#quiz",
+  "links::image_text_2_cta": "#quiz",
+  "links::features_2_cta":   "#quiz",
+  "links::final_cta":        "#quiz",
+  // Texte
   "header::logo_text": "MARTIN KRENDL",
   "header::cta_label": "Kostenloses Kennenlernen",
   "hero::title": "Sing freier, sicherer und mit mehr Ausdruck",
@@ -49,7 +81,7 @@ const FALLBACK: Record<string, string> = {
   "feature_card_2::title": "Erprobte Methode",
   "feature_card_2::text": "Du arbeitest mit einer Methode, die vielen Menschen geholfen hat, freier, sicherer und klangvoller zu singen.",
   "feature_card_3::title": "Gesund und mit Gefühl singen",
-  "feature_card_3::text": "Mehr Klang, mehr Sicherheit und mehr Leichtigkeit – ohne unnötigen Druck auf die Stimme.",
+  "feature_card_3::text": "Mehr Klang, mehr Sicherheit und mehr Leichtigkeit \u2013 ohne unnötigen Druck auf die Stimme.",
   "image_text_1::title": "Deine Stimme kann mehr, als du vielleicht gerade glaubst",
   "image_text_1::text": "Viele Menschen kämpfen mit Unsicherheit, engen Höhen, fehlender Kraft oder dem Gefühl, nicht so zu klingen, wie sie es eigentlich möchten. Genau hier setzt der Gesangsunterricht an: verständlich, individuell und mit Fokus auf echte Veränderung.",
   "image_text_1::cta_label": "Jetzt kostenlos kennenlernen",
@@ -59,27 +91,27 @@ const FALLBACK: Record<string, string> = {
   "quote_section::label": "Meine Haltung im Unterricht",
   "quote_section::quote": "\u201eSingen soll nicht schwerer werden \u2013 sondern freier, ehrlicher und sicherer.\u201c",
   "video_section::title": "Hör und sieh selbst",
-  "video_section::text": "Die Videos zeigen mich direkt beim Singen – damit du ein Gefühl dafür bekommst, wer dich im Gesangsunterricht begleitet.",
+  "video_section::text": "Die Videos zeigen mich direkt beim Singen \u2013 damit du ein Gefühl dafür bekommst, wer dich im Gesangsunterricht begleitet.",
   "image_text_2::title": "Gesangsunterricht, der dich musikalisch und stimmlich weiterbringt",
-  "image_text_2::text": "Es geht nicht darum, dich in ein starres System zu pressen. Es geht darum, deine Stimme besser zu verstehen, Blockaden zu lösen und Stück für Stück freier zu singen – so, dass es sich gut, gesund und echt anfühlt.",
+  "image_text_2::text": "Es geht nicht darum, dich in ein starres System zu pressen. Es geht darum, deine Stimme besser zu verstehen, Blockaden zu lösen und Stück für Stück freier zu singen \u2013 so, dass es sich gut, gesund und echt anfühlt.",
   "image_text_2::cta_label": "Kostenloses Gespräch starten",
   "features_2_heading::title": "Was dich im Gesangsunterricht erwartet",
-  "features_2_heading::text": "Klarer Unterricht, persönliche Aufmerksamkeit und ein Ansatz, der sich an deiner Stimme orientiert – nicht an pauschalen Lösungen.",
+  "features_2_heading::text": "Klarer Unterricht, persönliche Aufmerksamkeit und ein Ansatz, der sich an deiner Stimme orientiert \u2013 nicht an pauschalen Lösungen.",
   "feature2_card_1::title": "Für jedes Level",
-  "feature2_card_1::text": "Ob Anfänger, Wiedereinsteiger oder Profi – du wirst dort abgeholt, wo du gerade stehst.",
+  "feature2_card_1::text": "Ob Anfänger, Wiedereinsteiger oder Profi \u2013 du wirst dort abgeholt, wo du gerade stehst.",
   "feature2_card_2::title": "Mit Erfahrung",
   "feature2_card_2::text": "Langjährige Unterrichts- und Bühnenerfahrung verbinden sich mit einem klaren Blick für deine nächsten Schritte.",
   "feature2_card_3::title": "Live oder online",
   "feature2_card_3::text": "Du kannst im Studio in Steyr oder unkompliziert via Zoom mit mir arbeiten.",
   "feature2_card_4::title": "Mit echter Freude",
-  "feature2_card_4::text": "Singen darf wirksam sein – und gleichzeitig leicht, lebendig und berührend bleiben.",
+  "feature2_card_4::text": "Singen darf wirksam sein \u2013 und gleichzeitig leicht, lebendig und berührend bleiben.",
   "flowing_text::text": "Ob du sicherer intonieren, freier in die Höhe kommen, kraftvoller klingen oder einfach wieder mit mehr Freude singen möchtest: Der nächste Schritt beginnt oft nicht mit mehr Druck, sondern mit dem richtigen Zugang zu deiner Stimme.",
   "testimonial_1::label": "Video-Testimonial",
   "testimonial_1::quote": "\u201eMartin Krendl ist ein absoluter Meister seines Fachs\u201c",
-  "testimonial_1::author": "– Robin D., Starvocal Coach",
+  "testimonial_1::author": "\u2013 Robin D., Starvocal Coach",
   "testimonial_2::label": "Video-Testimonial",
-  "testimonial_2::quote": "\u201eIch durfte schon mehrfach mit Martin auf der B\u00fchne stehen. Was der pr\u00e4sentiert ist wow\u201c",
-  "testimonial_2::author": "– Misha Kovar, Originalcast We Will Rock You, Tanz der Vampire, Evita, u.n.v.m.",
+  "testimonial_2::quote": "\u201eIch durfte schon mehrfach mit Martin auf der Bühne stehen. Was der präsentiert ist wow\u201c",
+  "testimonial_2::author": "\u2013 Misha Kovar, Originalcast We Will Rock You, Tanz der Vampire, Evita, u.n.v.m.",
   "about::label": "Über Martin",
   "about::title": "Von der eigenen Suche zur Arbeit mit Sängern",
   "about::text_1": "Mein eigener Wendepunkt kam, als mir Robin D. in kurzer Zeit etwas gezeigt hat, das ich nach Monaten bei anderen Lehrern nicht geschafft hatte. Diese Erfahrung hat meinen Blick auf Stimme, Technik und Unterricht grundlegend verändert.",
@@ -88,7 +120,7 @@ const FALLBACK: Record<string, string> = {
   "reviews::title": "Stimmen von Schülern",
   "review_1::text": "Egal ob Profi oder Hobby Musiker, jeder kann bei Martin was lernen. Er freut sich über deinen Erfolg und ist einfach ein wirklich cooler Typ. Habe keine Minute bereut, die ich bei ihm Unterricht hatte. 100% Empfehlung!!",
   "review_1::author": "Angelika Spitzbart",
-  "review_2::text": "Martin ist ein sehr geduldiger, wertsch\u00e4tzender Vollblutmusiker und Lehrer ... Alles, was ich bei ihm lernen durfte ist abgespeichert ... die Liebe und der Mut zum Selbstmusizieren ist wieder da!!",
+  "review_2::text": "Martin ist ein sehr geduldiger, wertschätzender Vollblutmusiker und Lehrer ... Alles, was ich bei ihm lernen durfte ist abgespeichert ... die Liebe und der Mut zum Selbstmusizieren ist wieder da!!",
   "review_2::author": "Birgit Baumgartner",
   "review_3::text": "Martin Krendl ist ein Könner auf seinem Gebiet! Ob Cajon oder Gesang, er ist der Experte! Nicht nur was er einem beibringt, sondern auch wie er lehrt ist einfach PERFEKT!!!! Man merkt er ist bei jedem Schüler mit Herz und Seele bei der Sache.",
   "review_3::author": "Marianne Falkner",
@@ -97,25 +129,40 @@ const FALLBACK: Record<string, string> = {
   "final_cta::cta_label": "Jetzt Kennenlerngespräch anfragen",
 };
 
-// ── Konstanten (nicht editierbar – Logos, Icons, Videos) ─────────────────────
-const brand = "#884A4A";
-const graphite = "#2F2F2F";
-const darkGray = "#4A4A4A";
-const lightGray = "#6B6B6B";
-const quizBg = "#F7F7F7";
-const sectionWidth = "mx-auto w-full max-w-[1200px] px-4 md:px-6";
-
-const logos = ["/logo1.jpg", "/logo2.jpg"];
-
 const featureIcons = [GraduationCap, Trophy, ShieldCheck];
 const secondFeatureIcons = [Users, Award, Video, MicVocal];
+const sectionWidth = "mx-auto w-full max-w-[1200px] px-4 md:px-6";
 
-// ── Seite ─────────────────────────────────────────────────────────────────────
+// ── Bild-Wrapper der sowohl lokale als auch Supabase-URLs unterstützt ─────────
+function CmsImage({ src, alt, fill, width, height, className, priority }: {
+  src: string; alt: string; fill?: boolean;
+  width?: number; height?: number;
+  className?: string; priority?: boolean;
+}) {
+  const isExternal = src.startsWith('http');
+  if (fill) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return isExternal
+      ? <img src={src} alt={alt} className={`absolute inset-0 h-full w-full ${className || ''}`} style={{ objectFit: 'cover' }} />
+      : <Image src={src} alt={alt} fill className={className} priority={priority} />;
+  }
+  return isExternal
+    // eslint-disable-next-line @next/next/no-img-element
+    ? <img src={src} alt={alt} width={width} height={height} className={className} />
+    : <Image src={src} alt={alt} width={width || 180} height={height || 80} className={className} />;
+}
+
 export default async function Page() {
   const cms = await getContent("home");
-
-  // Hilfsfunktion: CMS-Wert oder Fallback
   const c = (key: string) => cms[key] ?? FALLBACK[key] ?? "";
+
+  // Farben aus CMS
+  const brandColor   = c("colors::brand");
+  const graphite     = c("colors::graphite");
+  const darkGray     = c("colors::dark_gray");
+  const lightGray    = c("colors::light_gray");
+  const quizBg       = c("colors::quiz_bg");
+  const headerBg     = c("colors::header_bg");
 
   const bulletPoints = [c("image_text_1::bullet_1"), c("image_text_1::bullet_2"), c("image_text_1::bullet_3")];
 
@@ -140,8 +187,14 @@ export default async function Page() {
 
   return (
     <main
-      className="min-h-screen bg-white text-[color:var(--graphite)]"
-      style={{ "--brand": brand, "--graphite": graphite, "--darkGray": darkGray, "--lightGray": lightGray, "--quizBg": quizBg } as CSSProperties}
+      className="min-h-screen bg-white"
+      style={{
+        "--brand": brandColor,
+        "--graphite": graphite,
+        "--darkGray": darkGray,
+        "--lightGray": lightGray,
+        "--quizBg": quizBg,
+      } as CSSProperties}
     >
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap');
@@ -154,16 +207,15 @@ export default async function Page() {
         input[type='range']::-moz-range-thumb { height: 14px; width: 14px; border: 2px solid white; border-radius: 9999px; background: var(--brand); cursor: pointer; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
       `}</style>
 
-       <TopHeader />
-
+      <TopHeader />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-white/10" style={{ backgroundColor: brand }}>
+      <header className="sticky top-0 z-50 border-b border-white/10" style={{ backgroundColor: headerBg }}>
         <div className={`${sectionWidth} flex h-20 items-center justify-between`}>
           <div className="text-left text-lg font-extrabold tracking-[0.18em] text-white md:text-xl">
             {c("header::logo_text")}
           </div>
-          <a href="#quiz">
+          <a href={c("links::header_cta")}>
             <Button variant="secondary" className="rounded-[4px] px-6 py-3 font-semibold text-white">
               {c("header::cta_label")}
             </Button>
@@ -174,29 +226,23 @@ export default async function Page() {
       {/* Hero */}
       <section className="relative">
         <div className="relative aspect-square w-full md:aspect-[16/6]">
-          <Image src="/martin-desktop.jpg" alt="Martin Krendl beim Singen" fill priority className="object-cover" />
+          <CmsImage src={c("images::hero")} alt="Martin Krendl beim Singen" fill className="object-cover" priority />
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/10" />
           <div className="absolute inset-x-0 bottom-0">
             <div className={`${sectionWidth} pb-10 md:pb-14`}>
               <div className="mx-auto max-w-4xl text-center text-white">
-                <h1 className="text-3xl font-extrabold leading-tight md:text-5xl">
-                  {c("hero::title")}
-                </h1>
-                <p className="mt-4 text-sm text-white/85 md:text-lg">
-                  {c("hero::subtitle")}
-                </p>
+                <h1 className="text-3xl font-extrabold leading-tight md:text-5xl">{c("hero::title")}</h1>
+                <p className="mt-4 text-sm text-white/85 md:text-lg">{c("hero::subtitle")}</p>
                 <div className="mt-6">
-                  <a href="#quiz">
-                    <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+                  <a href={c("links::hero_cta")}>
+                    <Button className="rounded-[4px] px-6 py-3 font-semibold text-white hover:opacity-95" style={{ backgroundColor: brandColor }}>
                       {c("hero::cta_label")}
                     </Button>
                   </a>
                 </div>
                 <div className="mt-4 flex flex-col items-center justify-center gap-2">
                   <div className="flex items-center gap-1">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className="h-5 w-5 fill-[#D4AF37] text-[#D4AF37]" />
-                    ))}
+                    {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="h-5 w-5 fill-[#D4AF37] text-[#D4AF37]" />)}
                   </div>
                   <p className="text-sm font-semibold text-white/90">{c("hero::social_proof")}</p>
                 </div>
@@ -206,18 +252,18 @@ export default async function Page() {
         </div>
       </section>
 
-      {/* Logo Section */}
+      {/* Logos */}
       <section className="py-12 md:py-14">
         <div className={sectionWidth}>
           <div className="mx-auto mb-8 max-w-3xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--brand)]">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: brandColor }}>
               {c("logos_section::label")}
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
-            {logos.map((logo, index) => (
-              <div key={logo} className="flex h-28 w-[min(100%,260px)] items-center justify-center rounded-[4px] border border-neutral-200 bg-white p-4 md:h-32">
-                <Image src={logo} alt={`Logo ${index + 1}`} width={180} height={80} className="max-h-14 w-auto object-contain md:max-h-16" />
+            {[c("images::logo1"), c("images::logo2")].map((logo, index) => (
+              <div key={index} className="flex h-28 w-[min(100%,260px)] items-center justify-center rounded-[4px] border border-neutral-200 bg-white p-4 md:h-32">
+                <CmsImage src={logo} alt={`Logo ${index + 1}`} width={180} height={80} className="max-h-14 w-auto object-contain md:max-h-16" />
               </div>
             ))}
           </div>
@@ -231,7 +277,7 @@ export default async function Page() {
             {featureCards.map((item) => {
               const Icon = item.icon;
               return (
-                <div key={item.title} className="rounded-[4px] px-6 py-8 text-center text-white" style={{ backgroundColor: brand }}>
+                <div key={item.title} className="rounded-[4px] px-6 py-8 text-center text-white" style={{ backgroundColor: brandColor }}>
                   <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[4px] border border-white/20 bg-white/10">
                     <Icon className="h-7 w-7 text-white" />
                   </div>
@@ -248,24 +294,24 @@ export default async function Page() {
       <section className="py-14 md:py-20">
         <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
           <div className="relative aspect-square overflow-hidden rounded-[4px]">
-            <Image src="/martin3.jpg" alt="Gesangsunterricht mit Martin Krendl" fill className="object-cover" />
+            <CmsImage src={c("images::section1")} alt="Gesangsunterricht mit Martin Krendl" fill className="object-cover" />
           </div>
           <div>
             <h2 className="text-3xl font-extrabold md:text-4xl">{c("image_text_1::title")}</h2>
-            <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">{c("image_text_1::text")}</p>
+            <p className="mt-4 text-base leading-8" style={{ color: lightGray }}>{c("image_text_1::text")}</p>
             <div className="mt-6 space-y-3">
               {bulletPoints.map((point) => (
                 <div key={point} className="flex items-start gap-3">
-                  <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: brand }}>
+                  <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: brandColor }}>
                     <Check className="h-3.5 w-3.5 text-white" />
                   </div>
-                  <p className="text-sm leading-7 text-[color:var(--graphite)]">{point}</p>
+                  <p className="text-sm leading-7" style={{ color: graphite }}>{point}</p>
                 </div>
               ))}
             </div>
             <div className="mt-8">
-              <a href="#quiz">
-                <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+              <a href={c("links::image_text_1_cta")}>
+                <Button className="rounded-[4px] px-6 py-3 font-semibold text-white hover:opacity-95" style={{ backgroundColor: brandColor }}>
                   {c("image_text_1::cta_label")}
                 </Button>
               </a>
@@ -277,7 +323,7 @@ export default async function Page() {
       {/* Quote Image */}
       <section className="py-14 md:py-20">
         <div className="relative aspect-[4/5] w-full overflow-hidden md:aspect-[16/6]">
-          <Image src="/martin-zitat.jpg" alt="Martin Krendl beim Singen" fill className="object-cover" />
+          <CmsImage src={c("images::quote_bg")} alt="Martin Krendl" fill className="object-cover" />
           <div className="absolute inset-0 bg-black/45" />
           <div className={`${sectionWidth} absolute inset-0 flex items-center`}>
             <div className="max-w-3xl">
@@ -290,35 +336,44 @@ export default async function Page() {
         </div>
       </section>
 
-      {/* Video Carousel – Client Component */}
-      <VideoCarousel title={c("video_section::title")} text={c("video_section::text")} />
+      {/* Video Carousel */}
+      <VideoCarousel
+        title={c("video_section::title")}
+        text={c("video_section::text")}
+        brandColor={brandColor}
+        videos={[
+          { src: c("videos::carousel_1_src"), thumbnail: c("videos::carousel_1_thumb") },
+          { src: c("videos::carousel_2_src"), thumbnail: c("videos::carousel_2_thumb") },
+          { src: c("videos::carousel_3_src"), thumbnail: c("videos::carousel_3_thumb") },
+        ]}
+      />
 
       {/* Image + Text 2 */}
       <section className="py-14 md:py-20">
         <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
           <div className="order-2 md:order-1">
             <h2 className="text-3xl font-extrabold md:text-4xl">{c("image_text_2::title")}</h2>
-            <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">{c("image_text_2::text")}</p>
+            <p className="mt-4 text-base leading-8" style={{ color: lightGray }}>{c("image_text_2::text")}</p>
             <div className="mt-6 space-y-3">
               {bulletPoints.map((point) => (
                 <div key={point} className="flex items-start gap-3">
-                  <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: brand }}>
+                  <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: brandColor }}>
                     <Check className="h-3.5 w-3.5 text-white" />
                   </div>
-                  <p className="text-sm leading-7 text-[color:var(--graphite)]">{point}</p>
+                  <p className="text-sm leading-7" style={{ color: graphite }}>{point}</p>
                 </div>
               ))}
             </div>
             <div className="mt-8">
-              <a href="#quiz">
-                <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+              <a href={c("links::image_text_2_cta")}>
+                <Button className="rounded-[4px] px-6 py-3 font-semibold text-white hover:opacity-95" style={{ backgroundColor: brandColor }}>
                   {c("image_text_2::cta_label")}
                 </Button>
               </a>
             </div>
           </div>
           <div className="order-1 relative aspect-square overflow-hidden rounded-[4px] md:order-2">
-            <Image src="/martin2.jpg" alt="Martin Krendl im Gesangsunterricht" fill className="object-cover" />
+            <CmsImage src={c("images::section2")} alt="Martin Krendl im Gesangsunterricht" fill className="object-cover" />
           </div>
         </div>
       </section>
@@ -328,13 +383,13 @@ export default async function Page() {
         <div className={sectionWidth}>
           <div className="mx-auto mb-10 max-w-3xl text-center">
             <h2 className="text-3xl font-extrabold md:text-4xl">{c("features_2_heading::title")}</h2>
-            <p className="mt-4 text-[color:var(--lightGray)]">{c("features_2_heading::text")}</p>
+            <p className="mt-4" style={{ color: lightGray }}>{c("features_2_heading::text")}</p>
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 md:gap-6">
             {secondFeatureCards.map((item) => {
               const Icon = item.icon;
               return (
-                <div key={item.title} className="rounded-[4px] px-5 py-7 text-center text-white" style={{ backgroundColor: brand }}>
+                <div key={item.title} className="rounded-[4px] px-5 py-7 text-center text-white" style={{ backgroundColor: brandColor }}>
                   <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[4px] border border-white/20 bg-white/10">
                     <Icon className="h-7 w-7 text-white" />
                   </div>
@@ -345,8 +400,8 @@ export default async function Page() {
             })}
           </div>
           <div className="mt-8 text-center">
-            <a href="#quiz">
-              <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+            <a href={c("links::features_2_cta")}>
+              <Button className="rounded-[4px] px-6 py-3 font-semibold text-white hover:opacity-95" style={{ backgroundColor: brandColor }}>
                 Zum Kennenlern-Quiz
               </Button>
             </a>
@@ -358,38 +413,37 @@ export default async function Page() {
       <section className="py-14 md:py-20">
         <div className={sectionWidth}>
           <div className="mx-auto max-w-4xl text-center">
-            <p className="text-lg leading-9 text-[color:var(--darkGray)] md:text-xl">
-              {c("flowing_text::text")}
-            </p>
+            <p className="text-lg leading-9 md:text-xl" style={{ color: darkGray }}>{c("flowing_text::text")}</p>
           </div>
         </div>
       </section>
 
       {/* Quiz */}
       <section id="quiz" className="scroll-mt-28 py-14 md:py-20" style={{ backgroundColor: quizBg }}>
-        <div className={sectionWidth}>
-          <Quiz />
-        </div>
+        <div className={sectionWidth}><Quiz /></div>
       </section>
 
-      {/* Testimonial Videos – Client Component */}
+      {/* Testimonial Videos */}
       <TestimonialVideos
         t1label={c("testimonial_1::label")} t1quote={c("testimonial_1::quote")} t1author={c("testimonial_1::author")}
+        t1src={c("videos::testimonial_1_src")} t1thumb={c("videos::testimonial_1_thumb")}
         t2label={c("testimonial_2::label")} t2quote={c("testimonial_2::quote")} t2author={c("testimonial_2::author")}
+        t2src={c("videos::testimonial_2_src")} t2thumb={c("videos::testimonial_2_thumb")}
+        brandColor={brandColor}
       />
 
       {/* About */}
       <section className="py-14 md:py-20">
         <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
           <div className="relative aspect-square overflow-hidden rounded-[4px]">
-            <Image src="/martin1.jpg" alt="Martin Krendl Portrait" fill className="object-cover" />
+            <CmsImage src={c("images::about")} alt="Martin Krendl Portrait" fill className="object-cover" />
           </div>
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--brand)]">{c("about::label")}</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: brandColor }}>{c("about::label")}</p>
             <h2 className="mt-3 text-3xl font-extrabold md:text-4xl">{c("about::title")}</h2>
-            <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">{c("about::text_1")}</p>
-            <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">{c("about::text_2")}</p>
-            <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">{c("about::text_3")}</p>
+            <p className="mt-4 text-base leading-8" style={{ color: lightGray }}>{c("about::text_1")}</p>
+            <p className="mt-4 text-base leading-8" style={{ color: lightGray }}>{c("about::text_2")}</p>
+            <p className="mt-4 text-base leading-8" style={{ color: lightGray }}>{c("about::text_3")}</p>
           </div>
         </div>
       </section>
@@ -405,12 +459,10 @@ export default async function Page() {
               {reviews.map((review, index) => (
                 <div key={index} className="min-w-[88%] rounded-[4px] bg-neutral-100 p-6 md:min-w-0">
                   <div className="mb-4 flex items-center gap-1">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-[#D4AF37] text-[#D4AF37]" />
-                    ))}
+                    {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="h-4 w-4 fill-[#D4AF37] text-[#D4AF37]" />)}
                   </div>
-                  <p className="text-sm leading-7 text-[color:var(--graphite)]">{review.text}</p>
-                  <p className="mt-4 text-sm font-semibold text-[color:var(--brand)]">– {review.author}</p>
+                  <p className="text-sm leading-7" style={{ color: graphite }}>{review.text}</p>
+                  <p className="mt-4 text-sm font-semibold" style={{ color: brandColor }}>– {review.author}</p>
                 </div>
               ))}
             </div>
@@ -422,13 +474,13 @@ export default async function Page() {
       <section className="pb-20 pt-14 md:pb-24 md:pt-20">
         <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-3 md:gap-10`}>
           <div className="relative aspect-video overflow-hidden rounded-[4px]">
-            <Image src="/martin5.png" alt="Gesangsunterricht in Steyr" fill className="object-cover" />
+            <CmsImage src={c("images::final_cta")} alt="Gesangsunterricht in Steyr" fill className="object-cover" />
           </div>
           <div className="md:col-span-2">
             <h2 className="text-3xl font-extrabold md:text-4xl">{c("final_cta::title")}</h2>
-            <p className="mt-4 max-w-3xl text-base leading-8 text-[color:var(--lightGray)]">{c("final_cta::text")}</p>
+            <p className="mt-4 max-w-3xl text-base leading-8" style={{ color: lightGray }}>{c("final_cta::text")}</p>
             <div className="mt-8">
-              <a href="#quiz">
+              <a href={c("links::final_cta")}>
                 <Button variant="secondary" className="rounded-[4px] px-6 py-3 font-semibold text-white">
                   {c("final_cta::cta_label")}
                 </Button>
@@ -438,8 +490,7 @@ export default async function Page() {
         </div>
       </section>
 
- <Footer />
-      
+      <Footer />
     </main>
   );
 }
