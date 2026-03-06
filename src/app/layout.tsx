@@ -9,8 +9,8 @@ import CookieBanner from '@/components/CookieBanner';
 import MarketingPixels from '@/components/MarketingPixels';
 
 export const metadata: Metadata = {
-  title: 'Fotoboxen Event im Salzburger Raum',
-  description: 'Jetzt Fotobox für Deine Feier anfordern',
+  title: 'Voiceation Steyr by Martin Krendl',
+  description: 'Jetzt Probestunde anfordern',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
