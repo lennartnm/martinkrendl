@@ -1,0 +1,437 @@
+// src/app/page.tsx
+// Server Component – lädt Texte aus Supabase CMS
+// Interaktive Teile (Videos) sind in VideoSection.tsx ausgelagert
+
+import type { CSSProperties } from "react";
+import Image from "next/image";
+import { Button } from "@/components/ui/Button";
+import Quiz from "@/components/quiz";
+import { VideoCarousel, TestimonialVideos } from "@/app/components/VideoSection";
+import { supabase } from "@/lib/supabase";
+import {
+  Award, Check, GraduationCap, ShieldCheck, Star,
+  Trophy, Users, Video, MicVocal,
+} from "lucide-react";
+
+// ── Hilfsfunktion: CMS-Inhalte laden ─────────────────────────────────────────
+async function getContent(page: string): Promise<Record<string, string>> {
+  try {
+    const { data, error } = await supabase
+      .from("cms_content")
+      .select("section_key, field_key, value")
+      .eq("page", page);
+
+    if (error || !data) return {};
+
+    const map: Record<string, string> = {};
+    for (const entry of data) {
+      map[`${entry.section_key}::${entry.field_key}`] = entry.value;
+    }
+    return map;
+  } catch {
+    return {};
+  }
+}
+
+// ── Fallback-Werte (werden genutzt wenn DB-Eintrag fehlt) ────────────────────
+const FALLBACK: Record<string, string> = {
+  "header::logo_text": "MARTIN KRENDL",
+  "header::cta_label": "Kostenloses Kennenlernen",
+  "hero::title": "Sing freier, sicherer und mit mehr Ausdruck",
+  "hero::subtitle": "Lerne mit der Voiceation Methode bekannter Stars, wie du deine Stimme auf ein neues Level heben kannst.",
+  "hero::cta_label": "Unverbindliche Probestunde anfragen",
+  "hero::social_proof": "100+ Schüler vor Ort & online",
+  "logos_section::label": "Bekannt aus Unterricht, Bühne und Ausbildung",
+  "feature_card_1::title": "Individueller Gesangsunterricht",
+  "feature_card_1::text": "Kein Unterricht von der Stange, sondern ein klar auf dich und deine Stimme abgestimmter Weg.",
+  "feature_card_2::title": "Erprobte Methode",
+  "feature_card_2::text": "Du arbeitest mit einer Methode, die vielen Menschen geholfen hat, freier, sicherer und klangvoller zu singen.",
+  "feature_card_3::title": "Gesund und mit Gefühl singen",
+  "feature_card_3::text": "Mehr Klang, mehr Sicherheit und mehr Leichtigkeit – ohne unnötigen Druck auf die Stimme.",
+  "image_text_1::title": "Deine Stimme kann mehr, als du vielleicht gerade glaubst",
+  "image_text_1::text": "Viele Menschen kämpfen mit Unsicherheit, engen Höhen, fehlender Kraft oder dem Gefühl, nicht so zu klingen, wie sie es eigentlich möchten. Genau hier setzt der Gesangsunterricht an: verständlich, individuell und mit Fokus auf echte Veränderung.",
+  "image_text_1::cta_label": "Jetzt kostenlos kennenlernen",
+  "image_text_1::bullet_1": "Mehr Stimmumfang und mehr Sicherheit in der Höhe",
+  "image_text_1::bullet_2": "Klarerer, kräftigerer Klang ohne unnötige Anstrengung",
+  "image_text_1::bullet_3": "Persönliche Begleitung mit ehrlichem Feedback und klaren Schritten",
+  "quote_section::label": "Meine Haltung im Unterricht",
+  "quote_section::quote": "„Singen soll nicht schwerer werden – sondern freier, ehrlicher und sicherer."",
+  "video_section::title": "Hör und sieh selbst",
+  "video_section::text": "Die Videos zeigen mich direkt beim Singen – damit du ein Gefühl dafür bekommst, wer dich im Gesangsunterricht begleitet.",
+  "image_text_2::title": "Gesangsunterricht, der dich musikalisch und stimmlich weiterbringt",
+  "image_text_2::text": "Es geht nicht darum, dich in ein starres System zu pressen. Es geht darum, deine Stimme besser zu verstehen, Blockaden zu lösen und Stück für Stück freier zu singen – so, dass es sich gut, gesund und echt anfühlt.",
+  "image_text_2::cta_label": "Kostenloses Gespräch starten",
+  "features_2_heading::title": "Was dich im Gesangsunterricht erwartet",
+  "features_2_heading::text": "Klarer Unterricht, persönliche Aufmerksamkeit und ein Ansatz, der sich an deiner Stimme orientiert – nicht an pauschalen Lösungen.",
+  "feature2_card_1::title": "Für jedes Level",
+  "feature2_card_1::text": "Ob Anfänger, Wiedereinsteiger oder Profi – du wirst dort abgeholt, wo du gerade stehst.",
+  "feature2_card_2::title": "Mit Erfahrung",
+  "feature2_card_2::text": "Langjährige Unterrichts- und Bühnenerfahrung verbinden sich mit einem klaren Blick für deine nächsten Schritte.",
+  "feature2_card_3::title": "Live oder online",
+  "feature2_card_3::text": "Du kannst im Studio in Steyr oder unkompliziert via Zoom mit mir arbeiten.",
+  "feature2_card_4::title": "Mit echter Freude",
+  "feature2_card_4::text": "Singen darf wirksam sein – und gleichzeitig leicht, lebendig und berührend bleiben.",
+  "flowing_text::text": "Ob du sicherer intonieren, freier in die Höhe kommen, kraftvoller klingen oder einfach wieder mit mehr Freude singen möchtest: Der nächste Schritt beginnt oft nicht mit mehr Druck, sondern mit dem richtigen Zugang zu deiner Stimme.",
+  "testimonial_1::label": "Video-Testimonial",
+  "testimonial_1::quote": "„Martin Krendl ist ein absoluter Meister seines Fachs"",
+  "testimonial_1::author": "– Robin D., Starvocal Coach",
+  "testimonial_2::label": "Video-Testimonial",
+  "testimonial_2::quote": "„Ich durfte schon mehrfach mit Martin auf der Bühne stehen. Was der präsentiert ist wow"",
+  "testimonial_2::author": "– Misha Kovar, Originalcast We Will Rock You, Tanz der Vampire, Evita, u.n.v.m.",
+  "about::label": "Über Martin",
+  "about::title": "Von der eigenen Suche zur Arbeit mit Sängern",
+  "about::text_1": "Mein eigener Wendepunkt kam, als mir Robin D. in kurzer Zeit etwas gezeigt hat, das ich nach Monaten bei anderen Lehrern nicht geschafft hatte. Diese Erfahrung hat meinen Blick auf Stimme, Technik und Unterricht grundlegend verändert.",
+  "about::text_2": "2009 begann meine Ausbildung, 2012 eröffnete ich mein eigenes Voiceation Studio. Heute arbeite ich mit Anfängern, Fortgeschrittenen und Profis, gebe Workshops für Chöre und Ensembles und unterrichte live im Studio oder via Zoom.",
+  "about::text_3": "Mir ist wichtig, dass Menschen nicht nur „besser singen", sondern ihre Stimme mit mehr Vertrauen, Freiheit und Freude erleben.",
+  "reviews::title": "Stimmen von Schülern",
+  "review_1::text": "Egal ob Profi oder Hobby Musiker, jeder kann bei Martin was lernen. Er freut sich über deinen Erfolg und ist einfach ein wirklich cooler Typ. Habe keine Minute bereut, die ich bei ihm Unterricht hatte. 100% Empfehlung!!",
+  "review_1::author": "Angelika Spitzbart",
+  "review_2::text": "Martin ist ein sehr geduldiger, wertschätzender Vollblutmusiker und Lehrer ... Alles, was ich bei ihm lernen durfte ist abgespeichert ... die Liebe und der Mut zum \"Selbstmusizieren\" ist wieder da!!",
+  "review_2::author": "Birgit Baumgartner",
+  "review_3::text": "Martin Krendl ist ein Könner auf seinem Gebiet! Ob Cajon oder Gesang, er ist der Experte! Nicht nur was er einem beibringt, sondern auch wie er lehrt ist einfach PERFEKT!!!! Man merkt er ist bei jedem Schüler mit Herz und Seele bei der Sache.",
+  "review_3::author": "Marianne Falkner",
+  "final_cta::title": "Lass uns gemeinsam schauen, was in deiner Stimme steckt",
+  "final_cta::text": "Wenn du spürst, dass deine Stimme noch mehr kann, dann ist ein persönliches Kennenlerngespräch der beste erste Schritt. Ganz unkompliziert, kostenlos und mit Blick darauf, was für dich gerade sinnvoll ist.",
+  "final_cta::cta_label": "Jetzt Kennenlerngespräch anfragen",
+};
+
+// ── Konstanten (nicht editierbar – Logos, Icons, Videos) ─────────────────────
+const brand = "#884A4A";
+const graphite = "#2F2F2F";
+const darkGray = "#4A4A4A";
+const lightGray = "#6B6B6B";
+const quizBg = "#F7F7F7";
+const sectionWidth = "mx-auto w-full max-w-[1200px] px-4 md:px-6";
+
+const logos = ["/logo1.jpg", "/logo2.jpg"];
+
+const featureIcons = [GraduationCap, Trophy, ShieldCheck];
+const secondFeatureIcons = [Users, Award, Video, MicVocal];
+
+// ── Seite ─────────────────────────────────────────────────────────────────────
+export default async function Page() {
+  const cms = await getContent("home");
+
+  // Hilfsfunktion: CMS-Wert oder Fallback
+  const c = (key: string) => cms[key] ?? FALLBACK[key] ?? "";
+
+  const bulletPoints = [c("image_text_1::bullet_1"), c("image_text_1::bullet_2"), c("image_text_1::bullet_3")];
+
+  const featureCards = [
+    { icon: featureIcons[0], title: c("feature_card_1::title"), text: c("feature_card_1::text") },
+    { icon: featureIcons[1], title: c("feature_card_2::title"), text: c("feature_card_2::text") },
+    { icon: featureIcons[2], title: c("feature_card_3::title"), text: c("feature_card_3::text") },
+  ];
+
+  const secondFeatureCards = [
+    { icon: secondFeatureIcons[0], title: c("feature2_card_1::title"), text: c("feature2_card_1::text") },
+    { icon: secondFeatureIcons[1], title: c("feature2_card_2::title"), text: c("feature2_card_2::text") },
+    { icon: secondFeatureIcons[2], title: c("feature2_card_3::title"), text: c("feature2_card_3::text") },
+    { icon: secondFeatureIcons[3], title: c("feature2_card_4::title"), text: c("feature2_card_4::text") },
+  ];
+
+  const reviews = [
+    { text: c("review_1::text"), author: c("review_1::author") },
+    { text: c("review_2::text"), author: c("review_2::author") },
+    { text: c("review_3::text"), author: c("review_3::author") },
+  ];
+
+  return (
+    <main
+      className="min-h-screen bg-white text-[color:var(--graphite)]"
+      style={{ "--brand": brand, "--graphite": graphite, "--darkGray": darkGray, "--lightGray": lightGray, "--quizBg": quizBg } as CSSProperties}
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap');
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Open Sans', sans-serif; color: var(--graphite); background: #ffffff; }
+        input[type='range'] { -webkit-appearance: none; appearance: none; background: transparent; }
+        input[type='range']::-webkit-slider-runnable-track { height: 4px; border-radius: 9999px; background: #e5e5e5; }
+        input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; margin-top: -5px; height: 14px; width: 14px; border-radius: 9999px; background: var(--brand); cursor: pointer; border: 2px solid white; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
+        input[type='range']::-moz-range-track { height: 4px; border-radius: 9999px; background: #e5e5e5; }
+        input[type='range']::-moz-range-thumb { height: 14px; width: 14px; border: 2px solid white; border-radius: 9999px; background: var(--brand); cursor: pointer; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
+      `}</style>
+
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b border-white/10" style={{ backgroundColor: brand }}>
+        <div className={`${sectionWidth} flex h-20 items-center justify-between`}>
+          <div className="text-left text-lg font-extrabold tracking-[0.18em] text-white md:text-xl">
+            {c("header::logo_text")}
+          </div>
+          <a href="#quiz">
+            <Button variant="secondary" className="rounded-[4px] px-6 py-3 font-semibold text-white">
+              {c("header::cta_label")}
+            </Button>
+          </a>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <section className="relative">
+        <div className="relative aspect-square w-full md:aspect-[16/6]">
+          <Image src="/martin-desktop.jpg" alt="Martin Krendl beim Singen" fill priority className="object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/10" />
+          <div className="absolute inset-x-0 bottom-0">
+            <div className={`${sectionWidth} pb-10 md:pb-14`}>
+              <div className="mx-auto max-w-4xl text-center text-white">
+                <h1 className="text-3xl font-extrabold leading-tight md:text-5xl">
+                  {c("hero::title")}
+                </h1>
+                <p className="mt-4 text-sm text-white/85 md:text-lg">
+                  {c("hero::subtitle")}
+                </p>
+                <div className="mt-6">
+                  <a href="#quiz">
+                    <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+                      {c("hero::cta_label")}
+                    </Button>
+                  </a>
+                </div>
+                <div className="mt-4 flex flex-col items-center justify-center gap-2">
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} className="h-5 w-5 fill-[#D4AF37] text-[#D4AF37]" />
+                    ))}
+                  </div>
+                  <p className="text-sm font-semibold text-white/90">{c("hero::social_proof")}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Logo Section */}
+      <section className="py-12 md:py-14">
+        <div className={sectionWidth}>
+          <div className="mx-auto mb-8 max-w-3xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--brand)]">
+              {c("logos_section::label")}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
+            {logos.map((logo, index) => (
+              <div key={logo} className="flex h-28 w-[min(100%,260px)] items-center justify-center rounded-[4px] border border-neutral-200 bg-white p-4 md:h-32">
+                <Image src={logo} alt={`Logo ${index + 1}`} width={180} height={80} className="max-h-14 w-auto object-contain md:max-h-16" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 3 Feature Cards */}
+      <section className="pt-8 pb-14 md:pt-10 md:pb-20">
+        <div className={sectionWidth}>
+          <div className="grid gap-4 md:grid-cols-3 md:gap-6">
+            {featureCards.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.title} className="rounded-[4px] px-6 py-8 text-center text-white" style={{ backgroundColor: brand }}>
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[4px] border border-white/20 bg-white/10">
+                    <Icon className="h-7 w-7 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-white/90">{item.text}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Image + Text 1 */}
+      <section className="py-14 md:py-20">
+        <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
+          <div className="relative aspect-square overflow-hidden rounded-[4px]">
+            <Image src="/martin3.jpg" alt="Gesangsunterricht mit Martin Krendl" fill className="object-cover" />
+          </div>
+          <div>
+            <h2 className="text-3xl font-extrabold md:text-4xl">{c("image_text_1::title")}</h2>
+            <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">{c("image_text_1::text")}</p>
+            <div className="mt-6 space-y-3">
+              {bulletPoints.map((point) => (
+                <div key={point} className="flex items-start gap-3">
+                  <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: brand }}>
+                    <Check className="h-3.5 w-3.5 text-white" />
+                  </div>
+                  <p className="text-sm leading-7 text-[color:var(--graphite)]">{point}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-8">
+              <a href="#quiz">
+                <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+                  {c("image_text_1::cta_label")}
+                </Button>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Quote Image */}
+      <section className="py-14 md:py-20">
+        <div className="relative aspect-[4/5] w-full overflow-hidden md:aspect-[16/6]">
+          <Image src="/martin-zitat.jpg" alt="Martin Krendl beim Singen" fill className="object-cover" />
+          <div className="absolute inset-0 bg-black/45" />
+          <div className={`${sectionWidth} absolute inset-0 flex items-center`}>
+            <div className="max-w-3xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">{c("quote_section::label")}</p>
+              <blockquote className="mt-4 text-2xl font-bold leading-relaxed text-white md:text-4xl">
+                {c("quote_section::quote")}
+              </blockquote>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Video Carousel – Client Component */}
+      <VideoCarousel title={c("video_section::title")} text={c("video_section::text")} />
+
+      {/* Image + Text 2 */}
+      <section className="py-14 md:py-20">
+        <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
+          <div className="order-2 md:order-1">
+            <h2 className="text-3xl font-extrabold md:text-4xl">{c("image_text_2::title")}</h2>
+            <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">{c("image_text_2::text")}</p>
+            <div className="mt-6 space-y-3">
+              {bulletPoints.map((point) => (
+                <div key={point} className="flex items-start gap-3">
+                  <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: brand }}>
+                    <Check className="h-3.5 w-3.5 text-white" />
+                  </div>
+                  <p className="text-sm leading-7 text-[color:var(--graphite)]">{point}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-8">
+              <a href="#quiz">
+                <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+                  {c("image_text_2::cta_label")}
+                </Button>
+              </a>
+            </div>
+          </div>
+          <div className="order-1 relative aspect-square overflow-hidden rounded-[4px] md:order-2">
+            <Image src="/martin2.jpg" alt="Martin Krendl im Gesangsunterricht" fill className="object-cover" />
+          </div>
+        </div>
+      </section>
+
+      {/* 4 Feature Cards */}
+      <section className="py-14 md:py-20">
+        <div className={sectionWidth}>
+          <div className="mx-auto mb-10 max-w-3xl text-center">
+            <h2 className="text-3xl font-extrabold md:text-4xl">{c("features_2_heading::title")}</h2>
+            <p className="mt-4 text-[color:var(--lightGray)]">{c("features_2_heading::text")}</p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 md:gap-6">
+            {secondFeatureCards.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.title} className="rounded-[4px] px-5 py-7 text-center text-white" style={{ backgroundColor: brand }}>
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[4px] border border-white/20 bg-white/10">
+                    <Icon className="h-7 w-7 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-white/90">{item.text}</p>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-8 text-center">
+            <a href="#quiz">
+              <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+                Zum Kennenlern-Quiz
+              </Button>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Flowing Text */}
+      <section className="py-14 md:py-20">
+        <div className={sectionWidth}>
+          <div className="mx-auto max-w-4xl text-center">
+            <p className="text-lg leading-9 text-[color:var(--darkGray)] md:text-xl">
+              {c("flowing_text::text")}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Quiz */}
+      <section id="quiz" className="scroll-mt-28 py-14 md:py-20" style={{ backgroundColor: quizBg }}>
+        <div className={sectionWidth}>
+          <Quiz />
+        </div>
+      </section>
+
+      {/* Testimonial Videos – Client Component */}
+      <TestimonialVideos
+        t1label={c("testimonial_1::label")} t1quote={c("testimonial_1::quote")} t1author={c("testimonial_1::author")}
+        t2label={c("testimonial_2::label")} t2quote={c("testimonial_2::quote")} t2author={c("testimonial_2::author")}
+      />
+
+      {/* About */}
+      <section className="py-14 md:py-20">
+        <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
+          <div className="relative aspect-square overflow-hidden rounded-[4px]">
+            <Image src="/martin1.jpg" alt="Martin Krendl Portrait" fill className="object-cover" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--brand)]">{c("about::label")}</p>
+            <h2 className="mt-3 text-3xl font-extrabold md:text-4xl">{c("about::title")}</h2>
+            <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">{c("about::text_1")}</p>
+            <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">{c("about::text_2")}</p>
+            <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">{c("about::text_3")}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Reviews */}
+      <section className="py-14 md:py-20">
+        <div className={sectionWidth}>
+          <div className="mx-auto mb-10 max-w-2xl text-center">
+            <h2 className="text-3xl font-extrabold md:text-4xl">{c("reviews::title")}</h2>
+          </div>
+          <div className="overflow-x-auto pb-4 [scrollbar-width:none] md:overflow-visible">
+            <div className="flex gap-4 md:grid md:grid-cols-3 md:gap-6">
+              {reviews.map((review, index) => (
+                <div key={index} className="min-w-[88%] rounded-[4px] bg-neutral-100 p-6 md:min-w-0">
+                  <div className="mb-4 flex items-center gap-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} className="h-4 w-4 fill-[#D4AF37] text-[#D4AF37]" />
+                    ))}
+                  </div>
+                  <p className="text-sm leading-7 text-[color:var(--graphite)]">{review.text}</p>
+                  <p className="mt-4 text-sm font-semibold text-[color:var(--brand)]">– {review.author}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="pb-20 pt-14 md:pb-24 md:pt-20">
+        <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-3 md:gap-10`}>
+          <div className="relative aspect-video overflow-hidden rounded-[4px]">
+            <Image src="/martin5.png" alt="Gesangsunterricht in Steyr" fill className="object-cover" />
+          </div>
+          <div className="md:col-span-2">
+            <h2 className="text-3xl font-extrabold md:text-4xl">{c("final_cta::title")}</h2>
+            <p className="mt-4 max-w-3xl text-base leading-8 text-[color:var(--lightGray)]">{c("final_cta::text")}</p>
+            <div className="mt-8">
+              <a href="#quiz">
+                <Button variant="secondary" className="rounded-[4px] px-6 py-3 font-semibold text-white">
+                  {c("final_cta::cta_label")}
+                </Button>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
