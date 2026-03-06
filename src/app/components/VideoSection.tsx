@@ -1,25 +1,11 @@
 "use client";
-
 // src/app/components/VideoSection.tsx
-// Alle Video-Interaktionen als Client Component ausgelagert
+// Empfängt Video-URLs und Brand-Farbe als Props vom Server (CMS-gesteuert)
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
 import { Pause, Play } from "lucide-react";
 
-const brand = "#884A4A";
-
-const carouselVideos = [
-  { src: "/5030c62f-ea92-45de-bab1-7f8aeda2f40c.mp4", thumbnail: "/thumb11.jpg" },
-  { src: "/85052189-16cf-4fe2-aa49-b46f0d96a05f.mp4", thumbnail: "/thumb22.jpg" },
-  { src: "/80cd8f88-d573-43bb-8238-0eaf3066ca59.mp4", thumbnail: "/thumb33.jpg" },
-];
-
-const testimonialVideos = [
-  { src: "/review-video-1.mp4", thumbnail: "/review-video-1-thumb.jpg" },
-  { src: "/review-video-2.mp4", thumbnail: "/review-video-2-thumb.jpg" },
-];
-
+type VideoEntry = { src: string; thumbnail: string };
 type VideoState = { duration: number; currentTime: number; isPlaying: boolean };
 
 function formatTime(value: number) {
@@ -29,34 +15,34 @@ function formatTime(value: number) {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-type ThumbnailVideoProps = {
-  src: string;
-  thumbnail: string;
-  alt: string;
-  className?: string;
-  videoClassName?: string;
-  controls?: boolean;
-  playsInline?: boolean;
-  preload?: "none" | "metadata" | "auto";
-  onVideoRef?: (el: HTMLVideoElement | null) => void;
-  onLoadedMetadata?: () => void;
-  onTimeUpdate?: () => void;
-  onPlay?: () => void;
-  onPause?: () => void;
-};
+// ── CmsImg: supports both local paths and full URLs ───────────────────────────
+function CmsImg({ src, alt, className }: { src: string; alt: string; className?: string }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt={alt} className={`absolute inset-0 h-full w-full object-cover ${className || ""}`} />
+  );
+}
 
+// ── ThumbnailVideo ────────────────────────────────────────────────────────────
 function ThumbnailVideo({
   src, thumbnail, alt, className = "", videoClassName = "",
   controls = false, playsInline = true, preload = "metadata",
   onVideoRef, onLoadedMetadata, onTimeUpdate, onPlay, onPause,
-}: ThumbnailVideoProps) {
+}: {
+  src: string; thumbnail: string; alt: string;
+  className?: string; videoClassName?: string;
+  controls?: boolean; playsInline?: boolean; preload?: "none" | "metadata" | "auto";
+  onVideoRef?: (el: HTMLVideoElement | null) => void;
+  onLoadedMetadata?: () => void; onTimeUpdate?: () => void;
+  onPlay?: () => void; onPause?: () => void;
+}) {
   const [showThumbnail, setShowThumbnail] = useState(true);
 
   return (
     <div className={`relative ${className}`}>
       {showThumbnail && (
         <div className="pointer-events-none absolute inset-0 z-10">
-          <Image src={thumbnail} alt={alt} fill className="object-cover" />
+          <CmsImg src={thumbnail} alt={alt} />
           <div className="absolute inset-0 bg-black/10" />
         </div>
       )}
@@ -78,23 +64,17 @@ function ThumbnailVideo({
   );
 }
 
+// ── CarouselVideoCard ─────────────────────────────────────────────────────────
 function CarouselVideoCard({
   video, index, state, brandColor, isActive,
-  onSelect, onTogglePlay, onSeek, onLoadedMetadata,
-  onTimeUpdate, onPlay, onPause, videoRef,
+  onSelect, onTogglePlay, onSeek,
+  onLoadedMetadata, onTimeUpdate, onPlay, onPause, videoRef,
 }: {
-  video: { src: string; thumbnail: string };
-  index: number;
-  state: VideoState;
-  brandColor: string;
-  isActive: boolean;
-  onSelect: () => void;
-  onTogglePlay: () => void;
-  onSeek: (value: number) => void;
-  onLoadedMetadata: () => void;
-  onTimeUpdate: () => void;
-  onPlay: () => void;
-  onPause: () => void;
+  video: VideoEntry; index: number; state: VideoState;
+  brandColor: string; isActive: boolean;
+  onSelect: () => void; onTogglePlay: () => void; onSeek: (v: number) => void;
+  onLoadedMetadata: () => void; onTimeUpdate: () => void;
+  onPlay: () => void; onPause: () => void;
   videoRef: (el: HTMLVideoElement | null) => void;
 }) {
   const duration = state.duration || 0;
@@ -126,8 +106,8 @@ function CarouselVideoCard({
           <div className="flex w-full items-center gap-3">
             <input
               type="range" min={0} max={duration || 0} step={0.1} value={currentTime}
-              onChange={(e) => onSeek(Number(e.target.value))}
-              className="w-full" aria-label={`Timeline Video ${index + 1}`}
+              onChange={(e) => onSeek(Number(e.target.value))} className="w-full"
+              aria-label={`Timeline Video ${index + 1}`}
             />
             <div className="min-w-[78px] text-right text-xs text-[color:var(--lightGray)]">
               {formatTime(currentTime)} / {formatTime(duration)}
@@ -139,20 +119,32 @@ function CarouselVideoCard({
   );
 }
 
-// ── Haupt-Export: Carousel ────────────────────────────────────────────────────
-export function VideoCarousel({ title, text }: { title: string; text: string }) {
+// ── VideoCarousel (export) ────────────────────────────────────────────────────
+export function VideoCarousel({
+  title, text, brandColor, videos,
+}: {
+  title: string; text: string; brandColor: string;
+  videos: VideoEntry[];
+}) {
   const sectionWidth = "mx-auto w-full max-w-[1200px] px-4 md:px-6";
   const [activeVideo, setActiveVideo] = useState(1);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const [videoStates, setVideoStates] = useState<VideoState[]>(
-    carouselVideos.map(() => ({ duration: 0, currentTime: 0, isPlaying: false }))
+    videos.map(() => ({ duration: 0, currentTime: 0, isPlaying: false }))
   );
 
+  // Sync state length if videos change
+  useEffect(() => {
+    setVideoStates(videos.map(() => ({ duration: 0, currentTime: 0, isPlaying: false })));
+  }, [videos.length]);
+
   const orderedVideos = useMemo(() => {
-    const leftIndex = (activeVideo - 1 + carouselVideos.length) % carouselVideos.length;
-    const rightIndex = (activeVideo + 1) % carouselVideos.length;
+    const len = videos.length;
+    if (len === 0) return [];
+    const leftIndex = (activeVideo - 1 + len) % len;
+    const rightIndex = (activeVideo + 1) % len;
     return [leftIndex, activeVideo, rightIndex];
-  }, [activeVideo]);
+  }, [activeVideo, videos.length]);
 
   const updateVideoState = (index: number, patch: Partial<VideoState>) => {
     setVideoStates((prev) => prev.map((item, i) => (i === index ? { ...item, ...patch } : item)));
@@ -161,10 +153,7 @@ export function VideoCarousel({ title, text }: { title: string; text: string }) 
   const handleLoadedMetadata = (index: number) => {
     const video = videoRefs.current[index];
     if (!video) return;
-    updateVideoState(index, {
-      duration: Number.isFinite(video.duration) ? video.duration : 0,
-      currentTime: video.currentTime || 0,
-    });
+    updateVideoState(index, { duration: Number.isFinite(video.duration) ? video.duration : 0, currentTime: video.currentTime || 0 });
   };
 
   const handleTimeUpdate = (index: number) => {
@@ -176,7 +165,7 @@ export function VideoCarousel({ title, text }: { title: string; text: string }) 
   const handleTogglePlay = async (index: number) => {
     const video = videoRefs.current[index];
     if (!video) return;
-    videoRefs.current.forEach((item, i) => { if (i !== index && item && !item.paused) item.pause(); });
+    videoRefs.current.forEach((v, i) => { if (i !== index && v && !v.paused) v.pause(); });
     if (video.paused) { try { await video.play(); } catch {} } else { video.pause(); }
   };
 
@@ -188,11 +177,10 @@ export function VideoCarousel({ title, text }: { title: string; text: string }) 
   };
 
   useEffect(() => {
-    videoRefs.current.forEach((video, index) => {
-      if (!video) return;
-      if (index !== activeVideo) video.pause();
-    });
+    videoRefs.current.forEach((video, index) => { if (video && index !== activeVideo) video.pause(); });
   }, [activeVideo]);
+
+  if (videos.length === 0) return null;
 
   return (
     <section className="py-14 md:py-20">
@@ -205,12 +193,15 @@ export function VideoCarousel({ title, text }: { title: string; text: string }) 
         {/* Mobile */}
         <div className="overflow-x-auto pb-4 [scrollbar-width:none] md:hidden">
           <div className="flex snap-x snap-mandatory gap-4">
-            {carouselVideos.map((video, i) => (
-              <div key={video.src} className="min-w-[88%] snap-center">
+            {videos.map((video, i) => (
+              <div key={`${video.src}-${i}`} className="min-w-[88%] snap-center">
                 <CarouselVideoCard
-                  video={video} index={i} state={videoStates[i]} brandColor={brand}
-                  isActive={activeVideo === i} onSelect={() => setActiveVideo(i)}
-                  onTogglePlay={() => handleTogglePlay(i)} onSeek={(v) => handleSeek(i, v)}
+                  video={video} index={i}
+                  state={videoStates[i] || { duration: 0, currentTime: 0, isPlaying: false }}
+                  brandColor={brandColor} isActive={activeVideo === i}
+                  onSelect={() => setActiveVideo(i)}
+                  onTogglePlay={() => handleTogglePlay(i)}
+                  onSeek={(v) => handleSeek(i, v)}
                   onLoadedMetadata={() => handleLoadedMetadata(i)}
                   onTimeUpdate={() => handleTimeUpdate(i)}
                   onPlay={() => updateVideoState(i, { isPlaying: true })}
@@ -226,7 +217,8 @@ export function VideoCarousel({ title, text }: { title: string; text: string }) 
         <div className="hidden md:block">
           <div className="flex items-center justify-center gap-4 lg:gap-6">
             {orderedVideos.map((videoIndex, position) => {
-              const video = carouselVideos[videoIndex];
+              const video = videos[videoIndex];
+              if (!video) return null;
               const isCenter = position === 1;
               return (
                 <div
@@ -234,8 +226,9 @@ export function VideoCarousel({ title, text }: { title: string; text: string }) 
                   className={`transition-all duration-300 ${isCenter ? "w-[52%] lg:w-[56%]" : "w-[24%] lg:w-[22%] cursor-pointer opacity-80 hover:opacity-100"}`}
                 >
                   <CarouselVideoCard
-                    video={video} index={videoIndex} state={videoStates[videoIndex]}
-                    brandColor={brand} isActive={isCenter}
+                    video={video} index={videoIndex}
+                    state={videoStates[videoIndex] || { duration: 0, currentTime: 0, isPlaying: false }}
+                    brandColor={brandColor} isActive={isCenter}
                     onSelect={() => setActiveVideo(videoIndex)}
                     onTogglePlay={() => handleTogglePlay(videoIndex)}
                     onSeek={(v) => handleSeek(videoIndex, v)}
@@ -250,12 +243,12 @@ export function VideoCarousel({ title, text }: { title: string; text: string }) 
             })}
           </div>
           <div className="mt-6 flex justify-center gap-2">
-            {carouselVideos.map((_, index) => (
+            {videos.map((_, index) => (
               <button
                 key={index} type="button" onClick={() => setActiveVideo(index)}
                 aria-label={`Video ${index + 1} auswählen`}
                 className={`h-2.5 rounded-full transition-all ${activeVideo === index ? "w-8" : "w-2.5"}`}
-                style={{ backgroundColor: activeVideo === index ? brand : "rgb(212 212 212)" }}
+                style={{ backgroundColor: activeVideo === index ? brandColor : "rgb(212 212 212)" }}
               />
             ))}
           </div>
@@ -265,13 +258,15 @@ export function VideoCarousel({ title, text }: { title: string; text: string }) 
   );
 }
 
-// ── Testimonial Videos ────────────────────────────────────────────────────────
+// ── TestimonialVideos (export) ────────────────────────────────────────────────
 export function TestimonialVideos({
-  t1label, t1quote, t1author,
-  t2label, t2quote, t2author,
+  t1label, t1quote, t1author, t1src, t1thumb,
+  t2label, t2quote, t2author, t2src, t2thumb,
+  brandColor,
 }: {
-  t1label: string; t1quote: string; t1author: string;
-  t2label: string; t2quote: string; t2author: string;
+  t1label: string; t1quote: string; t1author: string; t1src: string; t1thumb: string;
+  t2label: string; t2quote: string; t2author: string; t2src: string; t2thumb: string;
+  brandColor: string;
 }) {
   const sectionWidth = "mx-auto w-full max-w-[1200px] px-4 md:px-6";
 
@@ -282,14 +277,14 @@ export function TestimonialVideos({
           <div className="overflow-hidden rounded-[4px] border border-neutral-200 bg-white">
             <div className="relative aspect-video bg-black">
               <ThumbnailVideo
-                src={testimonialVideos[0].src} thumbnail={testimonialVideos[0].thumbnail}
-                alt="Vorschaubild Review Video 1" className="h-full w-full"
-                videoClassName="h-full w-full object-cover" controls preload="metadata"
+                src={t1src} thumbnail={t1thumb} alt="Review Video 1"
+                className="h-full w-full" videoClassName="h-full w-full object-cover"
+                controls preload="metadata"
               />
             </div>
           </div>
           <div className="rounded-[4px] bg-neutral-100 p-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--brand)]">{t1label}</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: brandColor }}>{t1label}</p>
             <blockquote className="mt-4 text-2xl font-bold leading-relaxed text-[color:var(--graphite)]">{t1quote}</blockquote>
             <p className="mt-4 text-sm leading-7 text-[color:var(--lightGray)]">{t1author}</p>
           </div>
@@ -297,16 +292,16 @@ export function TestimonialVideos({
 
         <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
           <div className="order-2 rounded-[4px] bg-neutral-100 p-8 md:order-1">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--brand)]">{t2label}</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: brandColor }}>{t2label}</p>
             <blockquote className="mt-4 text-2xl font-bold leading-relaxed text-[color:var(--graphite)]">{t2quote}</blockquote>
             <p className="mt-4 text-sm leading-7 text-[color:var(--lightGray)]">{t2author}</p>
           </div>
           <div className="order-1 overflow-hidden rounded-[4px] border border-neutral-200 bg-white md:order-2">
             <div className="relative aspect-video bg-black">
               <ThumbnailVideo
-                src={testimonialVideos[1].src} thumbnail={testimonialVideos[1].thumbnail}
-                alt="Vorschaubild Review Video 2" className="h-full w-full"
-                videoClassName="h-full w-full object-cover" controls preload="metadata"
+                src={t2src} thumbnail={t2thumb} alt="Review Video 2"
+                className="h-full w-full" videoClassName="h-full w-full object-cover"
+                controls preload="metadata"
               />
             </div>
           </div>
