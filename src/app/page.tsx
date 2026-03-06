@@ -162,7 +162,11 @@ export default async function Page() {
   const orderRaw = c("layout::section_order");
   const hiddenRaw = c("layout::hidden_sections");
   const sectionOrder: string[] = orderRaw ? orderRaw.split(',').map(s => s.trim()).filter(Boolean) : DEFAULT_ORDER;
-  const hiddenSections = new Set(hiddenRaw ? hiddenRaw.split(',').map(s => s.trim()).filter(Boolean) : []);
+  const hiddenSections = new Set(
+    hiddenRaw && hiddenRaw.trim()
+      ? hiddenRaw.split(',').map(s => s.trim()).filter(Boolean)
+      : []
+  );
 
   // Farben aus CMS
   const brandColor   = c("colors::brand");
