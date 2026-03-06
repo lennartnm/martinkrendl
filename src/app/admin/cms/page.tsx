@@ -441,6 +441,7 @@ function SectionRow({
 export default function CmsPage() {
   const [selectedPage, setSelectedPage] = useState('home');
   const [pageDropdownOpen, setPageDropdownOpen] = useState(false);
+  const pageDropdownRef = useRef<HTMLDivElement>(null);
   const [content, setContent]   = useState<CM>({});
   const [dirty, setDirty]       = useState<Set<string>>(new Set());
   const [loading, setLoading]   = useState(true);
@@ -452,6 +453,17 @@ export default function CmsPage() {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [orderDirty, setOrderDirty] = useState(false);
   const dragOver = useRef<string | null>(null);
+
+  // Close page dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (pageDropdownRef.current && !pageDropdownRef.current.contains(e.target as Node)) {
+        setPageDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const currentSections = SECTIONS_BY_PAGE[selectedPage] || [];
 
@@ -579,7 +591,7 @@ export default function CmsPage() {
         </div>
 
         {/* Page selector dropdown */}
-        <div className="relative w-full max-w-xs">
+        <div ref={pageDropdownRef} className="relative w-full max-w-xs">
           <p className="mb-1.5 text-xs font-semibold uppercase tracking-widest text-[#9CA3AF]">Seite auswählen</p>
           <button
             type="button"
