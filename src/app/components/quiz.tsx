@@ -391,14 +391,17 @@ export default function Quiz() {
               </div>
 
               <h2 className="mt-3 text-3xl font-extrabold text-[color:var(--graphite)] md:text-4xl">
-                Trag hier bitte deine Kontaktdaten ein
+                Du bist bereit für deine Probestunde!
               </h2>
 
               <p className="mx-auto mt-5 max-w-xl text-base leading-8 text-[color:var(--lightGray)]">
                 Wow, das klingt super! Ich lade dich herzlich zu einer
                 unverbindlichen Probestunde ein. Dort lernst du die Voiceation
                 Methode kennen und wie sie deine Stimme auf das nächste Level
-                hebt.
+                hebt. Ich freue mich auf dich!
+
+                <br></br>
+            Dein Martin
               </p>
 
               <form onSubmit={submitLead} className="mx-auto mt-8 max-w-xl space-y-3">
