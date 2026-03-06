@@ -9,7 +9,6 @@ export default function TopHeader() {
 
   return (
     <>
-      {/* Google Font */}
       <link
         href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500&display=swap"
         rel="stylesheet"
@@ -18,13 +17,12 @@ export default function TopHeader() {
       <div
         style={{
           fontFamily: "'Open Sans', sans-serif",
-          backgroundColor: "#f3f3f3",
+          backgroundColor: "#e5e5e5",
           color: "#333",
           fontSize: "14px",
           padding: "6px 16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
+          position: "relative",
+          textAlign: "center",
         }}
       >
         <span>Voiceation Gesangsunterricht in Steyr oder online 🎶</span>
@@ -32,6 +30,10 @@ export default function TopHeader() {
         <button
           onClick={() => setVisible(false)}
           style={{
+            position: "absolute",
+            right: "16px",
+            top: "50%",
+            transform: "translateY(-50%)",
             border: "none",
             background: "transparent",
             fontSize: "16px",
