@@ -155,7 +155,7 @@ export default async function Page() {
       `}</style>
 
        <TopHeader />
- <Footer />
+
 
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-white/10" style={{ backgroundColor: brand }}>
@@ -437,6 +437,9 @@ export default async function Page() {
           </div>
         </div>
       </section>
+
+ <Footer />
+      
     </main>
   );
 }
