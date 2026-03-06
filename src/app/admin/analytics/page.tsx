@@ -2,7 +2,7 @@
 // src/app/admin/analytics/page.tsx
 
 import { useEffect, useState } from 'react';
-import { TrendingUp, TrendingDown, Minus, Users, Monitor, Smartphone, Tablet, Loader2, RefreshCw, Info } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Users, Monitor, Smartphone, Tablet, Loader2, RefreshCw, CheckCircle } from 'lucide-react';
 
 const brand = '#884A4A';
 
@@ -230,16 +230,11 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            {/* Setup Info */}
-            <div className="rounded-[4px] border border-blue-100 bg-blue-50 p-4">
-              <p className="flex items-center gap-2 text-sm font-semibold text-blue-700">
-                <Info className="h-4 w-4 shrink-0" />
-                Tracking einrichten
-              </p>
-              <p className="mt-1 pl-6 text-xs text-blue-600">
-                Damit Seitenaufrufe erfasst werden, muss in <code className="rounded bg-blue-100 px-1">src/app/layout.tsx</code> ein
-                einmaliger Fetch-Aufruf zu <code className="rounded bg-blue-100 px-1">/api/admin/pageview</code> eingebaut werden.
-                Das Tracking läuft ohne Cookies und ist DSGVO-konform.
+            {/* Tracking status - no setup needed, it's already in layout.tsx */}
+            <div className="rounded-[4px] border border-emerald-100 bg-emerald-50 p-4">
+              <p className="flex items-center gap-2 text-sm font-semibold text-emerald-700">
+                <CheckCircle className="h-4 w-4 shrink-0" />
+                Tracking aktiv – das Zählen von Seitenaufrufen läuft automatisch, ohne Cookies und DSGVO-konform.
               </p>
             </div>
           </>
