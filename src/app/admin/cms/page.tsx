@@ -574,7 +574,7 @@ export default function CmsPage() {
           <div>
             <h1 className="text-2xl font-extrabold text-[#2F2F2F]">Content bearbeiten</h1>
             <p className="mt-0.5 text-sm text-[#6B6B6B]">
-              Sektionen per Drag & Drop sortieren – das Auge-Icon blendet eine Sektion auf der Website aus.
+              Hier kannst du die Seiteninhalte anpassen und steuern.
               {hidden.size > 0 && <span className="ml-2 font-semibold text-amber-600">· {hidden.size} ausgeblendet</span>}
             </p>
           </div>
