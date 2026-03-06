@@ -3,6 +3,8 @@
 // Interaktive Teile (Videos) sind in VideoSection.tsx ausgelagert
 
 import type { CSSProperties } from "react";
+import Footer from '@/components/ui/Footer';
+import TopHeader from '@/components/TopHeader';
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import Quiz from "@/components/quiz";
@@ -151,6 +153,9 @@ export default async function Page() {
         input[type='range']::-moz-range-track { height: 4px; border-radius: 9999px; background: #e5e5e5; }
         input[type='range']::-moz-range-thumb { height: 14px; width: 14px; border: 2px solid white; border-radius: 9999px; background: var(--brand); cursor: pointer; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
       `}</style>
+
+       <TopHeader />
+ <Footer />
 
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-white/10" style={{ backgroundColor: brand }}>
