@@ -15,6 +15,7 @@ import {
   Video,
   Pause,
   Play,
+  MicVocal,
 } from "lucide-react";
 
 const brand = "#884A4A";
@@ -33,60 +34,63 @@ const logos = [
 const featureCards = [
   {
     icon: GraduationCap,
-    title: "Individuelle Betreuung",
-    text: "Persönlich abgestimmtes Coaching für nachhaltige Fortschritte und messbare Ergebnisse.",
+    title: "Individuelles Vocal Coaching",
+    text: "Kein Unterricht von der Stange, sondern ein klar auf dich und deine Stimme abgestimmter Weg.",
   },
   {
     icon: Trophy,
     title: "Erprobte Methode",
-    text: "Strukturiertes Lernen mit klarem Fokus auf Verständnis, Sicherheit und langfristigen Erfolg.",
+    text: "Du arbeitest mit einer Methode, die vielen Sänger:innen geholfen hat, freier, sicherer und klangvoller zu singen.",
   },
   {
     icon: ShieldCheck,
-    title: "Verlässlich & klar",
-    text: "Transparente Begleitung mit klaren Schritten, ehrlichem Feedback und motivierender Unterstützung.",
+    title: "Gesund und mit Gefühl singen",
+    text: "Mehr Klang, mehr Sicherheit und mehr Leichtigkeit – ohne unnötigen Druck auf die Stimme.",
   },
 ];
 
 const secondFeatureCards = [
   {
     icon: Users,
-    title: "Persönlich",
-    text: "Nahbare Zusammenarbeit mit Fokus auf Vertrauen, Klarheit und individueller Förderung.",
+    title: "Für jedes Level",
+    text: "Ob Anfänger:in, Wiedereinsteiger:in oder Profi – du wirst dort abgeholt, wo du gerade stehst.",
   },
   {
     icon: Award,
-    title: "Erfolgsorientiert",
-    text: "Gezielte Strategien, die auf echte Fortschritte und sichtbare Ergebnisse ausgelegt sind.",
+    title: "Mit Erfahrung",
+    text: "Langjährige Unterrichts- und Bühnenerfahrung verbinden sich mit einem klaren Blick für deine nächsten Schritte.",
   },
   {
     icon: Video,
-    title: "Modern",
-    text: "Zeitgemäße Inhalte und Formate, die auf allen Geräten überzeugend funktionieren.",
+    title: "Live oder online",
+    text: "Du kannst im Studio in Steyr oder unkompliziert via Zoom mit mir arbeiten.",
   },
   {
-    icon: Star,
-    title: "Wertschätzend",
-    text: "Lernen in einer motivierenden Atmosphäre mit echter Aufmerksamkeit für jede Person.",
+    icon: MicVocal,
+    title: "Mit echter Freude",
+    text: "Singen darf wirksam sein – und gleichzeitig leicht, lebendig und berührend bleiben.",
   },
 ];
 
 const bulletPoints = [
-  "Persönliche Begleitung auf Augenhöhe",
-  "Klare Struktur für schnelle Fortschritte",
-  "Nachhaltige Unterstützung mit Fokus auf Ergebnisse",
+  "Mehr Stimmumfang und mehr Sicherheit in der Höhe",
+  "Klarerer, kräftigerer Klang ohne unnötige Anstrengung",
+  "Persönliche Begleitung mit ehrlichem Feedback und klaren Schritten",
 ];
 
 const reviews = [
-  "Ich habe mich vom ersten Moment an bestens aufgehoben gefühlt. Die Betreuung war klar, motivierend und sehr professionell.",
-  "Unglaublich wertvolle Unterstützung. Inhalte wurden verständlich erklärt und individuell auf mich abgestimmt.",
-  "Man merkt sofort die Erfahrung und die Ruhe in der Begleitung. Absolute Empfehlung für alle, die wirklich weiterkommen wollen.",
-  "Die Zusammenarbeit war strukturiert, persönlich und effektiv. Genau die richtige Mischung aus Motivation und Klarheit.",
-  "Hier wird nicht einfach nur begleitet, sondern wirklich verstanden, worauf es ankommt. Das hat einen riesigen Unterschied gemacht.",
-  "Sehr hochwertiger Auftritt, starke Inhalte und eine Betreuung, die Vertrauen schafft. Ich würde es jederzeit wieder machen.",
-  "Besonders beeindruckt hat mich die individuelle Herangehensweise. Ich habe mich ernst genommen und gefördert gefühlt.",
-  "Modern, klar und menschlich. Genau die Art von Unterstützung, die man sich wünscht, wenn man echte Fortschritte erzielen möchte.",
-  "Von Anfang bis Ende professionell und angenehm. Man spürt die Qualität in jedem Detail.",
+  {
+    text: "Egal ob Profi oder Hobby Musiker, jeder kann bei Martin was lernen. Er freut sich über deinen Erfolg und ist einfach ein wirklich cooler Typ. Habe keine Minute bereut, die ich bei ihm Unterricht hatte. 100% Empfehlung!!",
+    author: "Angelika Spitzbart",
+  },
+  {
+    text: 'Martin ist ein sehr geduldiger, wertschätzender Vollblutmusiker und Lehrer ... Alles, was ich bei ihm lernen durfte ist abgespeichert ... die Liebe und der Mut zum "Selbstmusizieren" ist wieder da!!',
+    author: "Birgit Baumgartner",
+  },
+  {
+    text: "Martin Krendl ist ein Könner auf seinem Gebiet! Ob Cajon oder Gesang, er ist der Experte! Nicht nur was er einem beibringt, sondern auch wie er lehrt ist einfach PERFEKT!!!! Man merkt er ist bei jedem Schüler mit Herz und Seele bei der Sache und kitzelt aus jedem Menschen das best Möglichste heraus! Dank Martins Art kann er mit jedem Typ Mensch umgehen und weiß immer genau was zu tun ist! Ich bin sehr froh von so einem Profi lernen zu dürfen! DANKE!",
+    author: "Marianne Falkner",
+  },
 ];
 
 const carouselVideos = ["/video1.mp4", "/video2.mp4", "/video3.mp4"];
@@ -253,7 +257,7 @@ export default function Page() {
 
           <a href="#quiz">
             <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
-              Zum Quiz
+              Kostenloses Kennenlernen
             </Button>
           </a>
         </div>
@@ -264,7 +268,7 @@ export default function Page() {
         <div className="relative aspect-square w-full md:aspect-[16/6]">
           <Image
             src="/hero.jpg"
-            alt="Hero Bild"
+            alt="Martin Krendl beim Singen"
             fill
             priority
             className="object-cover"
@@ -273,21 +277,26 @@ export default function Page() {
 
           <div className="absolute inset-x-0 bottom-0">
             <div className={`${sectionWidth} pb-10 md:pb-14`}>
-              <div className="mx-auto max-w-3xl text-center text-white">
+              <div className="mx-auto max-w-4xl text-center text-white">
                 <h1 className="text-3xl font-extrabold leading-tight md:text-5xl">
-                  Klarheit, Struktur und echte Fortschritte für deinen nächsten
-                  Schritt
+                  Sing freier, sicherer und mit mehr Ausdruck
                 </h1>
                 <p className="mt-4 text-sm text-white/85 md:text-lg">
-                  Persönliche Begleitung mit einem modernen, klaren Ansatz –
-                  individuell, motivierend und auf nachhaltige Ergebnisse
-                  ausgerichtet.
+                  Für alle, die ihre Stimme wirklich entwickeln möchten – ob
+                  unter der Dusche, im Chor, auf der Bühne oder einfach für sich
+                  selbst.
+                </p>
+
+                <p className="mt-4 text-sm text-white/85 md:text-lg">
+                  Im Vocal Coaching mit Martin Krendl arbeitest du gezielt an
+                  Klang, Höhe, Leichtigkeit und Ausdruck – persönlich in Steyr
+                  oder online via Zoom.
                 </p>
 
                 <div className="mt-6">
                   <a href="#quiz">
                     <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
-                      Zum Quiz
+                      Kostenloses Kennenlerngespräch anfragen
                     </Button>
                   </a>
                 </div>
@@ -302,7 +311,7 @@ export default function Page() {
                     ))}
                   </div>
                   <p className="text-sm font-semibold text-white/90">
-                    100+ Schüler betreut
+                    Persönliches Vocal Coaching mit Herz, Struktur und Erfahrung
                   </p>
                 </div>
               </div>
@@ -314,6 +323,12 @@ export default function Page() {
       {/* Logo section */}
       <section className="py-12 md:py-14">
         <div className={sectionWidth}>
+          <div className="mx-auto mb-8 max-w-3xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--brand)]">
+              Bekannt aus Coaching, Bühne und Ausbildung
+            </p>
+          </div>
+
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
             {logos.map((logo, index) => (
               <div
@@ -367,7 +382,7 @@ export default function Page() {
           <div className="relative aspect-square overflow-hidden rounded-[4px]">
             <Image
               src="/section-image-1.jpg"
-              alt="Persönliche Betreuung"
+              alt="Gesangsunterricht mit Martin Krendl"
               fill
               className="object-cover"
             />
@@ -375,13 +390,13 @@ export default function Page() {
 
           <div>
             <h2 className="text-3xl font-extrabold md:text-4xl">
-              Persönlich begleitet. Klar geführt. Nachhaltig gestärkt.
+              Deine Stimme kann mehr, als du vielleicht gerade glaubst
             </h2>
             <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">
-              Hier geht es nicht um Standardlösungen, sondern um eine
-              individuelle Begleitung mit echter Aufmerksamkeit für deine
-              Situation. Der Fokus liegt auf Klarheit, Struktur und einem Weg,
-              der sich für dich richtig und machbar anfühlt.
+              Viele Sänger:innen kämpfen mit Unsicherheit, engen Höhen,
+              fehlender Kraft oder dem Gefühl, nicht so zu klingen, wie sie es
+              eigentlich möchten. Genau hier setzt das Coaching an:
+              verständlich, individuell und mit Fokus auf echte Veränderung.
             </p>
 
             <div className="mt-6 space-y-3">
@@ -403,7 +418,7 @@ export default function Page() {
             <div className="mt-8">
               <a href="#quiz">
                 <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
-                  Zum Quiz
+                  Jetzt kostenlos kennenlernen
                 </Button>
               </a>
             </div>
@@ -416,19 +431,19 @@ export default function Page() {
         <div className="relative aspect-[4/5] w-full overflow-hidden md:aspect-[16/6]">
           <Image
             src="/quote-image.jpg"
-            alt="Zitat Hintergrund"
+            alt="Martin Krendl beim Singen"
             fill
             className="object-cover"
           />
           <div className="absolute inset-0 bg-black/45" />
           <div className={`${sectionWidth} absolute inset-0 flex items-center`}>
-            <div className="max-w-2xl">
+            <div className="max-w-3xl">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">
-                Zitat
+                Meine Haltung im Unterricht
               </p>
               <blockquote className="mt-4 text-2xl font-bold leading-relaxed text-white md:text-4xl">
-                „Wer mit Klarheit, Vertrauen und der richtigen Begleitung lernt,
-                gewinnt nicht nur Sicherheit – sondern echte Perspektive.“
+                „Singen soll nicht schwerer werden – sondern freier, ehrlicher
+                und sicherer.“
               </blockquote>
             </div>
           </div>
@@ -441,11 +456,11 @@ export default function Page() {
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
               <h2 className="text-3xl font-extrabold md:text-4xl">
-                Eindrücke im Videoformat
+                Hör und sieh selbst
               </h2>
               <p className="mt-3 max-w-2xl text-[color:var(--lightGray)]">
-                Moderne, horizontale Video-Darstellung mit einem klaren Fokus
-                auf das mittlere Video auf Desktop.
+                Die Videos zeigen mich direkt beim Singen – damit du ein Gefühl
+                dafür bekommst, wer dich im Coaching begleitet.
               </p>
             </div>
           </div>
@@ -648,12 +663,13 @@ export default function Page() {
         >
           <div className="order-2 md:order-1">
             <h2 className="text-3xl font-extrabold md:text-4xl">
-              Moderne Begleitung mit einem klaren Blick auf das Wesentliche
+              Coaching, das dich musikalisch und stimmlich weiterbringt
             </h2>
             <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">
-              Ein starker Prozess entsteht dort, wo Erfahrung, Struktur und ein
-              gutes Gespür für Menschen zusammenkommen. Ziel ist eine Umgebung,
-              in der Orientierung entsteht und Fortschritt möglich wird.
+              Es geht nicht darum, dich in ein starres System zu pressen. Es
+              geht darum, deine Stimme besser zu verstehen, Blockaden zu lösen
+              und Stück für Stück freier zu singen – so, dass es sich gut,
+              gesund und echt anfühlt.
             </p>
 
             <div className="mt-6 space-y-3">
@@ -675,7 +691,7 @@ export default function Page() {
             <div className="mt-8">
               <a href="#quiz">
                 <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
-                  Zum Quiz
+                  Kostenloses Gespräch starten
                 </Button>
               </a>
             </div>
@@ -684,7 +700,7 @@ export default function Page() {
           <div className="order-1 relative aspect-square overflow-hidden rounded-[4px] md:order-2">
             <Image
               src="/section-image-2.jpg"
-              alt="Moderne Begleitung"
+              alt="Martin Krendl im Vocal Coaching"
               fill
               className="object-cover"
             />
@@ -695,10 +711,14 @@ export default function Page() {
       {/* 4 cards accent + heading + button */}
       <section className="py-14 md:py-20">
         <div className={sectionWidth}>
-          <div className="mx-auto mb-10 max-w-2xl text-center">
+          <div className="mx-auto mb-10 max-w-3xl text-center">
             <h2 className="text-3xl font-extrabold md:text-4xl">
-              Was die Zusammenarbeit besonders macht
+              Was dich im Coaching erwartet
             </h2>
+            <p className="mt-4 text-[color:var(--lightGray)]">
+              Klarer Unterricht, persönliche Aufmerksamkeit und ein Ansatz, der
+              sich an deiner Stimme orientiert – nicht an pauschalen Lösungen.
+            </p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 md:gap-6">
@@ -725,7 +745,7 @@ export default function Page() {
           <div className="mt-8 text-center">
             <a href="#quiz">
               <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
-                Zum Quiz
+                Zum Kennenlern-Quiz
               </Button>
             </a>
           </div>
@@ -737,10 +757,10 @@ export default function Page() {
         <div className={sectionWidth}>
           <div className="mx-auto max-w-4xl text-center">
             <p className="text-lg leading-9 text-[color:var(--darkGray)] md:text-xl">
-              Gute Begleitung bedeutet, Menschen nicht nur fachlich
-              weiterzubringen, sondern ihnen auch Sicherheit, Orientierung und
-              Vertrauen zu geben. Genau daraus entsteht ein Umfeld, in dem
-              Entwicklung nicht erzwungen, sondern natürlich möglich wird.
+              Ob du sicherer intonieren, freier in die Höhe kommen, kraftvoller
+              klingen oder einfach wieder mit mehr Freude singen möchtest: Der
+              nächste Schritt beginnt oft nicht mit mehr Druck, sondern mit dem
+              richtigen Zugang zu deiner Stimme.
             </p>
           </div>
         </div>
@@ -770,24 +790,30 @@ export default function Page() {
 
             <div className="rounded-[4px] bg-neutral-100 p-8">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--brand)]">
-                Bewertung
+                Video-Testimonial
               </p>
               <blockquote className="mt-4 text-2xl font-bold leading-relaxed text-[color:var(--graphite)]">
-                „Professionell, motivierend und dabei immer persönlich. Genau
-                die Unterstützung, die ich gebraucht habe.“
+                „Martin Krendl ist ein absoluter Meister seines Fachs“
               </blockquote>
+              <p className="mt-4 text-sm leading-7 text-[color:var(--lightGray)]">
+                – Robin D., Starvocal Coach
+              </p>
             </div>
           </div>
 
           <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
             <div className="order-2 rounded-[4px] bg-neutral-100 p-8 md:order-1">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--brand)]">
-                Bewertung
+                Video-Testimonial
               </p>
               <blockquote className="mt-4 text-2xl font-bold leading-relaxed text-[color:var(--graphite)]">
-                „Die Kombination aus Klarheit, Struktur und Menschlichkeit hat
-                für mich den entscheidenden Unterschied gemacht.“
+                „Ich durfte schon mehrfach mit Martin auf der Bühne stehen. Was
+                der präsentiert ist wow“
               </blockquote>
+              <p className="mt-4 text-sm leading-7 text-[color:var(--lightGray)]">
+                – Misha Kovar, Originalcast We Will Rock You, Tanz der Vampire,
+                Evita, u.n.v.m.
+              </p>
             </div>
 
             <div className="order-1 overflow-hidden rounded-[4px] border border-neutral-200 bg-white md:order-2">
@@ -804,12 +830,53 @@ export default function Page() {
         </div>
       </section>
 
+      {/* About / Story */}
+      <section className="py-14 md:py-20">
+        <div
+          className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}
+        >
+          <div className="relative aspect-square overflow-hidden rounded-[4px]">
+            <Image
+              src="/final-image.jpg"
+              alt="Martin Krendl Portrait"
+              fill
+              className="object-cover"
+            />
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--brand)]">
+              Über Martin
+            </p>
+            <h2 className="mt-3 text-3xl font-extrabold md:text-4xl">
+              Von der eigenen Suche zur Arbeit mit Sänger:innen
+            </h2>
+            <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">
+              Mein eigener Wendepunkt kam, als mir Robin D. in kurzer Zeit etwas
+              gezeigt hat, das ich nach Monaten bei anderen Lehrer:innen nicht
+              geschafft hatte. Diese Erfahrung hat meinen Blick auf Stimme,
+              Technik und Unterricht grundlegend verändert.
+            </p>
+            <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">
+              2009 begann meine Coaching-Ausbildung, 2012 eröffnete ich mein
+              eigenes Voiceation Studio. Heute arbeite ich mit Anfänger:innen,
+              Fortgeschrittenen und Profis, gebe Workshops für Chöre und
+              Ensembles und unterrichte live im Studio oder via Zoom.
+            </p>
+            <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">
+              Mir ist wichtig, dass Menschen nicht nur „besser singen“, sondern
+              ihre Stimme mit mehr Vertrauen, Freiheit und Freude erleben.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Reviews */}
       <section className="py-14 md:py-20">
         <div className={sectionWidth}>
           <div className="mx-auto mb-10 max-w-2xl text-center">
             <h2 className="text-3xl font-extrabold md:text-4xl">
-              Du bist in bester Gesellschaft
+              Stimmen von Schüler:innen
             </h2>
           </div>
 
@@ -829,7 +896,10 @@ export default function Page() {
                     ))}
                   </div>
                   <p className="text-sm leading-7 text-[color:var(--graphite)]">
-                    {review}
+                    {review.text}
+                  </p>
+                  <p className="mt-4 text-sm font-semibold text-[color:var(--brand)]">
+                    – {review.author}
                   </p>
                 </div>
               ))}
@@ -838,15 +908,15 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Final 3er grid */}
+      {/* Final CTA */}
       <section className="pb-20 pt-14 md:pb-24 md:pt-20">
         <div
           className={`${sectionWidth} grid items-center gap-8 md:grid-cols-3 md:gap-10`}
         >
           <div className="relative aspect-video overflow-hidden rounded-[4px]">
             <Image
-              src="/final-image.jpg"
-              alt="Abschlussbild"
+              src="/final-cta-image.jpg"
+              alt="Vocal Coaching in Steyr"
               fill
               className="object-cover"
             />
@@ -854,19 +924,19 @@ export default function Page() {
 
           <div className="md:col-span-2">
             <h2 className="text-3xl font-extrabold md:text-4xl">
-              Der nächste Schritt beginnt mit einer klaren Entscheidung
+              Lass uns gemeinsam schauen, was in deiner Stimme steckt
             </h2>
             <p className="mt-4 max-w-3xl text-base leading-8 text-[color:var(--lightGray)]">
-              Wenn du dir eine Begleitung wünschst, die modern, persönlich und
-              klar aufgebaut ist, dann ist jetzt ein guter Moment, den ersten
-              Schritt zu machen. Ein kurzer Einstieg über das Quiz reicht, um
-              den passenden nächsten Weg sichtbar zu machen.
+              Wenn du spürst, dass deine Stimme noch mehr kann, dann ist ein
+              persönliches Kennenlerngespräch der beste erste Schritt. Ganz
+              unkompliziert, kostenlos und mit Blick darauf, was für dich gerade
+              sinnvoll ist.
             </p>
 
             <div className="mt-8">
               <a href="#quiz">
                 <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
-                  Zum Quiz
+                  Jetzt Kennenlerngespräch anfragen
                 </Button>
               </a>
             </div>
