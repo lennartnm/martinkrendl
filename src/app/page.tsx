@@ -130,15 +130,11 @@ export default function Page() {
             MARTIN KRENDL
           </div>
 
-          <Button
-            onClick={() => {
-              const el = document.getElementById("quiz");
-              if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-            }}
-            className="rounded-[4px] bg-white px-5 py-2.5 font-semibold text-[color:var(--brand)] hover:bg-neutral-100"
-          >
-            Zum Quiz
-          </Button>
+         <a href="#quiz">
+  <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+    Zum Quiz
+  </Button>
+</a>
         </div>
       </header>
 
@@ -168,20 +164,11 @@ export default function Page() {
                 </p>
 
                 <div className="mt-6">
-                  <Button
-                    onClick={() => {
-                      const el = document.getElementById("quiz");
-                      if (el) {
-                        el.scrollIntoView({
-                          behavior: "smooth",
-                          block: "start",
-                        });
-                      }
-                    }}
-                    className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95"
-                  >
-                    Jetzt starten
-                  </Button>
+                 <a href="#quiz">
+  <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+    Zum Quiz
+  </Button>
+</a>
                 </div>
 
                 <div className="mt-4 flex flex-col items-center justify-center gap-2">
@@ -291,15 +278,11 @@ export default function Page() {
             </div>
 
             <div className="mt-8">
-              <Button
-                onClick={() => {
-                  const el = document.getElementById("quiz");
-                  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
-                className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95"
-              >
-                Zum Quiz
-              </Button>
+              <a href="#quiz">
+  <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+    Zum Quiz
+  </Button>
+</a>
             </div>
           </div>
         </div>
@@ -433,15 +416,11 @@ export default function Page() {
             </div>
 
             <div className="mt-8">
-              <Button
-                onClick={() => {
-                  const el = document.getElementById("quiz");
-                  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
-                className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95"
-              >
-                Zum Quiz
-              </Button>
+              <a href="#quiz">
+  <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+    Zum Quiz
+  </Button>
+</a>
             </div>
           </div>
 
@@ -487,15 +466,11 @@ export default function Page() {
           </div>
 
           <div className="mt-8 text-center">
-            <Button
-              onClick={() => {
-                const el = document.getElementById("quiz");
-                if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-              }}
-              className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95"
-            >
-              Zum Quiz
-            </Button>
+          <a href="#quiz">
+  <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+    Zum Quiz
+  </Button>
+</a>
           </div>
         </div>
       </section>
@@ -630,15 +605,11 @@ export default function Page() {
             </p>
 
             <div className="mt-8">
-              <Button
-                onClick={() => {
-                  const el = document.getElementById("quiz");
-                  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
-                className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95"
-              >
-                Zum Quiz
-              </Button>
+              <a href="#quiz">
+  <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+    Zum Quiz
+  </Button>
+</a>
             </div>
           </div>
         </div>
