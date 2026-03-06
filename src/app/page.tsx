@@ -1,5 +1,6 @@
 // src/app/page.tsx
 // Server Component – lädt alle Inhalte (Texte, Farben, Bilder, Videos, Links) aus Supabase CMS
+// Unterstützt: Ein/Ausblenden von Sektionen + Reihenfolge via CMS
 
 import type { CSSProperties } from "react";
 import Footer from '@/components/ui/Footer';
@@ -34,14 +35,12 @@ async function getContent(page: string): Promise<Record<string, string>> {
 
 // ── Fallbacks ─────────────────────────────────────────────────────────────────
 const FALLBACK: Record<string, string> = {
-  // Farben
   "colors::brand":      "#884A4A",
   "colors::graphite":   "#2F2F2F",
   "colors::dark_gray":  "#4A4A4A",
   "colors::light_gray": "#6B6B6B",
   "colors::quiz_bg":    "#F7F7F7",
   "colors::header_bg":  "#884A4A",
-  // Bilder
   "images::hero":       "/martin-desktop.jpg",
   "images::section1":   "/martin3.jpg",
   "images::quote_bg":   "/martin-zitat.jpg",
@@ -50,7 +49,6 @@ const FALLBACK: Record<string, string> = {
   "images::final_cta":  "/martin5.png",
   "images::logo1":      "/logo1.jpg",
   "images::logo2":      "/logo2.jpg",
-  // Videos
   "videos::carousel_1_src":       "/5030c62f-ea92-45de-bab1-7f8aeda2f40c.mp4",
   "videos::carousel_1_thumb":     "/thumb11.jpg",
   "videos::carousel_2_src":       "/85052189-16cf-4fe2-aa49-b46f0d96a05f.mp4",
@@ -61,14 +59,12 @@ const FALLBACK: Record<string, string> = {
   "videos::testimonial_1_thumb":  "/review-video-1-thumb.jpg",
   "videos::testimonial_2_src":    "/review-video-2.mp4",
   "videos::testimonial_2_thumb":  "/review-video-2-thumb.jpg",
-  // Links
   "links::header_cta":       "#quiz",
   "links::hero_cta":         "#quiz",
   "links::image_text_1_cta": "#quiz",
   "links::image_text_2_cta": "#quiz",
   "links::features_2_cta":   "#quiz",
   "links::final_cta":        "#quiz",
-  // Texte
   "header::logo_text": "MARTIN KRENDL",
   "header::cta_label": "Kostenloses Kennenlernen",
   "hero::title": "Sing freier, sicherer und mit mehr Ausdruck",
@@ -81,7 +77,7 @@ const FALLBACK: Record<string, string> = {
   "feature_card_2::title": "Erprobte Methode",
   "feature_card_2::text": "Du arbeitest mit einer Methode, die vielen Menschen geholfen hat, freier, sicherer und klangvoller zu singen.",
   "feature_card_3::title": "Gesund und mit Gefühl singen",
-  "feature_card_3::text": "Mehr Klang, mehr Sicherheit und mehr Leichtigkeit \u2013 ohne unnötigen Druck auf die Stimme.",
+  "feature_card_3::text": "Mehr Klang, mehr Sicherheit und mehr Leichtigkeit – ohne unnötigen Druck auf die Stimme.",
   "image_text_1::title": "Deine Stimme kann mehr, als du vielleicht gerade glaubst",
   "image_text_1::text": "Viele Menschen kämpfen mit Unsicherheit, engen Höhen, fehlender Kraft oder dem Gefühl, nicht so zu klingen, wie sie es eigentlich möchten. Genau hier setzt der Gesangsunterricht an: verständlich, individuell und mit Fokus auf echte Veränderung.",
   "image_text_1::cta_label": "Jetzt kostenlos kennenlernen",
@@ -129,11 +125,17 @@ const FALLBACK: Record<string, string> = {
   "final_cta::cta_label": "Jetzt Kennenlerngespräch anfragen",
 };
 
+// Default section order (maps to section IDs in CMS)
+const DEFAULT_ORDER = [
+  'hero', 'logos', 'feature_cards_3', 'image_text_1', 'quote',
+  'video_carousel', 'image_text_2', 'feature_cards_4', 'flowing_text',
+  'quiz', 'testimonials', 'about', 'reviews', 'final_cta',
+];
+
 const featureIcons = [GraduationCap, Trophy, ShieldCheck];
 const secondFeatureIcons = [Users, Award, Video, MicVocal];
 const sectionWidth = "mx-auto w-full max-w-[1200px] px-4 md:px-6";
 
-// ── Bild-Wrapper der sowohl lokale als auch Supabase-URLs unterstützt ─────────
 function CmsImage({ src, alt, fill, width, height, className, priority }: {
   src: string; alt: string; fill?: boolean;
   width?: number; height?: number;
@@ -141,20 +143,26 @@ function CmsImage({ src, alt, fill, width, height, className, priority }: {
 }) {
   const isExternal = src.startsWith('http');
   if (fill) {
-    // eslint-disable-next-line @next/next/no-img-element
     return isExternal
+      // eslint-disable-next-line @next/next/no-img-element
       ? <img src={src} alt={alt} className={`absolute inset-0 h-full w-full ${className || ''}`} style={{ objectFit: 'cover' }} />
       : <Image src={src} alt={alt} fill className={className} priority={priority} />;
   }
   return isExternal
     // eslint-disable-next-line @next/next/no-img-element
     ? <img src={src} alt={alt} width={width} height={height} className={className} />
-    : <Image src={src} alt={alt} width={width || 180} height={height || 80} className={className} />;
+    : <Image src={src} alt={alt} width={width || 400} height={height || 300} className={className} />;
 }
 
 export default async function Page() {
   const cms = await getContent("home");
   const c = (key: string) => cms[key] ?? FALLBACK[key] ?? "";
+
+  // Section order + visibility from CMS
+  const orderRaw = c("layout::section_order");
+  const hiddenRaw = c("layout::hidden_sections");
+  const sectionOrder: string[] = orderRaw ? orderRaw.split(',').map(s => s.trim()).filter(Boolean) : DEFAULT_ORDER;
+  const hiddenSections = new Set(hiddenRaw ? hiddenRaw.split(',').map(s => s.trim()).filter(Boolean) : []);
 
   // Farben aus CMS
   const brandColor   = c("colors::brand");
@@ -185,46 +193,10 @@ export default async function Page() {
     { text: c("review_3::text"), author: c("review_3::author") },
   ];
 
-  return (
-    <main
-      className="min-h-screen bg-white"
-      style={{
-        "--brand": brandColor,
-        "--graphite": graphite,
-        "--darkGray": darkGray,
-        "--lightGray": lightGray,
-        "--quizBg": quizBg,
-      } as CSSProperties}
-    >
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap');
-        html { scroll-behavior: smooth; }
-        body { font-family: 'Open Sans', sans-serif; color: var(--graphite); background: #ffffff; }
-        input[type='range'] { -webkit-appearance: none; appearance: none; background: transparent; }
-        input[type='range']::-webkit-slider-runnable-track { height: 4px; border-radius: 9999px; background: #e5e5e5; }
-        input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; margin-top: -5px; height: 14px; width: 14px; border-radius: 9999px; background: var(--brand); cursor: pointer; border: 2px solid white; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
-        input[type='range']::-moz-range-track { height: 4px; border-radius: 9999px; background: #e5e5e5; }
-        input[type='range']::-moz-range-thumb { height: 14px; width: 14px; border: 2px solid white; border-radius: 9999px; background: var(--brand); cursor: pointer; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
-      `}</style>
-
-      <TopHeader />
-
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-white/10" style={{ backgroundColor: headerBg }}>
-        <div className={`${sectionWidth} flex h-20 items-center justify-between`}>
-          <div className="text-left text-lg font-extrabold tracking-[0.18em] text-white md:text-xl">
-            {c("header::logo_text")}
-          </div>
-          <a href={c("links::header_cta")}>
-            <Button variant="secondary" className="rounded-[4px] px-6 py-3 font-semibold text-white">
-              {c("header::cta_label")}
-            </Button>
-          </a>
-        </div>
-      </header>
-
-      {/* Hero */}
-      <section className="relative">
+  // Map section ID → JSX
+  const sectionMap: Record<string, React.ReactNode> = {
+    hero: (
+      <section key="hero" className="relative">
         <div className="relative aspect-square w-full md:aspect-[16/6]">
           <CmsImage src={c("images::hero")} alt="Martin Krendl beim Singen" fill className="object-cover" priority />
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/10" />
@@ -251,9 +223,9 @@ export default async function Page() {
           </div>
         </div>
       </section>
-
-      {/* Logos */}
-      <section className="py-12 md:py-14">
+    ),
+    logos: (
+      <section key="logos" className="py-12 md:py-14">
         <div className={sectionWidth}>
           <div className="mx-auto mb-8 max-w-3xl text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: brandColor }}>
@@ -269,9 +241,9 @@ export default async function Page() {
           </div>
         </div>
       </section>
-
-      {/* 3 Feature Cards */}
-      <section className="pt-8 pb-14 md:pt-10 md:pb-20">
+    ),
+    feature_cards_3: (
+      <section key="feature_cards_3" className="pt-8 pb-14 md:pt-10 md:pb-20">
         <div className={sectionWidth}>
           <div className="grid gap-4 md:grid-cols-3 md:gap-6">
             {featureCards.map((item) => {
@@ -289,9 +261,9 @@ export default async function Page() {
           </div>
         </div>
       </section>
-
-      {/* Image + Text 1 */}
-      <section className="py-14 md:py-20">
+    ),
+    image_text_1: (
+      <section key="image_text_1" className="py-14 md:py-20">
         <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
           <div className="relative aspect-square overflow-hidden rounded-[4px]">
             <CmsImage src={c("images::section1")} alt="Gesangsunterricht mit Martin Krendl" fill className="object-cover" />
@@ -319,9 +291,9 @@ export default async function Page() {
           </div>
         </div>
       </section>
-
-      {/* Quote Image */}
-      <section className="py-14 md:py-20">
+    ),
+    quote: (
+      <section key="quote" className="py-14 md:py-20">
         <div className="relative aspect-[4/5] w-full overflow-hidden md:aspect-[16/6]">
           <CmsImage src={c("images::quote_bg")} alt="Martin Krendl" fill className="object-cover" />
           <div className="absolute inset-0 bg-black/45" />
@@ -335,9 +307,10 @@ export default async function Page() {
           </div>
         </div>
       </section>
-
-      {/* Video Carousel */}
+    ),
+    video_carousel: (
       <VideoCarousel
+        key="video_carousel"
         title={c("video_section::title")}
         text={c("video_section::text")}
         brandColor={brandColor}
@@ -347,9 +320,9 @@ export default async function Page() {
           { src: c("videos::carousel_3_src"), thumbnail: c("videos::carousel_3_thumb") },
         ]}
       />
-
-      {/* Image + Text 2 */}
-      <section className="py-14 md:py-20">
+    ),
+    image_text_2: (
+      <section key="image_text_2" className="py-14 md:py-20">
         <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
           <div className="order-2 md:order-1">
             <h2 className="text-3xl font-extrabold md:text-4xl">{c("image_text_2::title")}</h2>
@@ -377,9 +350,9 @@ export default async function Page() {
           </div>
         </div>
       </section>
-
-      {/* 4 Feature Cards */}
-      <section className="py-14 md:py-20">
+    ),
+    feature_cards_4: (
+      <section key="feature_cards_4" className="py-14 md:py-20">
         <div className={sectionWidth}>
           <div className="mx-auto mb-10 max-w-3xl text-center">
             <h2 className="text-3xl font-extrabold md:text-4xl">{c("features_2_heading::title")}</h2>
@@ -408,32 +381,33 @@ export default async function Page() {
           </div>
         </div>
       </section>
-
-      {/* Flowing Text */}
-      <section className="py-14 md:py-20">
+    ),
+    flowing_text: (
+      <section key="flowing_text" className="py-14 md:py-20">
         <div className={sectionWidth}>
           <div className="mx-auto max-w-4xl text-center">
             <p className="text-lg leading-9 md:text-xl" style={{ color: darkGray }}>{c("flowing_text::text")}</p>
           </div>
         </div>
       </section>
-
-      {/* Quiz */}
-      <section id="quiz" className="scroll-mt-28 py-14 md:py-20" style={{ backgroundColor: quizBg }}>
+    ),
+    quiz: (
+      <section key="quiz" id="quiz" className="scroll-mt-28 py-14 md:py-20" style={{ backgroundColor: quizBg }}>
         <div className={sectionWidth}><Quiz /></div>
       </section>
-
-      {/* Testimonial Videos */}
+    ),
+    testimonials: (
       <TestimonialVideos
+        key="testimonials"
         t1label={c("testimonial_1::label")} t1quote={c("testimonial_1::quote")} t1author={c("testimonial_1::author")}
         t1src={c("videos::testimonial_1_src")} t1thumb={c("videos::testimonial_1_thumb")}
         t2label={c("testimonial_2::label")} t2quote={c("testimonial_2::quote")} t2author={c("testimonial_2::author")}
         t2src={c("videos::testimonial_2_src")} t2thumb={c("videos::testimonial_2_thumb")}
         brandColor={brandColor}
       />
-
-      {/* About */}
-      <section className="py-14 md:py-20">
+    ),
+    about: (
+      <section key="about" className="py-14 md:py-20">
         <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
           <div className="relative aspect-square overflow-hidden rounded-[4px]">
             <CmsImage src={c("images::about")} alt="Martin Krendl Portrait" fill className="object-cover" />
@@ -447,9 +421,9 @@ export default async function Page() {
           </div>
         </div>
       </section>
-
-      {/* Reviews */}
-      <section className="py-14 md:py-20">
+    ),
+    reviews: (
+      <section key="reviews" className="py-14 md:py-20">
         <div className={sectionWidth}>
           <div className="mx-auto mb-10 max-w-2xl text-center">
             <h2 className="text-3xl font-extrabold md:text-4xl">{c("reviews::title")}</h2>
@@ -469,9 +443,9 @@ export default async function Page() {
           </div>
         </div>
       </section>
-
-      {/* Final CTA */}
-      <section className="pb-20 pt-14 md:pb-24 md:pt-20">
+    ),
+    final_cta: (
+      <section key="final_cta" className="pb-20 pt-14 md:pb-24 md:pt-20">
         <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-3 md:gap-10`}>
           <div className="relative aspect-video overflow-hidden rounded-[4px]">
             <CmsImage src={c("images::final_cta")} alt="Gesangsunterricht in Steyr" fill className="object-cover" />
@@ -489,6 +463,54 @@ export default async function Page() {
           </div>
         </div>
       </section>
+    ),
+  };
+
+  // Build ordered, filtered section list
+  const orderedSections = sectionOrder
+    .filter(id => !hiddenSections.has(id))
+    .map(id => sectionMap[id])
+    .filter(Boolean);
+
+  return (
+    <main
+      className="min-h-screen bg-white"
+      style={{
+        "--brand": brandColor,
+        "--graphite": graphite,
+        "--darkGray": darkGray,
+        "--lightGray": lightGray,
+        "--quizBg": quizBg,
+      } as CSSProperties}
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap');
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Open Sans', sans-serif; color: var(--graphite); background: #ffffff; }
+        input[type='range'] { -webkit-appearance: none; appearance: none; background: transparent; }
+        input[type='range']::-webkit-slider-runnable-track { height: 4px; border-radius: 9999px; background: #e5e5e5; }
+        input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; margin-top: -5px; height: 14px; width: 14px; border-radius: 9999px; background: var(--brand); cursor: pointer; border: 2px solid white; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
+        input[type='range']::-moz-range-track { height: 4px; border-radius: 9999px; background: #e5e5e5; }
+        input[type='range']::-moz-range-thumb { height: 14px; width: 14px; border: 2px solid white; border-radius: 9999px; background: var(--brand); cursor: pointer; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
+      `}</style>
+
+      <TopHeader />
+
+      {/* Header is always shown */}
+      <header className="sticky top-0 z-50 border-b border-white/10" style={{ backgroundColor: headerBg }}>
+        <div className={`${sectionWidth} flex h-20 items-center justify-between`}>
+          <div className="text-left text-lg font-extrabold tracking-[0.18em] text-white md:text-xl">
+            {c("header::logo_text")}
+          </div>
+          <a href={c("links::header_cta")}>
+            <Button variant="secondary" className="rounded-[4px] px-6 py-3 font-semibold text-white">
+              {c("header::cta_label")}
+            </Button>
+          </a>
+        </div>
+      </header>
+
+      {orderedSections}
 
       <Footer />
     </main>
