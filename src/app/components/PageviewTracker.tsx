@@ -11,6 +11,9 @@ function Tracker() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    // Never track admin pages
+    if (pathname.startsWith('/admin')) return;
+
     const utm_source = searchParams.get('utm_source') || undefined;
     const utm_medium = searchParams.get('utm_medium') || undefined;
     const utm_campaign = searchParams.get('utm_campaign') || undefined;
