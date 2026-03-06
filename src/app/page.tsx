@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import Quiz from "@/components/quiz";
@@ -23,6 +23,7 @@ const graphite = "#2F2F2F";
 const darkGray = "#4A4A4A";
 const lightGray = "#6B6B6B";
 const sectionWidth = "mx-auto w-full max-w-[1200px] px-4 md:px-6";
+const quizBg = "#F7F7F7";
 
 const logos = ["/logo1.jpg", "/logo2.jpg"];
 
@@ -94,13 +95,288 @@ const carouselVideos = [
   "/80cd8f88-d573-43bb-8238-0eaf3066ca59.mp4",
 ];
 
-const getPreviewSrc = (src: string) => `${src}#t=0.1`;
-
 type VideoState = {
   duration: number;
   currentTime: number;
   isPlaying: boolean;
 };
+
+function formatTime(value: number) {
+  if (!Number.isFinite(value) || value <= 0) return "0:00";
+  const minutes = Math.floor(value / 60);
+  const seconds = Math.floor(value % 60);
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function VideoThumbnail({
+  src,
+  alt,
+  className = "",
+  videoClassName = "",
+  controls = false,
+  autoPlay = false,
+  muted = false,
+  playsInline = true,
+  preload = "metadata",
+  onVideoRef,
+  onLoadedMetadata,
+  onTimeUpdate,
+  onPlay,
+  onPause,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+  videoClassName?: string;
+  controls?: boolean;
+  autoPlay?: boolean;
+  muted?: boolean;
+  playsInline?: boolean;
+  preload?: "none" | "metadata" | "auto";
+  onVideoRef?: (el: HTMLVideoElement | null) => void;
+  onLoadedMetadata?: () => void;
+  onTimeUpdate?: () => void;
+  onPlay?: () => void;
+  onPause?: () => void;
+}) {
+  const visibleVideoRef = useRef<HTMLVideoElement | null>(null);
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
+  const [thumbReady, setThumbReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const probeVideo = document.createElement("video");
+
+    probeVideo.src = src;
+    probeVideo.preload = "auto";
+    probeVideo.muted = true;
+    probeVideo.playsInline = true;
+    probeVideo.crossOrigin = "anonymous";
+
+    const cleanup = () => {
+      probeVideo.pause();
+      probeVideo.removeAttribute("src");
+      probeVideo.load();
+    };
+
+    const captureFrame = () => {
+      if (cancelled) return;
+
+      const width = probeVideo.videoWidth;
+      const height = probeVideo.videoHeight;
+
+      if (!width || !height) {
+        setThumbReady(true);
+        return;
+      }
+
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+
+        if (!ctx) {
+          setThumbReady(true);
+          return;
+        }
+
+        ctx.drawImage(probeVideo, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+
+        if (!cancelled) {
+          setThumbnail(dataUrl);
+          setThumbReady(true);
+        }
+      } catch {
+        if (!cancelled) {
+          setThumbReady(true);
+        }
+      } finally {
+        cleanup();
+      }
+    };
+
+    const handleLoadedData = () => {
+      const seekTarget =
+        probeVideo.duration && Number.isFinite(probeVideo.duration)
+          ? Math.min(0.05, Math.max(probeVideo.duration - 0.01, 0))
+          : 0;
+
+      if (seekTarget === 0) {
+        captureFrame();
+        return;
+      }
+
+      const onSeeked = () => {
+        probeVideo.removeEventListener("seeked", onSeeked);
+        captureFrame();
+      };
+
+      probeVideo.addEventListener("seeked", onSeeked, { once: true });
+
+      try {
+        probeVideo.currentTime = seekTarget;
+      } catch {
+        captureFrame();
+      }
+    };
+
+    const handleError = () => {
+      if (!cancelled) {
+        setThumbReady(true);
+      }
+      cleanup();
+    };
+
+    probeVideo.addEventListener("loadeddata", handleLoadedData, { once: true });
+    probeVideo.addEventListener("error", handleError, { once: true });
+    probeVideo.load();
+
+    return () => {
+      cancelled = true;
+      cleanup();
+    };
+  }, [src]);
+
+  return (
+    <div className={`relative ${className}`}>
+      {!controls && !autoPlay && thumbnail && (
+        <img
+          src={thumbnail}
+          alt={alt}
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
+            thumbReady ? "opacity-100" : "opacity-0"
+          }`}
+        />
+      )}
+
+      <video
+        ref={(el) => {
+          visibleVideoRef.current = el;
+          onVideoRef?.(el);
+        }}
+        src={src}
+        controls={controls}
+        autoPlay={autoPlay}
+        muted={muted}
+        playsInline={playsInline}
+        preload={preload}
+        className={videoClassName}
+        onLoadedMetadata={onLoadedMetadata}
+        onTimeUpdate={onTimeUpdate}
+        onPlay={onPlay}
+        onPause={onPause}
+        controlsList="nodownload"
+      />
+
+      {!controls && !autoPlay && thumbnail && (
+        <div className="pointer-events-none absolute inset-0 bg-black/5" />
+      )}
+    </div>
+  );
+}
+
+function CarouselVideoCard({
+  video,
+  index,
+  state,
+  brandColor,
+  isActive,
+  onSelect,
+  onTogglePlay,
+  onSeek,
+  onLoadedMetadata,
+  onTimeUpdate,
+  onPlay,
+  onPause,
+  videoRef,
+}: {
+  video: string;
+  index: number;
+  state: VideoState;
+  brandColor: string;
+  isActive: boolean;
+  onSelect: () => void;
+  onTogglePlay: () => void;
+  onSeek: (value: number) => void;
+  onLoadedMetadata: () => void;
+  onTimeUpdate: () => void;
+  onPlay: () => void;
+  onPause: () => void;
+  videoRef: (el: HTMLVideoElement | null) => void;
+}) {
+  const duration = state.duration || 0;
+  const currentTime = Math.min(state.currentTime, duration || 0);
+
+  return (
+    <div
+      className={`overflow-hidden rounded-[4px] border border-neutral-200 bg-white shadow-sm transition-all duration-300 ${
+        isActive ? "scale-100" : "scale-[0.96]"
+      }`}
+    >
+      <button
+        type="button"
+        onClick={onSelect}
+        className="block w-full text-left"
+        aria-label={`Video ${index + 1} auswählen`}
+      >
+        <div className="relative aspect-video bg-black">
+          <VideoThumbnail
+            src={video}
+            alt={`Vorschaubild Video ${index + 1}`}
+            className="h-full w-full"
+            videoClassName="h-full w-full object-cover"
+            preload="metadata"
+            onVideoRef={videoRef}
+            onLoadedMetadata={onLoadedMetadata}
+            onTimeUpdate={onTimeUpdate}
+            onPlay={onPlay}
+            onPause={onPause}
+          />
+        </div>
+      </button>
+
+      <div className="border-t border-neutral-200 px-4 py-3">
+        <div className="flex items-center gap-3">
+          <button
+            aria-label={
+              state.isPlaying
+                ? `Video ${index + 1} pausieren`
+                : `Video ${index + 1} abspielen`
+            }
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[4px] text-white"
+            style={{ backgroundColor: brandColor }}
+            type="button"
+            onClick={onTogglePlay}
+          >
+            {state.isPlaying ? (
+              <Pause className="h-4 w-4" />
+            ) : (
+              <Play className="h-4 w-4" />
+            )}
+          </button>
+
+          <div className="flex w-full items-center gap-3">
+            <input
+              type="range"
+              min={0}
+              max={duration || 0}
+              step={0.1}
+              value={currentTime}
+              onChange={(e) => onSeek(Number(e.target.value))}
+              className="w-full"
+              aria-label={`Timeline Video ${index + 1}`}
+            />
+            <div className="min-w-[78px] text-right text-xs text-[color:var(--lightGray)]">
+              {formatTime(currentTime)} / {formatTime(duration)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Page() {
   const [activeVideo, setActiveVideo] = useState(1);
@@ -150,6 +426,12 @@ export default function Page() {
     const video = videoRefs.current[index];
     if (!video) return;
 
+    videoRefs.current.forEach((item, i) => {
+      if (i !== index && item && !item.paused) {
+        item.pause();
+      }
+    });
+
     if (video.paused) {
       try {
         await video.play();
@@ -192,7 +474,8 @@ export default function Page() {
           "--graphite": graphite,
           "--darkGray": darkGray,
           "--lightGray": lightGray,
-        } as React.CSSProperties
+          "--quizBg": quizBg,
+        } as CSSProperties
       }
     >
       <style>{`
@@ -337,11 +620,11 @@ export default function Page() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
             {logos.map((logo, index) => (
               <div
                 key={logo}
-                className="flex h-28 items-center justify-center rounded-[4px] border border-neutral-200 bg-white p-4 md:h-32"
+                className="flex h-28 w-[min(100%,260px)] items-center justify-center rounded-[4px] border border-neutral-200 bg-white p-4 md:h-32"
               >
                 <Image
                   src={logo}
@@ -474,79 +757,27 @@ export default function Page() {
           {/* Mobile */}
           <div className="overflow-x-auto pb-4 [scrollbar-width:none] md:hidden">
             <div className="flex snap-x snap-mandatory gap-4">
-              {carouselVideos.map((video, i) => {
-                const state = videoStates[i];
-                const duration = state.duration || 0;
-                const currentTime = Math.min(state.currentTime, duration || 0);
-
-                return (
-                  <div key={video} className="min-w-[88%] snap-center">
-                    <div className="overflow-hidden rounded-[4px] border border-neutral-200 bg-white shadow-sm">
-                      <button
-                        type="button"
-                        onClick={() => handleSelectVideo(i)}
-                        className="block w-full text-left"
-                      >
-                        <div className="relative aspect-video bg-black">
-                          <video
-                            ref={(el) => {
-                              videoRefs.current[i] = el;
-                            }}
-                            src={getPreviewSrc(video)}
-                            playsInline
-                            preload="metadata"
-                            className="h-full w-full object-cover"
-                            onLoadedMetadata={() => handleLoadedMetadata(i)}
-                            onTimeUpdate={() => handleTimeUpdate(i)}
-                            onPlay={() =>
-                              updateVideoState(i, { isPlaying: true })
-                            }
-                            onPause={() =>
-                              updateVideoState(i, { isPlaying: false })
-                            }
-                            controlsList="nodownload"
-                          />
-                        </div>
-                      </button>
-
-                      <div className="border-t border-neutral-200 px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <button
-                            aria-label={
-                              state.isPlaying
-                                ? `Video ${i + 1} pausieren`
-                                : `Video ${i + 1} abspielen`
-                            }
-                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[4px] text-white"
-                            style={{ backgroundColor: brand }}
-                            type="button"
-                            onClick={() => handleTogglePlay(i)}
-                          >
-                            {state.isPlaying ? (
-                              <Pause className="h-4 w-4" />
-                            ) : (
-                              <Play className="h-4 w-4" />
-                            )}
-                          </button>
-
-                          <input
-                            type="range"
-                            min={0}
-                            max={duration || 0}
-                            step={0.1}
-                            value={currentTime}
-                            onChange={(e) =>
-                              handleSeek(i, Number(e.target.value))
-                            }
-                            className="w-full"
-                            aria-label={`Timeline Video ${i + 1}`}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {carouselVideos.map((video, i) => (
+                <div key={video} className="min-w-[88%] snap-center">
+                  <CarouselVideoCard
+                    video={video}
+                    index={i}
+                    state={videoStates[i]}
+                    brandColor={brand}
+                    isActive={activeVideo === i}
+                    onSelect={() => handleSelectVideo(i)}
+                    onTogglePlay={() => handleTogglePlay(i)}
+                    onSeek={(value) => handleSeek(i, value)}
+                    onLoadedMetadata={() => handleLoadedMetadata(i)}
+                    onTimeUpdate={() => handleTimeUpdate(i)}
+                    onPlay={() => updateVideoState(i, { isPlaying: true })}
+                    onPause={() => updateVideoState(i, { isPlaying: false })}
+                    videoRef={(el) => {
+                      videoRefs.current[i] = el;
+                    }}
+                  />
+                </div>
+              ))}
             </div>
           </div>
 
@@ -555,9 +786,6 @@ export default function Page() {
             <div className="flex items-center justify-center gap-4 lg:gap-6">
               {orderedVideos.map((videoIndex, position) => {
                 const video = carouselVideos[videoIndex];
-                const state = videoStates[videoIndex];
-                const duration = state.duration || 0;
-                const currentTime = Math.min(state.currentTime, duration || 0);
                 const isCenter = position === 1;
 
                 return (
@@ -569,75 +797,27 @@ export default function Page() {
                         : "w-[24%] lg:w-[22%] cursor-pointer opacity-80 hover:opacity-100"
                     }`}
                   >
-                    <div
-                      className={`overflow-hidden rounded-[4px] border border-neutral-200 bg-white shadow-sm transition-all duration-300 ${
-                        isCenter ? "scale-100" : "scale-[0.96]"
-                      }`}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => handleSelectVideo(videoIndex)}
-                        className="block w-full text-left"
-                      >
-                        <div className="relative aspect-video bg-black">
-                          <video
-                            ref={(el) => {
-                              videoRefs.current[videoIndex] = el;
-                            }}
-                            src={getPreviewSrc(video)}
-                            playsInline
-                            preload="metadata"
-                            className="h-full w-full object-cover"
-                            onLoadedMetadata={() =>
-                              handleLoadedMetadata(videoIndex)
-                            }
-                            onTimeUpdate={() => handleTimeUpdate(videoIndex)}
-                            onPlay={() =>
-                              updateVideoState(videoIndex, { isPlaying: true })
-                            }
-                            onPause={() =>
-                              updateVideoState(videoIndex, { isPlaying: false })
-                            }
-                            controlsList="nodownload"
-                          />
-                        </div>
-                      </button>
-
-                      <div className="border-t border-neutral-200 px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <button
-                            aria-label={
-                              state.isPlaying
-                                ? `Video ${videoIndex + 1} pausieren`
-                                : `Video ${videoIndex + 1} abspielen`
-                            }
-                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[4px] text-white"
-                            style={{ backgroundColor: brand }}
-                            type="button"
-                            onClick={() => handleTogglePlay(videoIndex)}
-                          >
-                            {state.isPlaying ? (
-                              <Pause className="h-4 w-4" />
-                            ) : (
-                              <Play className="h-4 w-4" />
-                            )}
-                          </button>
-
-                          <input
-                            type="range"
-                            min={0}
-                            max={duration || 0}
-                            step={0.1}
-                            value={currentTime}
-                            onChange={(e) =>
-                              handleSeek(videoIndex, Number(e.target.value))
-                            }
-                            className="w-full"
-                            aria-label={`Timeline Video ${videoIndex + 1}`}
-                          />
-                        </div>
-                      </div>
-                    </div>
+                    <CarouselVideoCard
+                      video={video}
+                      index={videoIndex}
+                      state={videoStates[videoIndex]}
+                      brandColor={brand}
+                      isActive={isCenter}
+                      onSelect={() => handleSelectVideo(videoIndex)}
+                      onTogglePlay={() => handleTogglePlay(videoIndex)}
+                      onSeek={(value) => handleSeek(videoIndex, value)}
+                      onLoadedMetadata={() => handleLoadedMetadata(videoIndex)}
+                      onTimeUpdate={() => handleTimeUpdate(videoIndex)}
+                      onPlay={() =>
+                        updateVideoState(videoIndex, { isPlaying: true })
+                      }
+                      onPause={() =>
+                        updateVideoState(videoIndex, { isPlaying: false })
+                      }
+                      videoRef={(el) => {
+                        videoRefs.current[videoIndex] = el;
+                      }}
+                    />
                   </div>
                 );
               })}
@@ -775,7 +955,11 @@ export default function Page() {
       </section>
 
       {/* Quiz import */}
-      <section id="quiz" className="scroll-mt-28 py-14 md:py-20">
+      <section
+        id="quiz"
+        className="scroll-mt-28 py-14 md:py-20"
+        style={{ backgroundColor: quizBg }}
+      >
         <div className={sectionWidth}>
           <Quiz />
         </div>
@@ -786,13 +970,14 @@ export default function Page() {
         <div className={`${sectionWidth} space-y-12`}>
           <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
             <div className="overflow-hidden rounded-[4px] border border-neutral-200 bg-white">
-              <div className="relative aspect-video">
-                <video
-                  src={getPreviewSrc("/review-video-1.mp4")}
+              <div className="relative aspect-video bg-black">
+                <VideoThumbnail
+                  src="/review-video-1.mp4"
+                  alt="Vorschaubild Review Video 1"
+                  className="h-full w-full"
+                  videoClassName="h-full w-full object-cover"
                   controls
-                  playsInline
                   preload="metadata"
-                  className="h-full w-full object-cover"
                 />
               </div>
             </div>
@@ -826,13 +1011,14 @@ export default function Page() {
             </div>
 
             <div className="order-1 overflow-hidden rounded-[4px] border border-neutral-200 bg-white md:order-2">
-              <div className="relative aspect-video">
-                <video
-                  src={getPreviewSrc("/review-video-2.mp4")}
+              <div className="relative aspect-video bg-black">
+                <VideoThumbnail
+                  src="/review-video-2.mp4"
+                  alt="Vorschaubild Review Video 2"
+                  className="h-full w-full"
+                  videoClassName="h-full w-full object-cover"
                   controls
-                  playsInline
                   preload="metadata"
-                  className="h-full w-full object-cover"
                 />
               </div>
             </div>
