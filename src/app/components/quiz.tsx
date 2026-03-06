@@ -1,444 +1,961 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
-import { Button } from '@/components/ui/Button';
+import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
+import { Button } from "@/components/ui/Button";
+import Quiz from "@/components/quiz";
+import {
+  Award,
+  Check,
+  GraduationCap,
+  ShieldCheck,
+  Star,
+  Trophy,
+  Users,
+  Video,
+  Pause,
+  Play,
+  MicVocal,
+} from "lucide-react";
 
-// -------------------- Micro-Confirmation --------------------
-function MicroConfirmation({
-  tone = 'blue',
-  title,
-  subtitle,
-}: {
-  tone?: 'blue' | 'green';
-  title: string;
-  subtitle?: string;
-}) {
-  const tones =
-    tone === 'green'
-      ? { border: 'border-green-200', bg: 'bg-green-50', text: 'text-green-800' }
-      : { border: 'border-[#3266AF33]', bg: 'bg-[#EAF2FF]', text: 'text-[#153965]' };
+const brand = "#884A4A";
+const graphite = "#2F2F2F";
+const darkGray = "#4A4A4A";
+const lightGray = "#6B6B6B";
+const sectionWidth = "mx-auto w-full max-w-[1200px] px-4 md:px-6";
 
-  return (
-    <div
-      className={[
-        'mx-auto',
-        'max-w-full',
-        'inline-flex',
-        'flex-wrap',
-        'items-center',
-        'justify-center',
-        'rounded-full',
-        'border',
-        tones.border,
-        tones.bg,
-        'px-3', 'sm:px-4', // <— mobiler etwas weniger Padding
-        'py-2',
-        'shadow-sm',
-        'min-w-0',
-      ].join(' ')}
-      role="status"
-      aria-live="polite"
-    >
-      <span
-        className={[
-          'text-sm',
-          'sm:text-base',
-          'font-medium',
-          tones.text,
-          'text-center',
-          'break-words',
-          'min-w-0',
-        ].join(' ')}
-      >
-        {title}
-      </span>
+const logos = ["/logo1.jpg", "/logo2.jpg"];
 
-      {subtitle && (
-        <span
-          className={[
-            'text-xs',
-            'sm:text-sm',
-            'text-gray-600',
-            'text-center',
-            'sm:ml-2',
-            'basis-full',
-            'sm:basis-auto',
-            'mt-1',
-            'sm:mt-0',
-            'break-words',
-            'min-w-0',
-          ].join(' ')}
-        >
-          {subtitle}
-        </span>
-      )}
-    </div>
-  );
-}
-
-// -------------------- Optionen --------------------
-const PARTY_DATE_OPTIONS = [
-  { title: 'In den nächsten 4 Wochen', detail: 'Kurzfristige Planung' },
-  { title: '1-3 Monate', detail: 'Etwas mehr Vorlaufzeit' },
-  { title: 'Nach 3 Monaten', detail: 'Längerfristig geplant' },
-  { title: 'Weiß ich noch nicht', detail: 'Noch unentschlossen' },
+const featureCards = [
+  {
+    icon: GraduationCap,
+    title: "Individueller Gesangsunterricht",
+    text: "Kein Unterricht von der Stange, sondern ein klar auf dich und deine Stimme abgestimmter Weg.",
+  },
+  {
+    icon: Trophy,
+    title: "Erprobte Methode",
+    text: "Du arbeitest mit einer Methode, die vielen Menschen geholfen hat, freier, sicherer und klangvoller zu singen.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Gesund und mit Gefühl singen",
+    text: "Mehr Klang, mehr Sicherheit und mehr Leichtigkeit – ohne unnötigen Druck auf die Stimme.",
+  },
 ];
 
-const PARTY_TYPE_OPTIONS = [
-  { title: 'Geburtstag', detail: 'Ein besonderes Jubiläum', icon: '🎂' },
-  { title: 'Hochzeit', detail: 'Der schönste Tag im Leben', icon: '💍' },
-  { title: 'Firmenfeier', detail: 'Mitarbeiter oder Kunden Event', icon: '🏢' },
-  { title: 'Sonstige', detail: 'z.B. Taufe, Weihnachtsfeier', icon: '🎉' },
+const secondFeatureCards = [
+  {
+    icon: Users,
+    title: "Für jedes Level",
+    text: "Ob Anfänger, Wiedereinsteiger oder Profi – du wirst dort abgeholt, wo du gerade stehst.",
+  },
+  {
+    icon: Award,
+    title: "Mit Erfahrung",
+    text: "Langjährige Unterrichts- und Bühnenerfahrung verbinden sich mit einem klaren Blick für deine nächsten Schritte.",
+  },
+  {
+    icon: Video,
+    title: "Live oder online",
+    text: "Du kannst im Studio in Steyr oder unkompliziert via Zoom mit mir arbeiten.",
+  },
+  {
+    icon: MicVocal,
+    title: "Mit echter Freude",
+    text: "Singen darf wirksam sein – und gleichzeitig leicht, lebendig und berührend bleiben.",
+  },
 ];
 
-type Answers = {
-  ready?: 'Ja' | 'Nein';
-  partyDate?: string;
-  partyType?: string;
-  zipCode?: string;
-  name?: string;
-  email?: string;
-  phone?: string;
+const bulletPoints = [
+  "Mehr Stimmumfang und mehr Sicherheit in der Höhe",
+  "Klarerer, kräftigerer Klang ohne unnötige Anstrengung",
+  "Persönliche Begleitung mit ehrlichem Feedback und klaren Schritten",
+];
+
+const reviews = [
+  {
+    text: "Egal ob Profi oder Hobby Musiker, jeder kann bei Martin was lernen. Er freut sich über deinen Erfolg und ist einfach ein wirklich cooler Typ. Habe keine Minute bereut, die ich bei ihm Unterricht hatte. 100% Empfehlung!!",
+    author: "Angelika Spitzbart",
+  },
+  {
+    text: 'Martin ist ein sehr geduldiger, wertschätzender Vollblutmusiker und Lehrer ... Alles, was ich bei ihm lernen durfte ist abgespeichert ... die Liebe und der Mut zum "Selbstmusizieren" ist wieder da!!',
+    author: "Birgit Baumgartner",
+  },
+  {
+    text: "Martin Krendl ist ein Könner auf seinem Gebiet! Ob Cajon oder Gesang, er ist der Experte! Nicht nur was er einem beibringt, sondern auch wie er lehrt ist einfach PERFEKT!!!! Man merkt er ist bei jedem Schüler mit Herz und Seele bei der Sache und kitzelt aus jedem Menschen das best Möglichste heraus! Dank Martins Art kann er mit jedem Typ Mensch umgehen und weiß immer genau was zu tun ist! Ich bin sehr froh von so einem Profi lernen zu dürfen! DANKE!",
+    author: "Marianne Falkner",
+  },
+];
+
+const carouselVideos = [
+  "/5030c62f-ea92-45de-bab1-7f8aeda2f40c.mp4",
+  "/85052189-16cf-4fe2-aa49-b46f0d96a05f.mp4",
+  "/80cd8f88-d573-43bb-8238-0eaf3066ca59.mp4",
+];
+
+const getPreviewSrc = (src: string) => `${src}#t=0.1`;
+
+type VideoState = {
+  duration: number;
+  currentTime: number;
+  isPlaying: boolean;
 };
 
-export default function Quiz() {
-  const [step, setStep] = useState<0 | 1 | 2 | 3 | 4 | 5>(0);
-  const [answers, setAnswers] = useState<Answers>({});
-  const [checking, setChecking] = useState(false);
-  const sentLeadRef = useRef(false);
-  const [zipCodeInput, setZipCodeInput] = useState('');
+export default function Page() {
+  const [activeVideo, setActiveVideo] = useState(1);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const [videoStates, setVideoStates] = useState<VideoState[]>(
+    carouselVideos.map(() => ({
+      duration: 0,
+      currentTime: 0,
+      isPlaying: false,
+    }))
+  );
 
-  const next = (data: Partial<Answers>) => {
-    setAnswers((a) => ({ ...a, ...data }));
-    if (step === 0 || step === 1 || step === 2) {
-      setStep((s) => ((s + 1) as 0 | 1 | 2 | 3 | 4 | 5));
-    }
+  const orderedVideos = useMemo(() => {
+    const leftIndex =
+      (activeVideo - 1 + carouselVideos.length) % carouselVideos.length;
+    const rightIndex = (activeVideo + 1) % carouselVideos.length;
+
+    return [leftIndex, activeVideo, rightIndex];
+  }, [activeVideo]);
+
+  const updateVideoState = (index: number, patch: Partial<VideoState>) => {
+    setVideoStates((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, ...patch } : item))
+    );
   };
 
-  // Zurück-Logik inkl. Fix für Step 5
-  const back = () => {
-    if (checking) {
-      setChecking(false);
-      setStep(3);
-    } else if (step === 5) {
-      setStep(3);
-    } else {
-      setStep((s) => (s > 0 ? ((s - 1) as 0 | 1 | 2 | 3 | 4 | 5) : 0));
-    }
+  const handleLoadedMetadata = (index: number) => {
+    const video = videoRefs.current[index];
+    if (!video) return;
+
+    updateVideoState(index, {
+      duration: Number.isFinite(video.duration) ? video.duration : 0,
+      currentTime: video.currentTime || 0,
+    });
   };
 
-  const nextFromZipCode = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (zipCodeInput.trim() === '') {
-      alert('Bitte geben Sie Ihre PLZ ein.');
-      return;
-    }
-    setAnswers((a) => ({ ...a, zipCode: zipCodeInput.trim() }));
-    setChecking(true);
-    setStep(4);
-    setTimeout(() => {
-      setChecking(false);
-      setStep(5);
-    }, 2000);
+  const handleTimeUpdate = (index: number) => {
+    const video = videoRefs.current[index];
+    if (!video) return;
+
+    updateVideoState(index, {
+      currentTime: video.currentTime || 0,
+    });
   };
 
-  // WICHTIG: onSubmit verwenden, damit auch State-Werte mitgeschickt werden
-  const submitLead = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = new FormData(e.currentTarget);
+  const handleTogglePlay = async (index: number) => {
+    const video = videoRefs.current[index];
+    if (!video) return;
 
-    const payload: Required<Pick<Answers, 'name' | 'email' | 'phone'>> &
-      Pick<Answers, 'partyType' | 'partyDate' | 'zipCode' | 'ready'> = {
-      ready: answers.ready ?? (String(form.get('ready') || '').trim() as 'Ja' | 'Nein' | undefined),
-      partyType: answers.partyType ?? String(form.get('partyType') || '').trim(),
-      partyDate: answers.partyDate ?? String(form.get('partyDate') || '').trim(),
-      zipCode: answers.zipCode ?? String(form.get('zipCode') || '').trim(),
-      name: String(form.get('name') || '').trim(),
-      email: String(form.get('email') || '').trim(),
-      phone: String(form.get('phone') || '').trim(),
-    };
-
-    if (!payload.name || !payload.email || !payload.phone) {
-      alert('Bitte fülle alle Felder aus.');
-      return;
-    }
-
-    // fbq Event nur einmal senden
-    if (!sentLeadRef.current) {
+    if (video.paused) {
       try {
-        (window as any).fbq?.('track', 'Lead', payload);
-        sentLeadRef.current = true;
-      } catch {}
+        await video.play();
+      } catch {
+        // ignore play promise issues
+      }
+    } else {
+      video.pause();
     }
-
-    try {
-      await fetch('/api/lead', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-    } catch {
-      // optional: Fehler-Logging
-    }
-
-    window.location.href = '/danke';
   };
+
+  const handleSeek = (index: number, value: number) => {
+    const video = videoRefs.current[index];
+    if (!video) return;
+
+    video.currentTime = value;
+    updateVideoState(index, { currentTime: value });
+  };
+
+  const handleSelectVideo = (index: number) => {
+    setActiveVideo(index);
+  };
+
+  useEffect(() => {
+    videoRefs.current.forEach((video, index) => {
+      if (!video) return;
+
+      if (index !== activeVideo) {
+        video.pause();
+      }
+    });
+  }, [activeVideo]);
 
   return (
-    <div className="quiz max-w-4xl mx-auto px-3 sm:px-4 space-y-4">
-      {/* Micro-Confirmations für Steps 1, 2 & 3 */}
-      {step === 1 && (
-        <div className="flex justify-center">
-          <MicroConfirmation
-            tone="blue"
-            title="Klingt gut – nur noch zwei kurze Fragen."
-            subtitle="Das hilft uns, das beste Angebot zu finden."
-          />
-        </div>
-      )}
-      {step === 2 && (
-        <div className="flex justify-center">
-          <MicroConfirmation
-            tone="blue"
-            title="Super – gleich sind wir durch."
-            subtitle="Wann ungefähr willst Du feiern?"
-          />
-        </div>
-      )}
-      {step === 3 && !checking && (
-        <div className="flex justify-center">
-          <MicroConfirmation
-            tone="blue"
-            title="Perfekt!"
-            subtitle="Das ist die letzte Frage"
-          />
-        </div>
-      )}
-      {/* Grüne Micro-Confirmation auf der Kontaktseite */}
-      {step === 5 && (
-        <div className="flex justify-center">
-          <MicroConfirmation
-            tone="green"
-            title="Das klingt super!"
-            subtitle="Eine Fotobox wird Deine Gäste mit Sicherheit beeindrucken."
-          />
-        </div>
-      )}
+    <main
+      className="min-h-screen bg-white text-[color:var(--graphite)]"
+      style={
+        {
+          "--brand": brand,
+          "--graphite": graphite,
+          "--darkGray": darkGray,
+          "--lightGray": lightGray,
+        } as React.CSSProperties
+      }
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap');
 
-      <div className="flex items-center justify-center">
-        <h3 className="text-center text-xl font-semibold sm:text-2xl text-[#3B3B3B]">
-          {step === 0 && 'Bereit Deinen Gästen unvergessliche Erinnerungen zu bereiten?'}
-          {step === 1 && 'Um was für eine Party handelt es sich?'}
-          {step === 2 && 'Wann steigt Deine Party?'}
-          {step === 3 && 'Wo steigt die Party?'}
-          {step === 4 && 'Deine Antworten werden ausgewertet ...'}
-          {step === 5 && 'Wohin dürfen wir Dir unverbindlich & kostenlos mehr Informationen senden?'}
-        </h3>
-      </div>
+        html {
+          scroll-behavior: smooth;
+        }
 
-      {/* Schritt 0 – Einstiegsfrage (👍/👎 neben Ja/Nein) */}
-      {step === 0 && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3 max-w-xl mx-auto">
-            <button
-              onClick={() => next({ ready: 'Ja' })}
-              className="group h-36 md:h-40 w-full flex flex-col items-center justify-center rounded-lg border border-[#3B3B3B]/30 bg-white p-3 sm:p-4 text-center shadow-sm transition hover:border-[#3B3B3B] active:scale-[0.98]"
+        body {
+          font-family: 'Open Sans', sans-serif;
+          color: var(--graphite);
+          background: #ffffff;
+        }
+
+        input[type='range'] {
+          -webkit-appearance: none;
+          appearance: none;
+          background: transparent;
+        }
+
+        input[type='range']::-webkit-slider-runnable-track {
+          height: 4px;
+          border-radius: 9999px;
+          background: #e5e5e5;
+        }
+
+        input[type='range']::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          margin-top: -5px;
+          height: 14px;
+          width: 14px;
+          border-radius: 9999px;
+          background: var(--brand);
+          cursor: pointer;
+          border: 2px solid white;
+          box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
+        }
+
+        input[type='range']::-moz-range-track {
+          height: 4px;
+          border-radius: 9999px;
+          background: #e5e5e5;
+        }
+
+        input[type='range']::-moz-range-thumb {
+          height: 14px;
+          width: 14px;
+          border: 2px solid white;
+          border-radius: 9999px;
+          background: var(--brand);
+          cursor: pointer;
+          box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
+        }
+      `}</style>
+
+      {/* Header */}
+      <header
+        className="sticky top-0 z-50 border-b border-white/10"
+        style={{ backgroundColor: brand }}
+      >
+        <div className={`${sectionWidth} flex h-20 items-center justify-between`}>
+          <div className="text-left text-lg font-extrabold tracking-[0.18em] text-white md:text-xl">
+            MARTIN KRENDL
+          </div>
+
+          <a href="#quiz">
+            <Button
+              variant="secondary"
+              className="rounded-[4px] px-6 py-3 font-semibold text-white"
             >
-              {/* fester Zeilenblock für gleiche Höhe */}
-              <div className="flex items-center justify-center gap-2 h-7">
-                <span className="text-lg font-semibold text-[#3B3B3B] leading-none">Ja</span>
-                <span className="text-2xl leading-none select-none translate-y-[1px]" aria-hidden>👍</span>
-              </div>
-              <div className="mt-2 text-xs text-gray-600 max-w-[90%] leading-snug">
-                Deine Feier wird einmalig.
-              </div>
-            </button>
+              Kostenloses Kennenlernen
+            </Button>
+          </a>
+        </div>
+      </header>
 
-            <button
-              onClick={() => next({ ready: 'Nein' })}
-              className="group h-36 md:h-40 w-full flex flex-col items-center justify-center rounded-lg border border-[#3B3B3B]/30 bg-white p-3 sm:p-4 text-center shadow-sm transition hover:border-[#3B3B3B] active:scale-[0.98]"
-            >
-              {/* fester Zeilenblock für gleiche Höhe */}
-              <div className="flex items-center justify-center gap-2 h-7">
-                <span className="text-lg font-semibold text-[#3B3B3B] leading-none">Nein</span>
-                <span className="text-2xl leading-none select-none translate-y-[1px]" aria-hidden>👎</span>
+      {/* Hero */}
+      <section className="relative">
+        <div className="relative aspect-square w-full md:aspect-[16/6]">
+          <Image
+            src="/martin-desktop.jpg"
+            alt="Martin Krendl beim Singen"
+            fill
+            priority
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/10" />
+
+          <div className="absolute inset-x-0 bottom-0">
+            <div className={`${sectionWidth} pb-10 md:pb-14`}>
+              <div className="mx-auto max-w-4xl text-center text-white">
+                <h1 className="text-3xl font-extrabold leading-tight md:text-5xl">
+                  Sing freier, sicherer und mit mehr Ausdruck
+                </h1>
+                <p className="mt-4 text-sm text-white/85 md:text-lg">
+                  Für alle, die ihre Stimme wirklich entwickeln möchten – ob
+                  unter der Dusche, im Chor, auf der Bühne oder einfach für sich
+                  selbst.
+                </p>
+
+                <p className="mt-4 text-sm text-white/85 md:text-lg">
+                  Im Gesangsunterricht mit Martin Krendl arbeitest du gezielt an
+                  Klang, Höhe, Leichtigkeit und Ausdruck – persönlich in Steyr
+                  oder online via Zoom.
+                </p>
+
+                <div className="mt-6">
+                  <a href="#quiz">
+                    <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+                      Kostenloses Kennenlerngespräch anfragen
+                    </Button>
+                  </a>
+                </div>
+
+                <div className="mt-4 flex flex-col items-center justify-center gap-2">
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className="h-5 w-5 fill-[#D4AF37] text-[#D4AF37]"
+                      />
+                    ))}
+                  </div>
+                  <p className="text-sm font-semibold text-white/90">
+                    Persönlicher Gesangsunterricht mit Herz, Struktur und Erfahrung
+                  </p>
+                </div>
               </div>
-              <div className="mt-2 text-xs text-gray-600 max-w-[90%] leading-snug">
-                Ich bin mir noch nicht sicher ..
-              </div>
-            </button>
+            </div>
           </div>
         </div>
-      )}
+      </section>
 
-      {/* Schritt 4 – Ladeanimation */}
-      {step === 4 && checking && (
-        <div className="mx-auto flex flex-col items-center gap-4 rounded-lg border border-[#3B3B3B]/30 bg-white p-6 text-center max-w-md">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-[#3B3B3B]" />
-          <p className="text-sm text-gray-700">Aktuelle Kapazität wird geprüft ...</p>
-        </div>
-      )}
+      {/* Logo section */}
+      <section className="py-12 md:py-14">
+        <div className={sectionWidth}>
+          <div className="mx-auto mb-8 max-w-3xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--brand)]">
+              Bekannt aus Unterricht, Bühne und Ausbildung
+            </p>
+          </div>
 
-      {/* Schritt 1 – Party Typ */}
-      {step === 1 && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 items-stretch">
-            {PARTY_TYPE_OPTIONS.map((opt) => (
-              <button
-                key={opt.title}
-                onClick={() => next({ partyType: opt.title })}
-                className="group h-36 md:h-40 w-full flex flex-col items-center justify-center rounded-lg border border-[#3B3B3B]/30 bg-white p-3 sm:p-4 text-center shadow-sm transition hover:border-[#3B3B3B] active:scale-[0.98]"
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+            {logos.map((logo, index) => (
+              <div
+                key={logo}
+                className="flex h-28 items-center justify-center rounded-[4px] border border-neutral-200 bg-white p-4 md:h-32"
               >
-                <span className="text-4xl mb-2 leading-none select-none flex-shrink-0" aria-hidden>
-                  {opt.icon}
-                </span>
-                <div className="text-lg font-semibold text-[#3B3B3B] mb-1 leading-tight">
-                  {opt.title}
-                </div>
-                <div className="text-xs text-gray-600 max-w-[90%] leading-snug">
-                  {opt.detail}
-                </div>
-              </button>
+                <Image
+                  src={logo}
+                  alt={`Logo ${index + 1}`}
+                  width={180}
+                  height={80}
+                  className="max-h-14 w-auto object-contain md:max-h-16"
+                />
+              </div>
             ))}
           </div>
-          <div className="flex justify-center">
-            <button
-              onClick={back}
-              type="button"
-              className="mt-2 text-sm underline underline-offset-4 text-gray-600 hover:text-[#3B3B3B]"
-            >
-              Zurück
-            </button>
+        </div>
+      </section>
+
+      {/* 3 cards accent */}
+      <section className="pt-8 pb-14 md:pt-10 md:pb-20">
+        <div className={sectionWidth}>
+          <div className="grid gap-4 md:grid-cols-3 md:gap-6">
+            {featureCards.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.title}
+                  className="rounded-[4px] px-6 py-8 text-center text-white"
+                  style={{ backgroundColor: brand }}
+                >
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[4px] border border-white/20 bg-white/10">
+                    <Icon className="h-7 w-7 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-white/90">
+                    {item.text}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
-      )}
+      </section>
 
-      {/* Schritt 2 – Party Datum */}
-      {step === 2 && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 items-stretch">
-            {PARTY_DATE_OPTIONS.map((opt) => (
-              <button
-                key={opt.title}
-                onClick={() => next({ partyDate: opt.title })}
-                className="group h-36 md:h-40 w-full flex flex-col items-center justify-center rounded-lg border border-[#3B3B3B]/30 bg-white p-3 sm:p-4 text-center shadow-sm transition hover:border-[#3B3B3B] active:scale-[0.98]"
-              >
-                <div className="text-lg font-semibold text-[#3B3B3B] mb-1 leading-tight">
-                  {opt.title}
-                </div>
-                <div className="text-xs text-gray-600 max-w-[90%] leading-snug">
-                  {opt.detail}
-                </div>
-              </button>
-            ))}
-          </div>
-
-          <div className="flex justify-center">
-            <button
-              onClick={back}
-              type="button"
-              className="mt-2 text-sm underline underline-offset-4 text-gray-600 hover:text-[#3B3B3B]"
-            >
-              Zurück
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Schritt 3 – PLZ */}
-      {step === 3 && (
-        <div className="space-y-3">
-          <form onSubmit={nextFromZipCode} className="mx-auto max-w-sm space-y-3">
-            <input
-              className="h-12 w-full rounded-lg border border-[#3B3B3B]/30 bg-white px-3 sm:px-4 text-center"
-              type="text"
-              pattern="[0-9]{4}"
-              value={zipCodeInput}
-              onChange={(e) => setZipCodeInput(e.target.value)}
-              placeholder="Deine PLZ (z.B. 5020)"
-              required
+      {/* Image + text */}
+      <section className="py-14 md:py-20">
+        <div
+          className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}
+        >
+          <div className="relative aspect-square overflow-hidden rounded-[4px]">
+            <Image
+              src="/martin3.jpg"
+              alt="Gesangsunterricht mit Martin Krendl"
+              fill
+              className="object-cover"
             />
+          </div>
 
-            <Button
-              type="submit"
-              className="h-11 w-full rounded-lg bg-[#3b3b3b] text-white hover:bg-[#3b3b3b]/90 active:bg-[#3b3b3b]/95"
-            >
-              Zum nächsten Schritt →
-            </Button>
-
-            <div className="flex justify-center">
-              <button
-                onClick={back}
-                type="button"
-                className="mt-2 text-sm underline underline-offset-4 text-gray-600 hover:text-[#3B3B3B]"
-              >
-                Zurück
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Schritt 5 – Kontaktdaten */}
-      {step === 5 && (
-        <div className="space-y-3">
-          {/* WICHTIG: onSubmit statt action */}
-          <form onSubmit={submitLead} className="mx-auto max-w-3xl space-y-3 text-center">
-            {/* Optional: Hidden-Felder als Fallback */}
-            <input type="hidden" name="ready" value={answers.ready || ''} />
-            <input type="hidden" name="partyType" value={answers.partyType || ''} />
-            <input type="hidden" name="partyDate" value={answers.partyDate || ''} />
-            <input type="hidden" name="zipCode" value={answers.zipCode || ''} />
-            {/* Honeypot gegen Bots (API unterstützt 'hp') */}
-            <input type="text" name="hp" tabIndex={-1} autoComplete="off" className="hidden" />
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              <input
-                className="h-12 rounded-lg border border-[#3b3b3b]/30 bg-white px-3 sm:px-4"
-                name="name"
-                placeholder="Dein Name"
-                required
-              />
-              <input
-                className="h-12 rounded-lg border border-[#3b3b3b]/30 bg-white px-3 sm:px-4"
-                type="email"
-                name="email"
-                placeholder="Deine E-Mail-Adresse"
-                required
-              />
-              <input
-                className="h-12 rounded-lg border border-[#3b3b3b]/30 bg-white px-3 sm:px-4"
-                type="tel"
-                name="phone"
-                placeholder="Deine Telefonnummer"
-                required
-                pattern="^[0-9+()\\s-]{6,}$"
-              />
-            </div>
-
-            <Button
-              type="submit"
-              className="h-11 w-full rounded-lg bg-[#3b3b3b] text-white transition-none hover:bg-[#3b3b3b] active:bg-[#3b3b3b]"
-            >
-             Kostenlos mehr Informationen erhalten
-            </Button>
-
-            <p className="text-center text-sm text-gray-500">
-              Mit dem Absenden erklärst Du Dich mit der Verarbeitung Deiner Angaben einverstanden.
+          <div>
+            <h2 className="text-3xl font-extrabold md:text-4xl">
+              Deine Stimme kann mehr, als du vielleicht gerade glaubst
+            </h2>
+            <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">
+              Viele Menschen kämpfen mit Unsicherheit, engen Höhen,
+              fehlender Kraft oder dem Gefühl, nicht so zu klingen, wie sie es
+              eigentlich möchten. Genau hier setzt der Gesangsunterricht an:
+              verständlich, individuell und mit Fokus auf echte Veränderung.
             </p>
 
-            <div className="flex justify-center">
-              <button
-                onClick={back}
-                type="button"
-                className="mt-2 text-sm underline underline-offset-4 text-gray-600 hover:text-[#3b3b3b]"
-              >
-                Zurück
-              </button>
+            <div className="mt-6 space-y-3">
+              {bulletPoints.map((point) => (
+                <div key={point} className="flex items-start gap-3">
+                  <div
+                    className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
+                    style={{ backgroundColor: brand }}
+                  >
+                    <Check className="h-3.5 w-3.5 text-white" />
+                  </div>
+                  <p className="text-sm leading-7 text-[color:var(--graphite)]">
+                    {point}
+                  </p>
+                </div>
+              ))}
             </div>
-          </form>
+
+            <div className="mt-8">
+              <a href="#quiz">
+                <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+                  Jetzt kostenlos kennenlernen
+                </Button>
+              </a>
+            </div>
+          </div>
         </div>
-      )}
-    </div>
+      </section>
+
+      {/* Full width quote image */}
+      <section className="py-14 md:py-20">
+        <div className="relative aspect-[4/5] w-full overflow-hidden md:aspect-[16/6]">
+          <Image
+            src="/martin-zitat.jpg"
+            alt="Martin Krendl beim Singen"
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-black/45" />
+          <div className={`${sectionWidth} absolute inset-0 flex items-center`}>
+            <div className="max-w-3xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">
+                Meine Haltung im Unterricht
+              </p>
+              <blockquote className="mt-4 text-2xl font-bold leading-relaxed text-white md:text-4xl">
+                „Singen soll nicht schwerer werden – sondern freier, ehrlicher
+                und sicherer.“
+              </blockquote>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Video carousel */}
+      <section className="py-14 md:py-20">
+        <div className={sectionWidth}>
+          <div className="mx-auto mb-8 max-w-3xl text-center">
+            <h2 className="text-3xl font-extrabold md:text-4xl">
+              Hör und sieh selbst
+            </h2>
+            <p className="mt-3 text-[color:var(--lightGray)]">
+              Die Videos zeigen mich direkt beim Singen – damit du ein Gefühl
+              dafür bekommst, wer dich im Gesangsunterricht begleitet.
+            </p>
+          </div>
+
+          {/* Mobile */}
+          <div className="overflow-x-auto pb-4 [scrollbar-width:none] md:hidden">
+            <div className="flex snap-x snap-mandatory gap-4">
+              {carouselVideos.map((video, i) => {
+                const state = videoStates[i];
+                const duration = state.duration || 0;
+                const currentTime = Math.min(state.currentTime, duration || 0);
+
+                return (
+                  <div key={video} className="min-w-[88%] snap-center">
+                    <div className="overflow-hidden rounded-[4px] border border-neutral-200 bg-white shadow-sm">
+                      <button
+                        type="button"
+                        onClick={() => handleSelectVideo(i)}
+                        className="block w-full text-left"
+                      >
+                        <div className="relative aspect-video bg-black">
+                          <video
+                            ref={(el) => {
+                              videoRefs.current[i] = el;
+                            }}
+                            src={getPreviewSrc(video)}
+                            playsInline
+                            preload="metadata"
+                            className="h-full w-full object-cover"
+                            onLoadedMetadata={() => handleLoadedMetadata(i)}
+                            onTimeUpdate={() => handleTimeUpdate(i)}
+                            onPlay={() =>
+                              updateVideoState(i, { isPlaying: true })
+                            }
+                            onPause={() =>
+                              updateVideoState(i, { isPlaying: false })
+                            }
+                            controlsList="nodownload"
+                          />
+                        </div>
+                      </button>
+
+                      <div className="border-t border-neutral-200 px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <button
+                            aria-label={
+                              state.isPlaying
+                                ? `Video ${i + 1} pausieren`
+                                : `Video ${i + 1} abspielen`
+                            }
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[4px] text-white"
+                            style={{ backgroundColor: brand }}
+                            type="button"
+                            onClick={() => handleTogglePlay(i)}
+                          >
+                            {state.isPlaying ? (
+                              <Pause className="h-4 w-4" />
+                            ) : (
+                              <Play className="h-4 w-4" />
+                            )}
+                          </button>
+
+                          <input
+                            type="range"
+                            min={0}
+                            max={duration || 0}
+                            step={0.1}
+                            value={currentTime}
+                            onChange={(e) =>
+                              handleSeek(i, Number(e.target.value))
+                            }
+                            className="w-full"
+                            aria-label={`Timeline Video ${i + 1}`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Desktop */}
+          <div className="hidden md:block">
+            <div className="flex items-center justify-center gap-4 lg:gap-6">
+              {orderedVideos.map((videoIndex, position) => {
+                const video = carouselVideos[videoIndex];
+                const state = videoStates[videoIndex];
+                const duration = state.duration || 0;
+                const currentTime = Math.min(state.currentTime, duration || 0);
+                const isCenter = position === 1;
+
+                return (
+                  <div
+                    key={`${video}-${position}`}
+                    className={`transition-all duration-300 ${
+                      isCenter
+                        ? "w-[52%] lg:w-[56%]"
+                        : "w-[24%] lg:w-[22%] cursor-pointer opacity-80 hover:opacity-100"
+                    }`}
+                  >
+                    <div
+                      className={`overflow-hidden rounded-[4px] border border-neutral-200 bg-white shadow-sm transition-all duration-300 ${
+                        isCenter ? "scale-100" : "scale-[0.96]"
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => handleSelectVideo(videoIndex)}
+                        className="block w-full text-left"
+                      >
+                        <div className="relative aspect-video bg-black">
+                          <video
+                            ref={(el) => {
+                              videoRefs.current[videoIndex] = el;
+                            }}
+                            src={getPreviewSrc(video)}
+                            playsInline
+                            preload="metadata"
+                            className="h-full w-full object-cover"
+                            onLoadedMetadata={() =>
+                              handleLoadedMetadata(videoIndex)
+                            }
+                            onTimeUpdate={() => handleTimeUpdate(videoIndex)}
+                            onPlay={() =>
+                              updateVideoState(videoIndex, { isPlaying: true })
+                            }
+                            onPause={() =>
+                              updateVideoState(videoIndex, { isPlaying: false })
+                            }
+                            controlsList="nodownload"
+                          />
+                        </div>
+                      </button>
+
+                      <div className="border-t border-neutral-200 px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <button
+                            aria-label={
+                              state.isPlaying
+                                ? `Video ${videoIndex + 1} pausieren`
+                                : `Video ${videoIndex + 1} abspielen`
+                            }
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[4px] text-white"
+                            style={{ backgroundColor: brand }}
+                            type="button"
+                            onClick={() => handleTogglePlay(videoIndex)}
+                          >
+                            {state.isPlaying ? (
+                              <Pause className="h-4 w-4" />
+                            ) : (
+                              <Play className="h-4 w-4" />
+                            )}
+                          </button>
+
+                          <input
+                            type="range"
+                            min={0}
+                            max={duration || 0}
+                            step={0.1}
+                            value={currentTime}
+                            onChange={(e) =>
+                              handleSeek(videoIndex, Number(e.target.value))
+                            }
+                            className="w-full"
+                            aria-label={`Timeline Video ${videoIndex + 1}`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-6 flex justify-center gap-2">
+              {carouselVideos.map((_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => handleSelectVideo(index)}
+                  aria-label={`Video ${index + 1} auswählen`}
+                  className={`h-2.5 rounded-full transition-all ${
+                    activeVideo === index ? "w-8" : "w-2.5"
+                  }`}
+                  style={{
+                    backgroundColor:
+                      activeVideo === index ? brand : "rgb(212 212 212)",
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Mirrored image + text */}
+      <section className="py-14 md:py-20">
+        <div
+          className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}
+        >
+          <div className="order-2 md:order-1">
+            <h2 className="text-3xl font-extrabold md:text-4xl">
+              Gesangsunterricht, der dich musikalisch und stimmlich weiterbringt
+            </h2>
+            <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">
+              Es geht nicht darum, dich in ein starres System zu pressen. Es
+              geht darum, deine Stimme besser zu verstehen, Blockaden zu lösen
+              und Stück für Stück freier zu singen – so, dass es sich gut,
+              gesund und echt anfühlt.
+            </p>
+
+            <div className="mt-6 space-y-3">
+              {bulletPoints.map((point) => (
+                <div key={point} className="flex items-start gap-3">
+                  <div
+                    className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
+                    style={{ backgroundColor: brand }}
+                  >
+                    <Check className="h-3.5 w-3.5 text-white" />
+                  </div>
+                  <p className="text-sm leading-7 text-[color:var(--graphite)]">
+                    {point}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8">
+              <a href="#quiz">
+                <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+                  Kostenloses Gespräch starten
+                </Button>
+              </a>
+            </div>
+          </div>
+
+          <div className="order-1 relative aspect-square overflow-hidden rounded-[4px] md:order-2">
+            <Image
+              src="/martin2.jpg"
+              alt="Martin Krendl im Gesangsunterricht"
+              fill
+              className="object-cover"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* 4 cards accent + heading + button */}
+      <section className="py-14 md:py-20">
+        <div className={sectionWidth}>
+          <div className="mx-auto mb-10 max-w-3xl text-center">
+            <h2 className="text-3xl font-extrabold md:text-4xl">
+              Was dich im Gesangsunterricht erwartet
+            </h2>
+            <p className="mt-4 text-[color:var(--lightGray)]">
+              Klarer Unterricht, persönliche Aufmerksamkeit und ein Ansatz, der
+              sich an deiner Stimme orientiert – nicht an pauschalen Lösungen.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 md:gap-6">
+            {secondFeatureCards.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.title}
+                  className="rounded-[4px] px-5 py-7 text-center text-white"
+                  style={{ backgroundColor: brand }}
+                >
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[4px] border border-white/20 bg-white/10">
+                    <Icon className="h-7 w-7 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-white/90">
+                    {item.text}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-8 text-center">
+            <a href="#quiz">
+              <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+                Zum Kennenlern-Quiz
+              </Button>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Centered flowing text */}
+      <section className="py-14 md:py-20">
+        <div className={sectionWidth}>
+          <div className="mx-auto max-w-4xl text-center">
+            <p className="text-lg leading-9 text-[color:var(--darkGray)] md:text-xl">
+              Ob du sicherer intonieren, freier in die Höhe kommen, kraftvoller
+              klingen oder einfach wieder mit mehr Freude singen möchtest: Der
+              nächste Schritt beginnt oft nicht mit mehr Druck, sondern mit dem
+              richtigen Zugang zu deiner Stimme.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Quiz import */}
+      <section id="quiz" className="scroll-mt-28 py-14 md:py-20">
+        <div className={sectionWidth}>
+          <Quiz />
+        </div>
+      </section>
+
+      {/* 2x video + quote layouts */}
+      <section className="py-14 md:py-20">
+        <div className={`${sectionWidth} space-y-12`}>
+          <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
+            <div className="overflow-hidden rounded-[4px] border border-neutral-200 bg-white">
+              <div className="relative aspect-video">
+                <video
+                  src={getPreviewSrc("/review-video-1.mp4")}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            </div>
+
+            <div className="rounded-[4px] bg-neutral-100 p-8">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--brand)]">
+                Video-Testimonial
+              </p>
+              <blockquote className="mt-4 text-2xl font-bold leading-relaxed text-[color:var(--graphite)]">
+                „Martin Krendl ist ein absoluter Meister seines Fachs“
+              </blockquote>
+              <p className="mt-4 text-sm leading-7 text-[color:var(--lightGray)]">
+                – Robin D., Starvocal Coach
+              </p>
+            </div>
+          </div>
+
+          <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
+            <div className="order-2 rounded-[4px] bg-neutral-100 p-8 md:order-1">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--brand)]">
+                Video-Testimonial
+              </p>
+              <blockquote className="mt-4 text-2xl font-bold leading-relaxed text-[color:var(--graphite)]">
+                „Ich durfte schon mehrfach mit Martin auf der Bühne stehen. Was
+                der präsentiert ist wow“
+              </blockquote>
+              <p className="mt-4 text-sm leading-7 text-[color:var(--lightGray)]">
+                – Misha Kovar, Originalcast We Will Rock You, Tanz der Vampire,
+                Evita, u.n.v.m.
+              </p>
+            </div>
+
+            <div className="order-1 overflow-hidden rounded-[4px] border border-neutral-200 bg-white md:order-2">
+              <div className="relative aspect-video">
+                <video
+                  src={getPreviewSrc("/review-video-2.mp4")}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* About / Story */}
+      <section className="py-14 md:py-20">
+        <div
+          className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}
+        >
+          <div className="relative aspect-square overflow-hidden rounded-[4px]">
+            <Image
+              src="/martin1.jpg"
+              alt="Martin Krendl Portrait"
+              fill
+              className="object-cover"
+            />
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--brand)]">
+              Über Martin
+            </p>
+            <h2 className="mt-3 text-3xl font-extrabold md:text-4xl">
+              Von der eigenen Suche zur Arbeit mit Sängern
+            </h2>
+            <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">
+              Mein eigener Wendepunkt kam, als mir Robin D. in kurzer Zeit etwas
+              gezeigt hat, das ich nach Monaten bei anderen Lehrern nicht
+              geschafft hatte. Diese Erfahrung hat meinen Blick auf Stimme,
+              Technik und Unterricht grundlegend verändert.
+            </p>
+            <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">
+              2009 begann meine Ausbildung, 2012 eröffnete ich mein eigenes
+              Voiceation Studio. Heute arbeite ich mit Anfängern,
+              Fortgeschrittenen und Profis, gebe Workshops für Chöre und
+              Ensembles und unterrichte live im Studio oder via Zoom.
+            </p>
+            <p className="mt-4 text-base leading-8 text-[color:var(--lightGray)]">
+              Mir ist wichtig, dass Menschen nicht nur „besser singen“, sondern
+              ihre Stimme mit mehr Vertrauen, Freiheit und Freude erleben.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Reviews */}
+      <section className="py-14 md:py-20">
+        <div className={sectionWidth}>
+          <div className="mx-auto mb-10 max-w-2xl text-center">
+            <h2 className="text-3xl font-extrabold md:text-4xl">
+              Stimmen von Schülern
+            </h2>
+          </div>
+
+          <div className="overflow-x-auto pb-4 [scrollbar-width:none] md:overflow-visible">
+            <div className="flex gap-4 md:grid md:grid-cols-3 md:gap-6">
+              {reviews.map((review, index) => (
+                <div
+                  key={index}
+                  className="min-w-[88%] rounded-[4px] bg-neutral-100 p-6 md:min-w-0"
+                >
+                  <div className="mb-4 flex items-center gap-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className="h-4 w-4 fill-[#D4AF37] text-[#D4AF37]"
+                      />
+                    ))}
+                  </div>
+                  <p className="text-sm leading-7 text-[color:var(--graphite)]">
+                    {review.text}
+                  </p>
+                  <p className="mt-4 text-sm font-semibold text-[color:var(--brand)]">
+                    – {review.author}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="pb-20 pt-14 md:pb-24 md:pt-20">
+        <div
+          className={`${sectionWidth} grid items-center gap-8 md:grid-cols-3 md:gap-10`}
+        >
+          <div className="relative aspect-video overflow-hidden rounded-[4px]">
+            <Image
+              src="/final-cta-image.jpg"
+              alt="Gesangsunterricht in Steyr"
+              fill
+              className="object-cover"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <h2 className="text-3xl font-extrabold md:text-4xl">
+              Lass uns gemeinsam schauen, was in deiner Stimme steckt
+            </h2>
+            <p className="mt-4 max-w-3xl text-base leading-8 text-[color:var(--lightGray)]">
+              Wenn du spürst, dass deine Stimme noch mehr kann, dann ist ein
+              persönliches Kennenlerngespräch der beste erste Schritt. Ganz
+              unkompliziert, kostenlos und mit Blick darauf, was für dich gerade
+              sinnvoll ist.
+            </p>
+
+            <div className="mt-8">
+              <a href="#quiz">
+                <Button
+                  variant="secondary"
+                  className="rounded-[4px] px-6 py-3 font-semibold text-white"
+                >
+                  Jetzt Kennenlerngespräch anfragen
+                </Button>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
