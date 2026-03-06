@@ -3,7 +3,7 @@ import '@/app/globals.css';
 import { dosis } from '@/app/fonts';
 
 import Footer from '@/components/ui/Footer';
-import { TopHeader } from '@/components/TopHeader';
+import TopHeader from '@/components/TopHeader';
 import { ConsentProvider } from '@/app/providers/ConsentProvider';
 import CookieBanner from '@/components/CookieBanner';
 import MarketingPixels from '@/components/MarketingPixels';
