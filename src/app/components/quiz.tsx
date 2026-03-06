@@ -274,12 +274,13 @@ export default function Quiz() {
                 Bereit für deine unverbindliche Probestunde?
               </h2>
 
-              <div className="mt-8 grid grid-cols-2 gap-4 md:gap-6">
+              <div className="mx-auto mt-8 grid max-w-[520px] grid-cols-2 gap-3 md:max-w-[520px] md:grid-cols-2 md:gap-4">
                 {question1Options.map((option) => (
                   <ImageAnswerCard
                     key={option.value}
                     title={option.title}
                     image={option.image}
+                    compact
                     onClick={() => next({ ready: option.value })}
                   />
                 ))}
@@ -324,7 +325,7 @@ export default function Quiz() {
                 Interessiert du dich für vor-Ort Unterricht oder online?
               </h2>
 
-              <div className="mx-auto mt-8 grid max-w-3xl grid-cols-2 gap-4 md:gap-6">
+              <div className="mx-auto mt-8 grid max-w-[520px] grid-cols-2 gap-3 md:max-w-[520px] md:grid-cols-2 md:gap-4">
                 {question3Options.map((option) => (
                   <IconAnswerCard
                     key={option.value}
