@@ -1,17 +1,20 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import Quiz from "@/components/quiz";
 import {
   Award,
   Check,
-  ChevronLeft,
-  ChevronRight,
   GraduationCap,
   ShieldCheck,
   Star,
   Trophy,
   Users,
   Video,
+  Pause,
+  Play,
 } from "lucide-react";
 
 const brand = "#884A4A";
@@ -86,14 +89,91 @@ const reviews = [
   "Von Anfang bis Ende professionell und angenehm. Man spürt die Qualität in jedem Detail.",
 ];
 
-const scrollToQuiz = `
-  const el = document.getElementById('quiz');
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-`;
+const carouselVideos = ["/video1.mp4", "/video2.mp4", "/video3.mp4"];
+
+type VideoState = {
+  duration: number;
+  currentTime: number;
+  isPlaying: boolean;
+};
 
 export default function Page() {
+  const [activeVideo, setActiveVideo] = useState(1);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const [videoStates, setVideoStates] = useState<VideoState[]>(
+    carouselVideos.map(() => ({
+      duration: 0,
+      currentTime: 0,
+      isPlaying: false,
+    }))
+  );
+
+  const orderedVideos = useMemo(() => {
+    const leftIndex =
+      (activeVideo - 1 + carouselVideos.length) % carouselVideos.length;
+    const rightIndex = (activeVideo + 1) % carouselVideos.length;
+
+    return [leftIndex, activeVideo, rightIndex];
+  }, [activeVideo]);
+
+  const updateVideoState = (index: number, patch: Partial<VideoState>) => {
+    setVideoStates((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, ...patch } : item))
+    );
+  };
+
+  const handleLoadedMetadata = (index: number) => {
+    const video = videoRefs.current[index];
+    if (!video) return;
+
+    updateVideoState(index, {
+      duration: Number.isFinite(video.duration) ? video.duration : 0,
+      currentTime: video.currentTime || 0,
+    });
+  };
+
+  const handleTimeUpdate = (index: number) => {
+    const video = videoRefs.current[index];
+    if (!video) return;
+
+    updateVideoState(index, {
+      currentTime: video.currentTime || 0,
+    });
+  };
+
+  const handleTogglePlay = (index: number) => {
+    const video = videoRefs.current[index];
+    if (!video) return;
+
+    if (video.paused) {
+      video.play();
+    } else {
+      video.pause();
+    }
+  };
+
+  const handleSeek = (index: number, value: number) => {
+    const video = videoRefs.current[index];
+    if (!video) return;
+
+    video.currentTime = value;
+    updateVideoState(index, { currentTime: value });
+  };
+
+  const handleSelectVideo = (index: number) => {
+    setActiveVideo(index);
+  };
+
+  useEffect(() => {
+    videoRefs.current.forEach((video, index) => {
+      if (!video) return;
+
+      if (index !== activeVideo) {
+        video.pause();
+      }
+    });
+  }, [activeVideo]);
+
   return (
     <main
       className="min-h-screen bg-white text-[color:var(--graphite)]"
@@ -118,6 +198,47 @@ export default function Page() {
           color: var(--graphite);
           background: #ffffff;
         }
+
+        input[type='range'] {
+          -webkit-appearance: none;
+          appearance: none;
+          background: transparent;
+        }
+
+        input[type='range']::-webkit-slider-runnable-track {
+          height: 4px;
+          border-radius: 9999px;
+          background: #e5e5e5;
+        }
+
+        input[type='range']::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          margin-top: -5px;
+          height: 14px;
+          width: 14px;
+          border-radius: 9999px;
+          background: var(--brand);
+          cursor: pointer;
+          border: 2px solid white;
+          box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
+        }
+
+        input[type='range']::-moz-range-track {
+          height: 4px;
+          border-radius: 9999px;
+          background: #e5e5e5;
+        }
+
+        input[type='range']::-moz-range-thumb {
+          height: 14px;
+          width: 14px;
+          border: 2px solid white;
+          border-radius: 9999px;
+          background: var(--brand);
+          cursor: pointer;
+          box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
+        }
       `}</style>
 
       {/* Header */}
@@ -130,17 +251,17 @@ export default function Page() {
             MARTIN KRENDL
           </div>
 
-         <a href="#quiz">
-  <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
-    Zum Quiz
-  </Button>
-</a>
+          <a href="#quiz">
+            <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+              Zum Quiz
+            </Button>
+          </a>
         </div>
       </header>
 
       {/* Hero */}
       <section className="relative">
-        <div className="relative aspect-[4/5] w-full md:aspect-[16/8]">
+        <div className="relative aspect-square w-full md:aspect-[16/6]">
           <Image
             src="/hero.jpg"
             alt="Hero Bild"
@@ -164,11 +285,11 @@ export default function Page() {
                 </p>
 
                 <div className="mt-6">
-                 <a href="#quiz">
-  <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
-    Zum Quiz
-  </Button>
-</a>
+                  <a href="#quiz">
+                    <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+                      Zum Quiz
+                    </Button>
+                  </a>
                 </div>
 
                 <div className="mt-4 flex flex-col items-center justify-center gap-2">
@@ -191,7 +312,7 @@ export default function Page() {
       </section>
 
       {/* Logo section */}
-      <section className="py-14 md:py-20">
+      <section className="py-12 md:py-14">
         <div className={sectionWidth}>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
             {logos.map((logo, index) => (
@@ -213,7 +334,7 @@ export default function Page() {
       </section>
 
       {/* 3 cards accent */}
-      <section className="py-14 md:py-20">
+      <section className="pt-8 pb-14 md:pt-10 md:pb-20">
         <div className={sectionWidth}>
           <div className="grid gap-4 md:grid-cols-3 md:gap-6">
             {featureCards.map((item) => {
@@ -240,7 +361,9 @@ export default function Page() {
 
       {/* Image + text */}
       <section className="py-14 md:py-20">
-        <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
+        <div
+          className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}
+        >
           <div className="relative aspect-square overflow-hidden rounded-[4px]">
             <Image
               src="/section-image-1.jpg"
@@ -279,10 +402,10 @@ export default function Page() {
 
             <div className="mt-8">
               <a href="#quiz">
-  <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
-    Zum Quiz
-  </Button>
-</a>
+                <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+                  Zum Quiz
+                </Button>
+              </a>
             </div>
           </div>
         </div>
@@ -290,7 +413,7 @@ export default function Page() {
 
       {/* Full width quote image */}
       <section className="py-14 md:py-20">
-        <div className="relative aspect-[16/8] w-full overflow-hidden">
+        <div className="relative aspect-[4/5] w-full overflow-hidden md:aspect-[16/6]">
           <Image
             src="/quote-image.jpg"
             alt="Zitat Hintergrund"
@@ -321,65 +444,197 @@ export default function Page() {
                 Eindrücke im Videoformat
               </h2>
               <p className="mt-3 max-w-2xl text-[color:var(--lightGray)]">
-                Moderne, horizontale Video-Slider-Darstellung mit Fokus auf
-                Klarheit, Ruhe und einer markanten Markenführung.
+                Moderne, horizontale Video-Darstellung mit einem klaren Fokus
+                auf das mittlere Video auf Desktop.
               </p>
             </div>
           </div>
 
-          <div className="overflow-x-auto pb-4 [scrollbar-width:none]">
-            <div className="flex snap-x snap-mandatory gap-4 md:gap-6">
-              {["/video1.mp4", "/video2.mp4", "/video3.mp4"].map((video, i) => (
-                <div
-                  key={video}
-                  className="min-w-[88%] snap-center md:min-w-[48%] lg:min-w-[36%]"
-                >
-                  <div className="overflow-hidden rounded-[4px] border border-neutral-200 bg-white shadow-sm">
-                    <div className="relative aspect-video bg-black">
-                      <video
-                        src={video}
-                        controls
-                        playsInline
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
+          {/* Mobile */}
+          <div className="overflow-x-auto pb-4 [scrollbar-width:none] md:hidden">
+            <div className="flex snap-x snap-mandatory gap-4">
+              {carouselVideos.map((video, i) => {
+                const state = videoStates[i];
+                const duration = state.duration || 0;
+                const currentTime = Math.min(state.currentTime, duration || 0);
 
-                    <div className="flex items-center justify-between border-t border-neutral-200 px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button
-                          aria-label={`Vorheriges Video ${i + 1}`}
-                          className="flex h-9 w-9 items-center justify-center rounded-[4px] border border-neutral-200 bg-white text-[color:var(--brand)]"
-                          type="button"
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </button>
-                        <button
-                          aria-label={`Nächstes Video ${i + 1}`}
-                          className="flex h-9 w-9 items-center justify-center rounded-[4px] border border-neutral-200 bg-white text-[color:var(--brand)]"
-                          type="button"
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </button>
-                      </div>
-
-                      <div className="mx-4 h-1 flex-1 rounded-full bg-neutral-200">
-                        <div
-                          className="h-1 rounded-full"
-                          style={{ width: `${(i + 1) * 25}%`, backgroundColor: brand }}
-                        />
-                      </div>
-
+                return (
+                  <div key={video} className="min-w-[88%] snap-center">
+                    <div className="overflow-hidden rounded-[4px] border border-neutral-200 bg-white shadow-sm">
                       <button
-                        aria-label={`Pause Video ${i + 1}`}
-                        className="rounded-[4px] px-3 py-2 text-sm font-semibold text-white"
-                        style={{ backgroundColor: brand }}
                         type="button"
+                        onClick={() => handleSelectVideo(i)}
+                        className="block w-full text-left"
                       >
-                        Pause
+                        <div className="relative aspect-video bg-black">
+                          <video
+                            ref={(el) => {
+                              videoRefs.current[i] = el;
+                            }}
+                            src={video}
+                            playsInline
+                            preload="metadata"
+                            className="h-full w-full object-cover"
+                            onLoadedMetadata={() => handleLoadedMetadata(i)}
+                            onTimeUpdate={() => handleTimeUpdate(i)}
+                            onPlay={() =>
+                              updateVideoState(i, { isPlaying: true })
+                            }
+                            onPause={() =>
+                              updateVideoState(i, { isPlaying: false })
+                            }
+                          />
+                        </div>
                       </button>
+
+                      <div className="border-t border-neutral-200 px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <button
+                            aria-label={
+                              state.isPlaying
+                                ? `Video ${i + 1} pausieren`
+                                : `Video ${i + 1} abspielen`
+                            }
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[4px] text-white"
+                            style={{ backgroundColor: brand }}
+                            type="button"
+                            onClick={() => handleTogglePlay(i)}
+                          >
+                            {state.isPlaying ? (
+                              <Pause className="h-4 w-4" />
+                            ) : (
+                              <Play className="h-4 w-4" />
+                            )}
+                          </button>
+
+                          <input
+                            type="range"
+                            min={0}
+                            max={duration || 0}
+                            step={0.1}
+                            value={currentTime}
+                            onChange={(e) =>
+                              handleSeek(i, Number(e.target.value))
+                            }
+                            className="w-full"
+                            aria-label={`Timeline Video ${i + 1}`}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Desktop */}
+          <div className="hidden md:block">
+            <div className="flex items-center justify-center gap-4 lg:gap-6">
+              {orderedVideos.map((videoIndex, position) => {
+                const video = carouselVideos[videoIndex];
+                const state = videoStates[videoIndex];
+                const duration = state.duration || 0;
+                const currentTime = Math.min(state.currentTime, duration || 0);
+                const isCenter = position === 1;
+
+                return (
+                  <div
+                    key={`${video}-${position}`}
+                    className={`transition-all duration-300 ${
+                      isCenter
+                        ? "w-[52%] lg:w-[56%]"
+                        : "w-[24%] lg:w-[22%] cursor-pointer opacity-80 hover:opacity-100"
+                    }`}
+                  >
+                    <div
+                      className={`overflow-hidden rounded-[4px] border border-neutral-200 bg-white shadow-sm transition-all duration-300 ${
+                        isCenter ? "scale-100" : "scale-[0.96]"
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => handleSelectVideo(videoIndex)}
+                        className="block w-full text-left"
+                      >
+                        <div className="relative aspect-video bg-black">
+                          <video
+                            ref={(el) => {
+                              videoRefs.current[videoIndex] = el;
+                            }}
+                            src={video}
+                            playsInline
+                            preload="metadata"
+                            className="h-full w-full object-cover"
+                            onLoadedMetadata={() =>
+                              handleLoadedMetadata(videoIndex)
+                            }
+                            onTimeUpdate={() => handleTimeUpdate(videoIndex)}
+                            onPlay={() =>
+                              updateVideoState(videoIndex, { isPlaying: true })
+                            }
+                            onPause={() =>
+                              updateVideoState(videoIndex, { isPlaying: false })
+                            }
+                          />
+                        </div>
+                      </button>
+
+                      <div className="border-t border-neutral-200 px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <button
+                            aria-label={
+                              state.isPlaying
+                                ? `Video ${videoIndex + 1} pausieren`
+                                : `Video ${videoIndex + 1} abspielen`
+                            }
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[4px] text-white"
+                            style={{ backgroundColor: brand }}
+                            type="button"
+                            onClick={() => handleTogglePlay(videoIndex)}
+                          >
+                            {state.isPlaying ? (
+                              <Pause className="h-4 w-4" />
+                            ) : (
+                              <Play className="h-4 w-4" />
+                            )}
+                          </button>
+
+                          <input
+                            type="range"
+                            min={0}
+                            max={duration || 0}
+                            step={0.1}
+                            value={currentTime}
+                            onChange={(e) =>
+                              handleSeek(videoIndex, Number(e.target.value))
+                            }
+                            className="w-full"
+                            aria-label={`Timeline Video ${videoIndex + 1}`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-6 flex justify-center gap-2">
+              {carouselVideos.map((_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => handleSelectVideo(index)}
+                  aria-label={`Video ${index + 1} auswählen`}
+                  className={`h-2.5 rounded-full transition-all ${
+                    activeVideo === index ? "w-8" : "w-2.5"
+                  }`}
+                  style={{
+                    backgroundColor:
+                      activeVideo === index ? brand : "rgb(212 212 212)",
+                  }}
+                />
               ))}
             </div>
           </div>
@@ -388,7 +643,9 @@ export default function Page() {
 
       {/* Mirrored image + text */}
       <section className="py-14 md:py-20">
-        <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
+        <div
+          className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}
+        >
           <div className="order-2 md:order-1">
             <h2 className="text-3xl font-extrabold md:text-4xl">
               Moderne Begleitung mit einem klaren Blick auf das Wesentliche
@@ -417,10 +674,10 @@ export default function Page() {
 
             <div className="mt-8">
               <a href="#quiz">
-  <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
-    Zum Quiz
-  </Button>
-</a>
+                <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+                  Zum Quiz
+                </Button>
+              </a>
             </div>
           </div>
 
@@ -466,11 +723,11 @@ export default function Page() {
           </div>
 
           <div className="mt-8 text-center">
-          <a href="#quiz">
-  <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
-    Zum Quiz
-  </Button>
-</a>
+            <a href="#quiz">
+              <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+                Zum Quiz
+              </Button>
+            </a>
           </div>
         </div>
       </section>
@@ -583,7 +840,9 @@ export default function Page() {
 
       {/* Final 3er grid */}
       <section className="pb-20 pt-14 md:pb-24 md:pt-20">
-        <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-3 md:gap-10`}>
+        <div
+          className={`${sectionWidth} grid items-center gap-8 md:grid-cols-3 md:gap-10`}
+        >
           <div className="relative aspect-video overflow-hidden rounded-[4px]">
             <Image
               src="/final-image.jpg"
@@ -606,10 +865,10 @@ export default function Page() {
 
             <div className="mt-8">
               <a href="#quiz">
-  <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
-    Zum Quiz
-  </Button>
-</a>
+                <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
+                  Zum Quiz
+                </Button>
+              </a>
             </div>
           </div>
         </div>
