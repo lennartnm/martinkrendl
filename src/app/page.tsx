@@ -93,7 +93,7 @@ const reviews = [
   },
 ];
 
-const carouselVideos = ["/video1.mp4", "/video2.mp4", "/video3.mp4"];
+const carouselVideos = ["/5030c62f-ea92-45de-bab1-7f8aeda2f40c.mp4", "/85052189-16cf-4fe2-aa49-b46f0d96a05f.mp4", "/80cd8f88-d573-43bb-8238-0eaf3066ca59.mp4"];
 
 type VideoState = {
   duration: number;
@@ -267,7 +267,7 @@ export default function Page() {
       <section className="relative">
         <div className="relative aspect-square w-full md:aspect-[16/6]">
           <Image
-            src="/hero.jpg"
+            src="/martin-desktop.jpg"
             alt="Martin Krendl beim Singen"
             fill
             priority
@@ -381,7 +381,7 @@ export default function Page() {
         >
           <div className="relative aspect-square overflow-hidden rounded-[4px]">
             <Image
-              src="/section-image-1.jpg"
+              src="/martin3.jpg"
               alt="Gesangsunterricht mit Martin Krendl"
               fill
               className="object-cover"
@@ -430,7 +430,7 @@ export default function Page() {
       <section className="py-14 md:py-20">
         <div className="relative aspect-[4/5] w-full overflow-hidden md:aspect-[16/6]">
           <Image
-            src="/quote-image.jpg"
+            src="/martin-zitat.jpg"
             alt="Martin Krendl beim Singen"
             fill
             className="object-cover"
@@ -699,7 +699,7 @@ export default function Page() {
 
           <div className="order-1 relative aspect-square overflow-hidden rounded-[4px] md:order-2">
             <Image
-              src="/section-image-2.jpg"
+              src="/martin2.jpg"
               alt="Martin Krendl im Vocal Coaching"
               fill
               className="object-cover"
@@ -837,7 +837,7 @@ export default function Page() {
         >
           <div className="relative aspect-square overflow-hidden rounded-[4px]">
             <Image
-              src="/final-image.jpg"
+              src="/martin1.jpg"
               alt="Martin Krendl Portrait"
               fill
               className="object-cover"
