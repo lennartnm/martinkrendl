@@ -77,10 +77,6 @@ function ProgressBar({ step }: { step: number }) {
 
   return (
     <div className="mx-auto w-full max-w-xl">
-      <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--lightGray)]">
-        <span>Kurzes Quiz</span>
-        <span>{Math.min(step + 1, 4)} / 4</span>
-      </div>
       <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200">
         <div
           className="h-full rounded-full transition-all duration-300"
@@ -95,10 +91,12 @@ function ImageAnswerCard({
   title,
   image,
   onClick,
+  compact = false,
 }: {
   title: string;
   image: string;
   onClick: () => void;
+  compact?: boolean;
 }) {
   return (
     <button
@@ -114,10 +112,16 @@ function ImageAnswerCard({
           className="object-cover transition duration-300 group-hover:scale-[1.03]"
         />
         <div
-          className="absolute inset-x-0 bottom-0 px-4 py-4 text-center"
+          className={`absolute inset-x-0 bottom-0 text-center ${
+            compact ? 'px-2 py-2.5 md:px-2 md:py-3' : 'px-4 py-4'
+          }`}
           style={{ backgroundColor: `${brand}E6` }}
         >
-          <span className="block text-sm font-bold text-white md:text-base">
+          <span
+            className={`block font-bold text-white ${
+              compact ? 'text-xs leading-snug md:text-sm' : 'text-sm md:text-base'
+            }`}
+          >
             {title}
           </span>
         </div>
@@ -157,27 +161,50 @@ export default function Quiz() {
   const [answers, setAnswers] = useState<Answers>({});
   const [loading, setLoading] = useState(false);
   const sentLeadRef = useRef(false);
+  const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const startLoadingStep = (data: Partial<Answers>) => {
+    setAnswers((prev) => ({ ...prev, ...data }));
+    setLoading(true);
+    setStep(3);
+
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+    }
+
+    loadingTimeoutRef.current = setTimeout(() => {
+      setLoading(false);
+      setStep(4);
+      loadingTimeoutRef.current = null;
+    }, 1800);
+  };
 
   const next = (data: Partial<Answers>) => {
-    setAnswers((prev) => ({ ...prev, ...data }));
-
     if (step === 2) {
-      setLoading(true);
-      setStep(3);
-
-      setTimeout(() => {
-        setLoading(false);
-        setStep(4);
-      }, 1800);
-
+      startLoadingStep(data);
       return;
     }
 
+    setAnswers((prev) => ({ ...prev, ...data }));
     setStep((prev) => (prev + 1) as 0 | 1 | 2 | 3 | 4);
   };
 
   const back = () => {
-    if (loading) return;
+    if (loading) {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+      }
+      setLoading(false);
+      setStep(2);
+      return;
+    }
+
+    if (step === 4) {
+      setStep(2);
+      return;
+    }
+
     setStep((prev) => (prev > 0 ? ((prev - 1) as 0 | 1 | 2 | 3 | 4) : 0));
   };
 
@@ -243,13 +270,7 @@ export default function Quiz() {
         <div className="mt-6 md:mt-8">
           {step === 0 && (
             <section className="text-center">
-              <p
-                className="text-sm font-semibold uppercase tracking-[0.18em]"
-                style={{ color: brand }}
-              >
-                Frage 1
-              </p>
-              <h2 className="mt-3 text-3xl font-extrabold text-[color:var(--graphite)] md:text-4xl">
+              <h2 className="text-3xl font-extrabold text-[color:var(--graphite)] md:text-4xl">
                 Bereit für deine unverbindliche Probestunde?
               </h2>
 
@@ -268,22 +289,17 @@ export default function Quiz() {
 
           {step === 1 && (
             <section className="text-center">
-              <p
-                className="text-sm font-semibold uppercase tracking-[0.18em]"
-                style={{ color: brand }}
-              >
-                Frage 2
-              </p>
-              <h2 className="mt-3 text-3xl font-extrabold text-[color:var(--graphite)] md:text-4xl">
+              <h2 className="text-3xl font-extrabold text-[color:var(--graphite)] md:text-4xl">
                 Hast du bereits Erfahrung im Singen?
               </h2>
 
-              <div className="mt-8 grid grid-cols-2 gap-4 md:gap-6">
+              <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
                 {question2Options.map((option) => (
                   <ImageAnswerCard
                     key={option.value}
                     title={option.title}
                     image={option.image}
+                    compact
                     onClick={() => next({ experience: option.value })}
                   />
                 ))}
@@ -304,13 +320,7 @@ export default function Quiz() {
 
           {step === 2 && (
             <section className="text-center">
-              <p
-                className="text-sm font-semibold uppercase tracking-[0.18em]"
-                style={{ color: brand }}
-              >
-                Frage 3
-              </p>
-              <h2 className="mt-3 text-3xl font-extrabold text-[color:var(--graphite)] md:text-4xl">
+              <h2 className="text-3xl font-extrabold text-[color:var(--graphite)] md:text-4xl">
                 Interessiert du dich für vor-Ort Unterricht oder online?
               </h2>
 
@@ -352,6 +362,17 @@ export default function Quiz() {
                   Wir bereiten deine unverbindliche Probestunde vor.
                 </p>
               </div>
+
+              <div className="mt-6 text-center">
+                <button
+                  type="button"
+                  onClick={back}
+                  className="text-sm underline underline-offset-4"
+                  style={{ color: lightGray }}
+                >
+                  Zurück
+                </button>
+              </div>
             </section>
           )}
 
@@ -367,13 +388,6 @@ export default function Quiz() {
                   />
                 </div>
               </div>
-
-              <p
-                className="text-sm font-semibold uppercase tracking-[0.18em]"
-                style={{ color: brand }}
-              >
-                Fast geschafft
-              </p>
 
               <h2 className="mt-3 text-3xl font-extrabold text-[color:var(--graphite)] md:text-4xl">
                 Trag hier bitte deine Kontaktdaten ein
