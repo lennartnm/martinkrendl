@@ -32,7 +32,7 @@ export default function TopHeader() {
             gap: "10px",
           }}
         >
-          <span>Voiceation Gesangsunterricht in Steyr oder online 🎶</span>
+          <span>Gesangsunterricht in Steyr oder online 🎶</span>
 
           <button
             onClick={() => setVisible(false)}
