@@ -230,13 +230,7 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            {/* Tracking status - no setup needed, it's already in layout.tsx */}
-            <div className="rounded-[4px] border border-emerald-100 bg-emerald-50 p-4">
-              <p className="flex items-center gap-2 text-sm font-semibold text-emerald-700">
-                <CheckCircle className="h-4 w-4 shrink-0" />
-                Tracking aktiv – das Zählen von Seitenaufrufen läuft automatisch, ohne Cookies und DSGVO-konform.
-              </p>
-            </div>
+          
           </>
         )}
       </div>
