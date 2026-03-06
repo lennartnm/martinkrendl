@@ -514,7 +514,7 @@ export default function Page() {
                     ))}
                   </div>
                   <p className="text-sm font-semibold text-white/90">
-                    Persönlicher Gesangsunterricht mit Herz, Struktur und Erfahrung
+                   100+ Schüler vor Ort & online
                   </p>
                 </div>
               </div>
