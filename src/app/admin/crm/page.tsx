@@ -41,6 +41,7 @@ const STATUS_STYLES: Record<string, { label: string; bg: string; text: string }>
 // Modern status dropdown component
 function StatusDropdown({ value, onChange, onClick, wide }: { value: string; onChange: (v: string) => void; onClick?: (e: React.MouseEvent) => void; wide?: boolean }) {
   const [open, setOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0, width: 0 });
   const ref = useRef<HTMLDivElement>(null);
   const s = STATUS_STYLES[value] || STATUS_STYLES.new;
 
@@ -50,11 +51,19 @@ function StatusDropdown({ value, onChange, onClick, wide }: { value: string; onC
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  const handleOpen = () => {
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      setMenuPos({ top: rect.bottom + 4, left: rect.left, width: Math.max(rect.width, 160) });
+    }
+    setOpen(v => !v);
+  };
+
   return (
     <div ref={ref} className={`relative ${wide ? 'w-full' : 'inline-block'}`} onClick={onClick}>
       <button
         type="button"
-        onClick={() => setOpen(v => !v)}
+        onClick={handleOpen}
         className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition hover:opacity-90 ${wide ? 'w-full justify-between rounded-[4px] border border-neutral-200 bg-white px-3 py-2 text-sm' : ''}`}
         style={wide ? { color: s.text } : { backgroundColor: s.bg, color: s.text }}
       >
@@ -64,8 +73,11 @@ function StatusDropdown({ value, onChange, onClick, wide }: { value: string; onC
         </span>
         <ChevronDown className={`h-3 w-3 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
-      {open && (
-        <div className="absolute left-0 top-full z-50 mt-1 min-w-[160px] overflow-hidden rounded-[4px] border border-neutral-200 bg-white shadow-lg">
+      {open && typeof window !== 'undefined' && (
+        <div
+          className="fixed z-[9999] overflow-hidden rounded-[4px] border border-neutral-200 bg-white shadow-lg"
+          style={{ top: menuPos.top, left: menuPos.left, minWidth: menuPos.width }}
+        >
           {Object.entries(STATUS_STYLES).map(([val, style]) => (
             <button
               key={val}
@@ -176,7 +188,7 @@ export default function CrmPage() {
       <div>
         <h1 className="text-2xl font-extrabold text-[#2F2F2F]">CRM / Leads</h1>
         <p className="mt-1 text-sm text-[#6B6B6B]">
-          Hier siehst du alle Anfragen aus dem Quiz – filtern, suchen und Status direkt per Klick ändern.
+         Verwalte und bearbeite deine Anfragen.
           {total > 0 && <span className="ml-2 font-semibold text-[#2F2F2F]">{total} Lead{total !== 1 ? 's' : ''} gesamt.</span>}
         </p>
       </div>
@@ -221,7 +233,7 @@ export default function CrmPage() {
       <div className="flex gap-5">
         {/* Lead List */}
         <div className={`flex-1 min-w-0 ${selectedLead ? 'lg:max-w-[60%]' : ''}`}>
-          <div className="rounded-[4px] border border-neutral-200 bg-white shadow-sm overflow-hidden">
+          <div className="rounded-[4px] border border-neutral-200 bg-white shadow-sm">
             {loading ? (
               <div className="flex h-48 items-center justify-center">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-200" style={{ borderTopColor: brand }} />
