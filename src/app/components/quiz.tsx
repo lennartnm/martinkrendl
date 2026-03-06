@@ -273,6 +273,9 @@ export default function Quiz() {
               <h2 className="text-3xl font-extrabold text-[color:var(--graphite)] md:text-4xl">
                 Bereit für deine unverbindliche Probestunde?
               </h2>
+              <p className="mx-auto mt-3 max-w-lg text-base text-[color:var(--lightGray)]">
+ Tippe einfach auf eine Antwort, um deine Anfrage zu starten.
+</p>
 
               <div className="mx-auto mt-8 grid max-w-[520px] grid-cols-2 gap-3 md:max-w-[520px] md:grid-cols-2 md:gap-4">
                 {question1Options.map((option) => (
