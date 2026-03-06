@@ -17,33 +17,37 @@ export default function TopHeader() {
       <div
         style={{
           fontFamily: "'Open Sans', sans-serif",
-          backgroundColor: "#e5e5e5",
+          backgroundColor: "#e0e0e0",
           color: "#333",
           fontSize: "14px",
           padding: "6px 16px",
-          position: "relative",
-          textAlign: "center",
+          display: "flex",
+          justifyContent: "center",
         }}
       >
-        <span>Voiceation Gesangsunterricht in Steyr oder online 🎶</span>
-
-        <button
-          onClick={() => setVisible(false)}
+        <div
           style={{
-            position: "absolute",
-            right: "16px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            border: "none",
-            background: "transparent",
-            fontSize: "16px",
-            cursor: "pointer",
-            lineHeight: 1,
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
           }}
-          aria-label="Header schließen"
         >
-          ✕
-        </button>
+          <span>Voiceation Gesangsunterricht in Steyr oder online 🎶</span>
+
+          <button
+            onClick={() => setVisible(false)}
+            style={{
+              border: "none",
+              background: "transparent",
+              fontSize: "16px",
+              cursor: "pointer",
+              lineHeight: 1,
+            }}
+            aria-label="Header schließen"
+          >
+            ✕
+          </button>
+        </div>
       </div>
     </>
   );
