@@ -1,14 +1,11 @@
 'use client';
 // src/app/admin/cms/page.tsx
-// Vollständiges CMS – jede Seiten-Sektion als Accordion
-// Enthält pro Sektion: Texte, Links, Farben, Bilder/Videos
-// + Drag & Drop Reihenfolge + Ein/Ausblenden
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Save, CheckCircle, AlertCircle, Loader2, Upload, Eye,
   EyeOff, ChevronDown, ChevronRight,
-  Palette, Image as ImageIcon, Video, Link as LinkIcon, Type, GripVertical,
+  Palette, Image as ImageIcon, Video, Link as LinkIcon, Type, GripVertical, FileText,
 } from 'lucide-react';
 
 const brand = '#884A4A';
@@ -19,8 +16,7 @@ type FT = 'text' | 'textarea' | 'color' | 'image' | 'video' | 'link';
 type Field = { section_key: string; field_key: string; label: string; type: FT; hint?: string };
 type Sect  = { id: string; label: string; fields: Field[] };
 
-// ── Alle Sektionen – jeweils mit ALLEN Feldern ────────────────────────────────
-const ALL_SECTIONS: Sect[] = [
+const HOME_SECTIONS: Sect[] = [
   {
     id: 'header', label: 'Header & Navigation',
     fields: [
@@ -128,6 +124,13 @@ const ALL_SECTIONS: Sect[] = [
     ],
   },
   {
+    id: 'quiz', label: 'Quiz / Anfrage-Formular',
+    fields: [
+      { section_key: 'quiz_section', field_key: 'title',    label: 'Überschrift', type: 'text' },
+      { section_key: 'quiz_section', field_key: 'subtitle', label: 'Unterzeile',  type: 'text' },
+    ],
+  },
+  {
     id: 'testimonials', label: 'Video Testimonials',
     fields: [
       { section_key: 'testimonial_1', field_key: 'label',  label: 'Testimonial 1 – Label', type: 'text' },
@@ -178,7 +181,7 @@ const ALL_SECTIONS: Sect[] = [
   {
     id: 'global_colors', label: 'Globale Farben',
     fields: [
-      { section_key: 'colors', field_key: 'brand',      label: 'Brand-Farbe (Hauptfarbe)', type: 'color', hint: 'Buttons, Icons, Akzente überall auf der Seite' },
+      { section_key: 'colors', field_key: 'brand',      label: 'Brand-Farbe (Hauptfarbe)', type: 'color', hint: 'Wird für Buttons, Icons und Akzente auf der ganzen Seite verwendet.' },
       { section_key: 'colors', field_key: 'graphite',   label: 'Textfarbe dunkel',          type: 'color' },
       { section_key: 'colors', field_key: 'dark_gray',  label: 'Textfarbe mittel',          type: 'color' },
       { section_key: 'colors', field_key: 'light_gray', label: 'Textfarbe hell',            type: 'color' },
@@ -187,7 +190,40 @@ const ALL_SECTIONS: Sect[] = [
   },
 ];
 
-// ── Kleine Felder-Komponenten ─────────────────────────────────────────────────
+const DANKE_SECTIONS: Sect[] = [
+  {
+    id: 'danke_header', label: 'Danke-Seite Header',
+    fields: [
+      { section_key: 'danke_header', field_key: 'logo_text', label: 'Logo Text', type: 'text' },
+    ],
+  },
+  {
+    id: 'danke_hero', label: 'Danke-Seite Inhalt',
+    fields: [
+      { section_key: 'danke_hero', field_key: 'title',    label: 'Überschrift',       type: 'text' },
+      { section_key: 'danke_hero', field_key: 'subtitle', label: 'Unterzeile',        type: 'textarea' },
+      { section_key: 'danke_hero', field_key: 'cta_label',label: 'Button Text',       type: 'text' },
+      { section_key: 'danke_hero', field_key: 'cta_link', label: 'Button Link',       type: 'link' },
+    ],
+  },
+];
+
+const PAGE_OPTIONS = [
+  { value: 'home',  label: 'Startseite (home)' },
+  { value: 'danke', label: 'Danke-Seite (danke)' },
+];
+
+const SECTIONS_BY_PAGE: Record<string, Sect[]> = {
+  home: HOME_SECTIONS,
+  danke: DANKE_SECTIONS,
+};
+
+const DEFAULT_ORDER_BY_PAGE: Record<string, string[]> = {
+  home: HOME_SECTIONS.map(s => s.id),
+  danke: DANKE_SECTIONS.map(s => s.id),
+};
+
+// ── Small field components ────────────────────────────────────────────────────
 
 function DirtyBadge() {
   return <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-600">geändert</span>;
@@ -294,7 +330,7 @@ function TextField({ label, hint, type, value, isDirty, onChange }: { label: str
   );
 }
 
-// ── Sektion-Accordion ─────────────────────────────────────────────────────────
+// ── Section Accordion ──────────────────────────────────────────────────────────
 function SectionRow({
   section, content, dirty, isHidden,
   onChange, onUpload, onToggleHide,
@@ -310,7 +346,6 @@ function SectionRow({
 }) {
   const [open, setOpen] = useState(false);
   const dirtyCount = section.fields.filter((f) => dirty.has(mk(f.section_key, f.field_key))).length;
-
   const textFields  = section.fields.filter((f) => f.type === 'text' || f.type === 'textarea');
   const linkFields  = section.fields.filter((f) => f.type === 'link');
   const colorFields = section.fields.filter((f) => f.type === 'color');
@@ -332,12 +367,10 @@ function SectionRow({
       onDragStart={onDragStart} onDragOver={onDragOver} onDrop={onDrop} onDragEnd={onDragEnd}
       className={`overflow-hidden rounded-[4px] border bg-white transition-all ${isDragging ? 'opacity-40 scale-[0.99]' : ''} ${isHidden ? 'border-neutral-200 opacity-60' : 'border-neutral-200'}`}
     >
-      {/* Header row */}
       <div className="flex items-center gap-2 px-3 py-3">
         <div className="cursor-grab touch-none text-neutral-300 hover:text-neutral-500 active:cursor-grabbing">
           <GripVertical className="h-5 w-5" />
         </div>
-
         <button type="button" onClick={() => !isHidden && setOpen((v) => !v)} className="flex flex-1 items-center gap-2 text-left min-w-0">
           {open && !isHidden ? <ChevronDown className="h-4 w-4 shrink-0 text-[#6B6B6B]" /> : <ChevronRight className="h-4 w-4 shrink-0 text-[#6B6B6B]" />}
           <span className={`truncate text-sm font-bold ${isHidden ? 'text-[#6B6B6B] line-through' : 'text-[#2F2F2F]'}`}>
@@ -348,7 +381,6 @@ function SectionRow({
           )}
         </button>
 
-        {/* Type indicators */}
         <div className="hidden items-center gap-1 sm:flex">
           {colorFields.length > 0 && <span className="flex items-center gap-0.5 rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] text-[#6B6B6B]"><Palette className="h-2.5 w-2.5" /> {colorFields.length}</span>}
           {mediaFields.length > 0 && <span className="flex items-center gap-0.5 rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] text-[#6B6B6B]"><ImageIcon className="h-2.5 w-2.5" /> {mediaFields.length}</span>}
@@ -358,12 +390,11 @@ function SectionRow({
 
         <button type="button" onClick={onToggleHide}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[4px] border border-neutral-200 text-[#6B6B6B] transition hover:bg-neutral-50"
-          title={isHidden ? 'Sektion einblenden' : 'Sektion ausblenden'}>
+          title={isHidden ? 'Sektion auf der Website anzeigen' : 'Sektion auf der Website ausblenden'}>
           {isHidden ? <EyeOff className="h-4 w-4 text-amber-500" /> : <Eye className="h-4 w-4" />}
         </button>
       </div>
 
-      {/* Accordion body */}
       {open && !isHidden && (
         <div className="border-t border-neutral-100 px-5 py-5 space-y-6">
           {textFields.length > 0 && (
@@ -408,29 +439,45 @@ function SectionRow({
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function CmsPage() {
+  const [selectedPage, setSelectedPage] = useState('home');
+  const [pageDropdownOpen, setPageDropdownOpen] = useState(false);
   const [content, setContent]   = useState<CM>({});
   const [dirty, setDirty]       = useState<Set<string>>(new Set());
   const [loading, setLoading]   = useState(true);
   const [saving, setSaving]     = useState(false);
   const [savedAt, setSavedAt]   = useState<Date | null>(null);
   const [error, setError]       = useState('');
-  const [order, setOrder]       = useState<string[]>(ALL_SECTIONS.map((s) => s.id));
+  const [order, setOrder]       = useState<string[]>([]);
   const [hidden, setHidden]     = useState<Set<string>>(new Set());
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [orderDirty, setOrderDirty] = useState(false);
   const dragOver = useRef<string | null>(null);
 
+  const currentSections = SECTIONS_BY_PAGE[selectedPage] || [];
+
+  // Load content when page changes
   useEffect(() => {
-    fetch('/api/admin/content?page=home')
+    setLoading(true);
+    setDirty(new Set());
+    setOrderDirty(false);
+    fetch(`/api/admin/content?page=${selectedPage}`)
       .then((r) => r.json())
       .then((json) => {
         if (!json.ok) throw new Error(json.error);
         const map: CM = {};
         for (const e of json.data) map[mk(e.section_key, e.field_key)] = e.value;
         setContent(map);
+
+        // Restore order & hidden from saved CMS values
+        const savedOrder = map['layout::section_order'];
+        const savedHidden = map['layout::hidden_sections'];
+        setOrder(savedOrder ? savedOrder.split(',').map((s: string) => s.trim()).filter(Boolean) : DEFAULT_ORDER_BY_PAGE[selectedPage] || currentSections.map(s => s.id));
+        setHidden(savedHidden ? new Set(savedHidden.split(',').map((s: string) => s.trim()).filter(Boolean)) : new Set());
       })
       .catch((e) => setError('Laden: ' + e.message))
       .finally(() => setLoading(false));
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPage]);
 
   const handleChange = useCallback((sk: string, fk: string, v: string) => {
     const k = mk(sk, fk);
@@ -448,16 +495,38 @@ export default function CmsPage() {
   }, []);
 
   const handleSave = async () => {
-    if (dirty.size === 0) return;
+    if (dirty.size === 0 && !orderDirty) return;
     setSaving(true); setError('');
-    const updates = Array.from(dirty).map((k) => { const [sk, fk] = k.split('::'); return { section_key: sk, field_key: fk, value: content[k] ?? '' }; });
+
+    // Include layout meta fields
+    const allDirty = new Set(dirty);
+    const updatesFromDirty = Array.from(allDirty).map((k) => { const [sk, fk] = k.split('::'); return { section_key: sk, field_key: fk, value: content[k] ?? '' }; });
+
+    // Always save layout order + hidden when orderDirty
+    const layoutUpdates = orderDirty ? [
+      { section_key: 'layout', field_key: 'section_order', value: order.join(',') },
+      { section_key: 'layout', field_key: 'hidden_sections', value: Array.from(hidden).join(',') },
+    ] : [];
+
+    const updates = [...updatesFromDirty, ...layoutUpdates];
+    if (updates.length === 0) { setSaving(false); return; }
+
     try {
-      const res = await fetch('/api/admin/content', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ page: 'home', updates }) });
+      const res = await fetch('/api/admin/content', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ page: selectedPage, updates }) });
       const json = await res.json();
       if (!json.ok) throw new Error(json.error);
-      setDirty(new Set()); setSavedAt(new Date());
+      setDirty(new Set()); setSavedAt(new Date()); setOrderDirty(false);
     } catch (e: any) { setError('Speichern: ' + e.message); }
     finally { setSaving(false); }
+  };
+
+  const toggleHide = (id: string) => {
+    setHidden((p) => {
+      const n = new Set(p);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
+    setOrderDirty(true);
   };
 
   const onDragStart = (id: string) => setDraggingId(id);
@@ -471,36 +540,74 @@ export default function CmsPage() {
       next.splice(fi, 1); next.splice(ti, 0, from);
       return next;
     });
+    setOrderDirty(true);
   };
   const onDragEnd = () => { setDraggingId(null); dragOver.current = null; };
 
   if (loading) return <div className="flex h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" style={{ color: brand }} /></div>;
 
-  const ordered = order.map((id) => ALL_SECTIONS.find((s) => s.id === id)).filter(Boolean) as Sect[];
+  const allSectionIds = currentSections.map(s => s.id);
+  const fullOrder = [...order.filter(id => allSectionIds.includes(id)), ...allSectionIds.filter(id => !order.includes(id))];
+  const ordered = fullOrder.map((id) => currentSections.find((s) => s.id === id)).filter(Boolean) as Sect[];
+
+  const totalDirty = dirty.size + (orderDirty ? 1 : 0);
 
   return (
     <>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap'); * { font-family: 'Open Sans', sans-serif !important; }`}</style>
       <div className="space-y-5 pb-10">
+
         {/* Page header */}
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-extrabold text-[#2F2F2F]">Content bearbeiten</h1>
             <p className="mt-0.5 text-sm text-[#6B6B6B]">
-              Sektionen per Drag & Drop sortieren · Auge-Icon zum Ein-/Ausblenden
+              Sektionen per Drag & Drop sortieren – das Auge-Icon blendet eine Sektion auf der Website aus.
               {hidden.size > 0 && <span className="ml-2 font-semibold text-amber-600">· {hidden.size} ausgeblendet</span>}
             </p>
           </div>
           <div className="flex items-center gap-3">
-            {savedAt && dirty.size === 0 && <span className="flex items-center gap-1.5 text-sm text-emerald-600"><CheckCircle className="h-4 w-4" />{savedAt.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' })} gespeichert</span>}
-            {dirty.size > 0 && <span className="flex items-center gap-1.5 text-sm text-amber-600"><AlertCircle className="h-4 w-4" />{dirty.size} ungespeichert</span>}
-            <button onClick={handleSave} disabled={saving || dirty.size === 0}
+            {savedAt && totalDirty === 0 && <span className="flex items-center gap-1.5 text-sm text-emerald-600"><CheckCircle className="h-4 w-4" />{savedAt.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' })} gespeichert</span>}
+            {totalDirty > 0 && <span className="flex items-center gap-1.5 text-sm text-amber-600"><AlertCircle className="h-4 w-4" />{totalDirty} ungespeichert</span>}
+            <button onClick={handleSave} disabled={saving || totalDirty === 0}
               className="flex items-center gap-2 rounded-[4px] px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-40"
               style={{ backgroundColor: brand }}>
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               {saving ? 'Speichern...' : 'Speichern & live schalten'}
             </button>
           </div>
+        </div>
+
+        {/* Page selector dropdown */}
+        <div className="relative w-full max-w-xs">
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-widest text-[#9CA3AF]">Seite auswählen</p>
+          <button
+            type="button"
+            onClick={() => setPageDropdownOpen(v => !v)}
+            className="flex h-11 w-full items-center justify-between rounded-[4px] border border-neutral-200 bg-white px-4 text-sm font-semibold text-[#2F2F2F] shadow-sm transition hover:border-[#884A4A]"
+          >
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-[#6B6B6B]" />
+              {PAGE_OPTIONS.find(p => p.value === selectedPage)?.label}
+            </div>
+            <ChevronDown className={`h-4 w-4 text-[#6B6B6B] transition-transform ${pageDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {pageDropdownOpen && (
+            <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-[4px] border border-neutral-200 bg-white shadow-lg">
+              {PAGE_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => { setSelectedPage(opt.value); setPageDropdownOpen(false); }}
+                  className={`flex w-full items-center gap-2 px-4 py-3 text-sm font-medium transition hover:bg-[#FDF8F8] ${selectedPage === opt.value ? 'bg-[#FDF8F8] font-semibold text-[#884A4A]' : 'text-[#2F2F2F]'}`}
+                >
+                  <FileText className={`h-4 w-4 ${selectedPage === opt.value ? 'text-[#884A4A]' : 'text-[#6B6B6B]'}`} />
+                  {opt.label}
+                  {selectedPage === opt.value && <CheckCircle className="ml-auto h-3.5 w-3.5 text-[#884A4A]" />}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {error && (
@@ -521,7 +628,7 @@ export default function CmsPage() {
               isHidden={hidden.has(section.id)}
               onChange={handleChange}
               onUpload={handleUpload}
-              onToggleHide={() => setHidden((p) => { const n = new Set(p); n.has(section.id) ? n.delete(section.id) : n.add(section.id); return n; })}
+              onToggleHide={() => toggleHide(section.id)}
               isDragging={draggingId === section.id}
               onDragStart={() => onDragStart(section.id)}
               onDragOver={(e) => onDragOver(e, section.id)}
@@ -532,11 +639,11 @@ export default function CmsPage() {
         </div>
 
         {/* Sticky save */}
-        {dirty.size > 0 && (
+        {totalDirty > 0 && (
           <div className="sticky bottom-4 flex justify-end">
             <div className="flex items-center gap-3 rounded-[4px] border border-amber-200 bg-white px-4 py-3 shadow-lg">
               <AlertCircle className="h-4 w-4 text-amber-500" />
-              <span className="text-sm text-[#4A4A4A]">{dirty.size} ungespeichert</span>
+              <span className="text-sm text-[#4A4A4A]">{totalDirty} ungespeichert</span>
               <button onClick={handleSave} disabled={saving}
                 className="flex items-center gap-2 rounded-[4px] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
                 style={{ backgroundColor: brand }}>
