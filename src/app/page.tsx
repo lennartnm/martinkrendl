@@ -490,22 +490,16 @@ export default function Page() {
                 <h1 className="text-3xl font-extrabold leading-tight md:text-5xl">
                   Sing freier, sicherer und mit mehr Ausdruck
                 </h1>
-                <p className="mt-4 text-sm text-white/85 md:text-lg">
-                  Für alle, die ihre Stimme wirklich entwickeln möchten – ob
-                  unter der Dusche, im Chor, auf der Bühne oder einfach für sich
-                  selbst.
-                </p>
+                
 
                 <p className="mt-4 text-sm text-white/85 md:text-lg">
-                  Im Gesangsunterricht mit Martin Krendl arbeitest du gezielt an
-                  Klang, Höhe, Leichtigkeit und Ausdruck – persönlich in Steyr
-                  oder online via Zoom.
+                Lerne mit der Voiceation Methode bekannter Stars, wie du deine Stimme auf ein neues Level heben kannst.
                 </p>
 
                 <div className="mt-6">
                   <a href="#quiz">
                     <Button className="rounded-[4px] bg-[color:var(--brand)] px-6 py-3 font-semibold text-white hover:opacity-95">
-                      Kostenloses Kennenlerngespräch anfragen
+                     Unverbindliche Probestunde anfragen
                     </Button>
                   </a>
                 </div>
