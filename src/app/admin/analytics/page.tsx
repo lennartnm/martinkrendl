@@ -150,7 +150,7 @@ export default function AnalyticsPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-extrabold text-[#2F2F2F]">Analytics</h1>
-            <p className="mt-0.5 text-sm text-[#6B6B6B]">Seitenaufrufe deiner Website – datenschutzfreundlich, kein Cookie nötig.</p>
+            <p className="mt-0.5 text-sm text-[#6B6B6B]">Seitenaufrufe deiner Website im Laufe der Zeit.</p>
           </div>
           <div className="flex items-center gap-2">
             {RANGES.map((r) => (
