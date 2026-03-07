@@ -1,6 +1,5 @@
 // src/app/page.tsx
-// Server Component – lädt alle Inhalte (Texte, Farben, Bilder, Videos, Links) aus Supabase CMS
-// Unterstützt: Ein/Ausblenden von Sektionen + Reihenfolge via CMS
+// Server Component – lädt alle Inhalte und Sektionsreihenfolge dynamisch aus Supabase
 
 import type { CSSProperties } from "react";
 import Footer from '@/components/ui/Footer';
@@ -14,6 +13,8 @@ import {
   Award, Check, GraduationCap, ShieldCheck, Star,
   Trophy, Users, Video, MicVocal,
 } from "lucide-react";
+
+type CmsSection = { section_instance: string; section_type: string; hidden: boolean; sort_order: number };
 
 // ── CMS laden ─────────────────────────────────────────────────────────────────
 async function getContent(page: string): Promise<Record<string, string>> {
@@ -30,6 +31,20 @@ async function getContent(page: string): Promise<Record<string, string>> {
     return map;
   } catch {
     return {};
+  }
+}
+
+// ── Sektionsreihenfolge aus DB laden ──────────────────────────────────────────
+async function getSections(page: string): Promise<CmsSection[]> {
+  try {
+    const { data } = await supabase
+      .from("cms_sections")
+      .select("section_instance, section_type, hidden, sort_order")
+      .eq("page_id", page)
+      .order("sort_order");
+    return data || [];
+  } catch {
+    return [];
   }
 }
 
@@ -155,18 +170,16 @@ function CmsImage({ src, alt, fill, width, height, className, priority }: {
 }
 
 export default async function Page() {
-  const cms = await getContent("home");
+  const [cms, dbSections] = await Promise.all([
+    getContent("home"),
+    getSections("home"),
+  ]);
   const c = (key: string) => cms[key] ?? FALLBACK[key] ?? "";
 
-  // Section order + visibility from CMS
-  const orderRaw = c("layout::section_order");
-  const hiddenRaw = c("layout::hidden_sections");
-  const sectionOrder: string[] = orderRaw ? orderRaw.split(',').map(s => s.trim()).filter(Boolean) : DEFAULT_ORDER;
-  const hiddenSections = new Set(
-    hiddenRaw && hiddenRaw.trim()
-      ? hiddenRaw.split(',').map(s => s.trim()).filter(Boolean)
-      : []
-  );
+  // Sektionsreihenfolge aus DB; Fallback wenn DB noch leer
+  const activeSections = dbSections.length > 0
+    ? dbSections.filter(s => !s.hidden)
+    : DEFAULT_ORDER.map((id, i) => ({ section_instance: id, section_type: id, hidden: false, sort_order: i }));
 
   // Farben aus CMS
   const brandColor   = c("colors::brand");
@@ -175,6 +188,12 @@ export default async function Page() {
   const lightGray    = c("colors::light_gray");
   const quizBg       = c("colors::quiz_bg");
   const headerBg     = c("colors::header_bg");
+
+  // Dynamischer Helfer: Wert aus CMS lesen, mit section_instance als Kontext
+  // Für Legacy-Sektionen (instance = type) funktioniert c() direkt
+  // Für neue Instanzen (z.B. "image_text_abc123") muss section_key = instance sein
+  const ci = (instance: string, field: string) =>
+    cms[`${instance}::${field}`] ?? FALLBACK[`${instance}::${field}`] ?? "";
 
   const bulletPoints = [c("image_text_1::bullet_1"), c("image_text_1::bullet_2"), c("image_text_1::bullet_3")];
 
@@ -197,9 +216,14 @@ export default async function Page() {
     { text: c("review_3::text"), author: c("review_3::author") },
   ];
 
-  // Map section ID → JSX
-  const sectionMap: Record<string, React.ReactNode> = {
-    hero: (
+  // sectionRenderers: jeder Typ bekommt seine section_instance übergeben
+  // Legacy-Sektionen haben instance == type (z.B. "hero"), neue haben UUIDs (z.B. "image_text_abc123")
+  // ci(instance, field) liest den richtigen DB-Eintrag
+  const sectionRenderers: Record<string, (instance: string) => React.ReactNode> = {
+    // header / global_colors werden nicht als Sektionen gerendert (sind immer sichtbar)
+    header: (_inst) => null,
+    global_colors: (_inst) => null,
+    hero: (instance) => (
       <section key="hero" className="relative">
         <div className="relative aspect-square w-full md:aspect-[16/6]">
           <CmsImage src={c("images::hero")} alt="Martin Krendl beim Singen" fill className="object-cover" priority />
@@ -228,7 +252,7 @@ export default async function Page() {
         </div>
       </section>
     ),
-    logos: (
+    logos: (instance) => (
       <section key="logos" className="py-12 md:py-14">
         <div className={sectionWidth}>
           <div className="mx-auto mb-8 max-w-3xl text-center">
@@ -246,7 +270,7 @@ export default async function Page() {
         </div>
       </section>
     ),
-    feature_cards_3: (
+    feature_cards_3: (instance) => (
       <section key="feature_cards_3" className="pt-8 pb-14 md:pt-10 md:pb-20">
         <div className={sectionWidth}>
           <div className="grid gap-4 md:grid-cols-3 md:gap-6">
@@ -266,7 +290,7 @@ export default async function Page() {
         </div>
       </section>
     ),
-    image_text_1: (
+    image_text_1: (instance) => (
       <section key="image_text_1" className="py-14 md:py-20">
         <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
           <div className="relative aspect-square overflow-hidden rounded-[4px]">
@@ -296,7 +320,7 @@ export default async function Page() {
         </div>
       </section>
     ),
-    quote: (
+    quote: (instance) => (
       <section key="quote" className="py-14 md:py-20">
         <div className="relative aspect-[4/5] w-full overflow-hidden md:aspect-[16/6]">
           <CmsImage src={c("images::quote_bg")} alt="Martin Krendl" fill className="object-cover" />
@@ -312,7 +336,7 @@ export default async function Page() {
         </div>
       </section>
     ),
-    video_carousel: (
+    video_carousel: (instance) => (
       <VideoCarousel
         key="video_carousel"
         title={c("video_section::title")}
@@ -325,7 +349,7 @@ export default async function Page() {
         ]}
       />
     ),
-    image_text_2: (
+    image_text_2: (instance) => (
       <section key="image_text_2" className="py-14 md:py-20">
         <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
           <div className="order-2 md:order-1">
@@ -355,7 +379,7 @@ export default async function Page() {
         </div>
       </section>
     ),
-    feature_cards_4: (
+    feature_cards_4: (instance) => (
       <section key="feature_cards_4" className="py-14 md:py-20">
         <div className={sectionWidth}>
           <div className="mx-auto mb-10 max-w-3xl text-center">
@@ -386,7 +410,7 @@ export default async function Page() {
         </div>
       </section>
     ),
-    flowing_text: (
+    flowing_text: (instance) => (
       <section key="flowing_text" className="py-14 md:py-20">
         <div className={sectionWidth}>
           <div className="mx-auto max-w-4xl text-center">
@@ -395,12 +419,12 @@ export default async function Page() {
         </div>
       </section>
     ),
-    quiz: (
+    quiz: (instance) => (
       <section key="quiz" id="quiz" className="scroll-mt-28 py-14 md:py-20" style={{ backgroundColor: quizBg }}>
         <div className={sectionWidth}><Quiz /></div>
       </section>
     ),
-    testimonials: (
+    testimonials: (instance) => (
       <TestimonialVideos
         key="testimonials"
         t1label={c("testimonial_1::label")} t1quote={c("testimonial_1::quote")} t1author={c("testimonial_1::author")}
@@ -410,7 +434,7 @@ export default async function Page() {
         brandColor={brandColor}
       />
     ),
-    about: (
+    about: (instance) => (
       <section key="about" className="py-14 md:py-20">
         <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
           <div className="relative aspect-square overflow-hidden rounded-[4px]">
@@ -426,7 +450,7 @@ export default async function Page() {
         </div>
       </section>
     ),
-    reviews: (
+    reviews: (instance) => (
       <section key="reviews" className="py-14 md:py-20">
         <div className={sectionWidth}>
           <div className="mx-auto mb-10 max-w-2xl text-center">
@@ -448,7 +472,7 @@ export default async function Page() {
         </div>
       </section>
     ),
-    final_cta: (
+    final_cta: (instance) => (
       <section key="final_cta" className="pb-20 pt-14 md:pb-24 md:pt-20">
         <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-3 md:gap-10`}>
           <div className="relative aspect-video overflow-hidden rounded-[4px]">
@@ -468,12 +492,55 @@ export default async function Page() {
         </div>
       </section>
     ),
+    // Alias: neue "image_text" Sektionen nutzen instance direkt
+    image_text: (instance) => {
+      const bp = [ci(instance, 'bullet_1'), ci(instance, 'bullet_2'), ci(instance, 'bullet_3')].filter(Boolean);
+      return (
+        <section key={instance} className="py-14 md:py-20">
+          <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
+            <div className="relative aspect-square overflow-hidden rounded-[4px]">
+              <CmsImage src={ci(instance, 'image') || c("images::section1")} alt="Bild" fill className="object-cover" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-extrabold md:text-4xl">{ci(instance, 'title')}</h2>
+              <p className="mt-4 text-base leading-8" style={{ color: lightGray }}>{ci(instance, 'text')}</p>
+              {bp.length > 0 && (
+                <div className="mt-6 space-y-3">
+                  {bp.map((point, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: brandColor }}>
+                        <Check className="h-3.5 w-3.5 text-white" />
+                      </div>
+                      <p className="text-sm leading-7" style={{ color: graphite }}>{point}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {ci(instance, 'cta_label') && (
+                <div className="mt-8">
+                  <a href={ci(instance, 'cta_link') || '#'}>
+                    <Button className="rounded-[4px] px-6 py-3 font-semibold text-white hover:opacity-95" style={{ backgroundColor: brandColor }}>
+                      {ci(instance, 'cta_label')}
+                    </Button>
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      );
+    },
   };
 
-  // Build ordered, filtered section list
-  const orderedSections = sectionOrder
-    .filter(id => !hiddenSections.has(id))
-    .map(id => sectionMap[id])
+  // Build ordered section list dynamisch aus DB
+  // sectionMap ist ein Record<sectionType, (instance: string) => ReactNode>
+  // Jede Sektion wird mit ihrer section_instance gerendert
+  const orderedSections = activeSections
+    .map(s => {
+      const renderer = sectionRenderers[s.section_type];
+      if (!renderer) return null;
+      return renderer(s.section_instance);
+    })
     .filter(Boolean);
 
   return (
@@ -514,7 +581,7 @@ export default async function Page() {
         </div>
       </header>
 
-      {orderedSections}
+      {orderedSections as React.ReactNode[]}
 
       <Footer />
     </main>
