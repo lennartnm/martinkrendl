@@ -29,17 +29,8 @@ const FUNNEL_STEPS = [
   { key: 'submit', label: 'Abgesendet ✓',     color: '#059669' },
 ];
 
-const CHANGELOG_CATEGORIES = [
-  { value: 'general',   label: 'Allgemein',  color: '#6B7280', bg: '#F3F4F6' },
-  { value: 'design',    label: 'Design',     color: '#7C3AED', bg: '#EDE9FE' },
-  { value: 'copy',      label: 'Text/Copy',  color: '#0284C7', bg: '#E0F2FE' },
-  { value: 'offer',     label: 'Angebot',    color: '#D97706', bg: '#FEF3C7' },
-  { value: 'technical', label: 'Technisch',  color: '#059669', bg: '#D1FAE5' },
-];
-
-function getCat(val: string) {
-  return CHANGELOG_CATEGORIES.find(c => c.value === val) || CHANGELOG_CATEGORIES[0];
-}
+const ENTRY_COLOR = { color: brand, bg: '#FDF4F4' };
+function getCat(_val: string) { return ENTRY_COLOR; }
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 function toDateInputVal(d: Date) {
@@ -296,12 +287,10 @@ function FunnelTimeline({
             <div className="w-5 border-t-2 border-dashed" style={{ borderColor: '#059669' }} />
             <span className="text-xs text-[#6B6B6B]">Absendungen</span>
           </div>
-          {CHANGELOG_CATEGORIES.map(cat => (
-            <div key={cat.value} className="flex items-center gap-1.5">
-              <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
-              <span className="text-xs text-[#9CA3AF]">{cat.label}</span>
-            </div>
-          ))}
+          <div className="flex items-center gap-1.5">
+            <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: brand }} />
+            <span className="text-xs text-[#9CA3AF]">Änderung</span>
+          </div>
         </div>
 
         {/* Date labels */}
@@ -357,19 +346,8 @@ function ChangelogPanel({ entries, onAdd, onDelete, loading }: {
   entries: ChangelogEntry[]; onAdd: (d: string, c: string) => void;
   onDelete: (id: string) => void; loading: boolean;
 }) {
-  const [desc, setDesc]     = useState('');
-  const [cat, setCat]       = useState('general');
-  const [catOpen, setCatOpen] = useState(false);
-  const catRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const h = (e: MouseEvent) => { if (catRef.current && !catRef.current.contains(e.target as Node)) setCatOpen(false); };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, []);
-
-  const submit = () => { if (!desc.trim()) return; onAdd(desc.trim(), cat); setDesc(''); };
-  const selCat = getCat(cat);
+  const [desc, setDesc] = useState('');
+  const submit = () => { if (!desc.trim()) return; onAdd(desc.trim(), 'general'); setDesc(''); };
 
   return (
     <div className="space-y-5">
@@ -381,26 +359,6 @@ function ChangelogPanel({ entries, onAdd, onDelete, loading }: {
           placeholder="Änderung kurz beschreiben…"
           className="h-9 flex-1 rounded-[4px] border border-neutral-200 px-3 text-sm outline-none transition focus:border-[#884A4A]"
         />
-        <div ref={catRef} className="relative">
-          <button type="button" onClick={() => setCatOpen(v => !v)}
-            className="flex h-9 items-center gap-1.5 rounded-[4px] border border-neutral-200 px-3 text-xs font-medium transition hover:border-[#884A4A]">
-            <div className="h-2 w-2 rounded-full" style={{ backgroundColor: selCat.color }} />
-            <span className="hidden sm:inline text-[#2F2F2F]">{selCat.label}</span>
-            <ChevronDown className="h-3 w-3 text-[#6B6B6B]" />
-          </button>
-          {catOpen && (
-            <div className="absolute right-0 top-full z-20 mt-1 w-36 overflow-hidden rounded-[4px] border border-neutral-200 bg-white shadow-lg">
-              {CHANGELOG_CATEGORIES.map(c => (
-                <button key={c.value} type="button" onClick={() => { setCat(c.value); setCatOpen(false); }}
-                  className={`flex w-full items-center gap-2 px-3 py-2 text-xs transition hover:bg-neutral-50 ${cat === c.value ? 'font-semibold' : ''}`}>
-                  <div className="h-2 w-2 rounded-full" style={{ backgroundColor: c.color }} />
-                  {c.label}
-                  {cat === c.value && <CheckCircle className="ml-auto h-3 w-3" style={{ color: c.color }} />}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
         <button type="button" onClick={submit} disabled={!desc.trim()}
           className="flex h-9 w-9 items-center justify-center rounded-[4px] text-white disabled:opacity-40 transition hover:opacity-90"
           style={{ backgroundColor: brand }}>
@@ -442,17 +400,11 @@ function ChangelogPanel({ entries, onAdd, onDelete, loading }: {
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                        style={{ backgroundColor: cat.bg, color: cat.color }}>
-                        {cat.label}
-                      </span>
-                      <span className="text-[10px] text-[#9CA3AF]">
-                        {date.toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: '2-digit' })}
-                        {' · '}
-                        {date.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
+                    <p className="text-[10px] text-[#9CA3AF]">
+                      {date.toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                      {' · '}
+                      {date.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
                   </div>
                 </div>
               );
