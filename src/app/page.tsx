@@ -223,35 +223,48 @@ export default async function Page() {
     // header / global_colors werden nicht als Sektionen gerendert (sind immer sichtbar)
     header: (_inst) => null,
     global_colors: (_inst) => null,
-    hero: (instance) => (
-      <section key="hero" className="relative">
-        <div className="relative aspect-square w-full md:aspect-[16/6]">
-          <CmsImage src={c("images::hero")} alt="Martin Krendl beim Singen" fill className="object-cover" priority />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/10" />
-          <div className="absolute inset-x-0 bottom-0">
-            <div className={`${sectionWidth} pb-10 md:pb-14`}>
-              <div className="mx-auto max-w-4xl text-center text-white">
-                <h1 className="text-3xl font-extrabold leading-tight md:text-5xl">{c("hero::title")}</h1>
-                <p className="mt-4 text-sm text-white/85 md:text-lg">{c("hero::subtitle")}</p>
-                <div className="mt-6">
-                  <a href={c("links::hero_cta")}>
-                    <Button className="rounded-[4px] px-6 py-3 font-semibold text-white hover:opacity-95" style={{ backgroundColor: brandColor }}>
-                      {c("hero::cta_label")}
-                    </Button>
-                  </a>
-                </div>
-                <div className="mt-4 flex flex-col items-center justify-center gap-2">
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="h-5 w-5 fill-[#D4AF37] text-[#D4AF37]" />)}
+    hero_legacy: (instance) => sectionRenderers['hero'](instance),
+    hero: (instance) => {
+      // Legacy hero (instance='hero') uses fixed keys; new instances use ci()
+      const isLegacy = instance === 'hero';
+      const heroTitle    = isLegacy ? c("hero::title")       : ci(instance, 'title');
+      const heroSubtitle = isLegacy ? c("hero::subtitle")    : ci(instance, 'subtitle');
+      const heroCtaLabel = isLegacy ? c("hero::cta_label")   : ci(instance, 'cta_label');
+      const heroCtaLink  = isLegacy ? c("links::hero_cta")   : (ci(instance, 'cta_link') || '#');
+      const heroProof    = isLegacy ? c("hero::social_proof"): ci(instance, 'social_proof');
+      const heroImage    = isLegacy ? c("images::hero")      : (ci(instance, 'image') || c("images::hero"));
+      return (
+        <section key={instance} className="relative">
+          <div className="relative aspect-square w-full md:aspect-[16/6]">
+            <CmsImage src={heroImage} alt="Martin Krendl beim Singen" fill className="object-cover" priority />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/10" />
+            <div className="absolute inset-x-0 bottom-0">
+              <div className={`${sectionWidth} pb-10 md:pb-14`}>
+                <div className="mx-auto max-w-4xl text-center text-white">
+                  <h1 className="text-3xl font-extrabold leading-tight md:text-5xl">{heroTitle}</h1>
+                  <p className="mt-4 text-sm text-white/85 md:text-lg">{heroSubtitle}</p>
+                  <div className="mt-6">
+                    <a href={heroCtaLink}>
+                      <Button className="rounded-[4px] px-6 py-3 font-semibold text-white hover:opacity-95" style={{ backgroundColor: brandColor }}>
+                        {heroCtaLabel}
+                      </Button>
+                    </a>
                   </div>
-                  <p className="text-sm font-semibold text-white/90">{c("hero::social_proof")}</p>
+                  {heroProof && (
+                    <div className="mt-4 flex flex-col items-center justify-center gap-2">
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="h-5 w-5 fill-[#D4AF37] text-[#D4AF37]" />)}
+                      </div>
+                      <p className="text-sm font-semibold text-white/90">{heroProof}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
-    ),
+        </section>
+      );
+    },
     logos: (instance) => (
       <section key="logos" className="py-12 md:py-14">
         <div className={sectionWidth}>
@@ -535,9 +548,23 @@ export default async function Page() {
   // Build ordered section list dynamisch aus DB
   // sectionMap ist ein Record<sectionType, (instance: string) => ReactNode>
   // Jede Sektion wird mit ihrer section_instance gerendert
+
+  // Legacy-Typ Aliase: section_types die in DB mit '_legacy' suffix gespeichert sein könnten
+  const legacyAliases: Record<string, keyof typeof sectionRenderers> = {
+    'logos_legacy': 'logos', 'feature_cards_3_legacy': 'feature_cards_3',
+    'feature_cards_4_legacy': 'feature_cards_4', 'quote_legacy': 'quote',
+    'video_carousel_legacy': 'video_carousel', 'image_text_1': 'image_text_1',
+    'image_text_2': 'image_text_2', 'flowing_text_legacy': 'flowing_text',
+    'testimonials_legacy': 'testimonials', 'about_legacy': 'about',
+    'reviews_legacy': 'reviews', 'final_cta_legacy': 'final_cta',
+    'hero_legacy': 'hero',
+  };
+
   const orderedSections = activeSections
     .map(s => {
-      const renderer = sectionRenderers[s.section_type];
+      const type = s.section_type;
+      const renderer = sectionRenderers[type]
+        ?? (legacyAliases[type] ? sectionRenderers[legacyAliases[type]] : null);
       if (!renderer) return null;
       return renderer(s.section_instance);
     })
