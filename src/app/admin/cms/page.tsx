@@ -131,6 +131,63 @@ const SECT_TYPES: { type: string; label: string; addable: boolean; fields: Field
     { section_key: 'colors', field_key: 'light_gray', label: 'Textfarbe hell',   type: 'color' },
     { section_key: 'colors', field_key: 'quiz_bg',    label: 'Quiz-Hintergrund', type: 'color' },
   ]},
+  // ── Hero legacy (bestehende Startseite) ──────────────────────────────────
+  { type: 'hero_legacy', label: 'Hero', addable: false, fields: [
+    { section_key: 'hero',   field_key: 'title',        label: 'Überschrift',     type: 'text' },
+    { section_key: 'hero',   field_key: 'subtitle',     label: 'Unterzeile',      type: 'textarea' },
+    { section_key: 'hero',   field_key: 'cta_label',    label: 'Button Text',     type: 'text' },
+    { section_key: 'hero',   field_key: 'social_proof', label: 'Social Proof',    type: 'text' },
+    { section_key: 'links',  field_key: 'hero_cta',     label: 'Button Link',     type: 'link', hint: '#quiz oder https://...' },
+    { section_key: 'images', field_key: 'hero',         label: 'Hintergrundbild', type: 'image', hint: 'Empfohlen: 1920×800px' },
+  ]},
+  // ── Components ────────────────────────────────────────────────────────────
+  { type: 'component_footer', label: 'Footer', addable: false, fields: [
+    { section_key: 'footer', field_key: 'logo_text',       label: 'Logo Text',          type: 'text' },
+    { section_key: 'footer', field_key: 'tagline',         label: 'Tagline',            type: 'text' },
+    { section_key: 'footer', field_key: 'copyright',       label: 'Copyright',          type: 'text' },
+    { section_key: 'footer', field_key: 'impressum_link',  label: 'Impressum Link',     type: 'link' },
+    { section_key: 'footer', field_key: 'datenschutz_link',label: 'Datenschutz Link',   type: 'link' },
+    { section_key: 'footer', field_key: 'email',           label: 'E-Mail',             type: 'text' },
+    { section_key: 'footer', field_key: 'phone',           label: 'Telefon',            type: 'text' },
+    { section_key: 'footer', field_key: 'address',         label: 'Adresse',            type: 'text' },
+    { section_key: 'footer', field_key: 'instagram_url',   label: 'Instagram URL',      type: 'link' },
+    { section_key: 'footer', field_key: 'facebook_url',    label: 'Facebook URL',       type: 'link' },
+    { section_key: 'footer', field_key: 'youtube_url',     label: 'YouTube URL',        type: 'link' },
+    { section_key: 'footer', field_key: 'tiktok_url',      label: 'TikTok URL',         type: 'link' },
+    { section_key: 'footer', field_key: 'bg_color',        label: 'Hintergrundfarbe',   type: 'color' },
+    { section_key: 'footer', field_key: 'text_color',      label: 'Textfarbe',          type: 'color' },
+    { section_key: 'footer', field_key: 'link_color',      label: 'Linkfarbe',          type: 'color' },
+  ]},
+  { type: 'component_cookie', label: 'Cookie Banner', addable: false, fields: [
+    { section_key: 'cookie', field_key: 'message',       label: 'Text',               type: 'textarea' },
+    { section_key: 'cookie', field_key: 'accept_label',  label: 'Akzeptieren Button', type: 'text' },
+    { section_key: 'cookie', field_key: 'decline_label', label: 'Ablehnen Button',    type: 'text' },
+    { section_key: 'cookie', field_key: 'privacy_link',  label: 'Datenschutz Link',   type: 'link' },
+    { section_key: 'cookie', field_key: 'privacy_label', label: 'Datenschutz Text',   type: 'text' },
+    { section_key: 'cookie', field_key: 'bg_color',      label: 'Hintergrundfarbe',   type: 'color' },
+    { section_key: 'cookie', field_key: 'text_color',    label: 'Textfarbe',          type: 'color' },
+    { section_key: 'cookie', field_key: 'accept_bg',     label: 'Button Farbe',       type: 'color' },
+    { section_key: 'cookie', field_key: 'border_color',  label: 'Rahmenfarbe',        type: 'color' },
+  ]},
+  { type: 'component_quiz', label: 'Quiz Einstellungen', addable: false, fields: [
+    { section_key: 'quiz_section', field_key: 'title',    label: 'Überschrift',        type: 'text' },
+    { section_key: 'quiz_section', field_key: 'subtitle', label: 'Unterzeile',         type: 'text' },
+    { section_key: 'quiz_q1',      field_key: 'question', label: 'Frage 1',            type: 'text' },
+    { section_key: 'quiz_q1',      field_key: 'option_1', label: 'Frage 1 – Option 1', type: 'text' },
+    { section_key: 'quiz_q1',      field_key: 'option_2', label: 'Frage 1 – Option 2', type: 'text' },
+    { section_key: 'quiz_q2',      field_key: 'question', label: 'Frage 2',            type: 'text' },
+    { section_key: 'quiz_q2',      field_key: 'option_1', label: 'Frage 2 – Option 1', type: 'text' },
+    { section_key: 'quiz_q2',      field_key: 'option_2', label: 'Frage 2 – Option 2', type: 'text' },
+    { section_key: 'quiz_q2',      field_key: 'option_3', label: 'Frage 2 – Option 3', type: 'text' },
+    { section_key: 'quiz_q2',      field_key: 'option_4', label: 'Frage 2 – Option 4', type: 'text' },
+    { section_key: 'quiz_q3',      field_key: 'question', label: 'Frage 3',            type: 'text' },
+    { section_key: 'quiz_q3',      field_key: 'option_1', label: 'Frage 3 – Option 1', type: 'text' },
+    { section_key: 'quiz_q3',      field_key: 'option_2', label: 'Frage 3 – Option 2', type: 'text' },
+    { section_key: 'quiz_form',    field_key: 'title',    label: 'Formular Titel',     type: 'text' },
+    { section_key: 'quiz_form',    field_key: 'submit_label', label: 'Absenden Button', type: 'text' },
+    { section_key: 'colors',       field_key: 'brand',    label: 'Akzentfarbe',        type: 'color' },
+  ]},
+  // ─────────────────────────────────────────────────────────────────────────
   { type: 'header', label: 'Header & Navigation', addable: false, fields: [
     { section_key: 'header', field_key: 'logo_text',  label: 'Logo Text',        type: 'text' },
     { section_key: 'header', field_key: 'cta_label',  label: 'Button Text',      type: 'text' },
@@ -345,7 +402,23 @@ function SectionRow({ section, content, dirty, onChange, onUpload, onToggleHide,
   onDuplicate: () => void; onDelete: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const def = SECT_MAP[section.section_type];
+  // Bestimme ob es sich um eine Legacy-Instanz handelt
+  // Legacy: section_instance === section_type ODER kurzer Name ohne Zeitstempel-Suffix
+  const isLegacyInstance = section.section_instance === section.section_type
+    || (section.section_instance.length < 30 && !section.section_instance.match(/_[a-z0-9]{6,}$/));
+  // Legacy-Typ-Alias: wenn section_type in SECT_MAP existiert aber Legacy-Instanz vorliegt,
+  // zeige Legacy-Felder (feste section_keys statt __INST__)
+  const LEGACY_ALIAS: Record<string, string> = {
+    'hero': 'hero_legacy', 'logos': 'logos_legacy',
+    'feature_cards_3': 'feature_cards_3_legacy', 'feature_cards_4': 'feature_cards_4_legacy',
+    'quote': 'quote_legacy', 'video_carousel': 'video_carousel_legacy',
+    'flowing_text': 'flowing_text_legacy', 'testimonials': 'testimonials_legacy',
+    'about': 'about_legacy', 'reviews': 'reviews_legacy', 'final_cta': 'final_cta_legacy',
+  };
+  const resolvedType = isLegacyInstance && LEGACY_ALIAS[section.section_type]
+    ? LEGACY_ALIAS[section.section_type]
+    : section.section_type;
+  const def = SECT_MAP[resolvedType] ?? SECT_MAP[section.section_type];
   const fields = def?.fields ?? [];
   const hasDirty = fields.some(f => dirty.has(resolveKey(f, section.section_instance)));
 
@@ -476,6 +549,19 @@ function NewPageDialog({ pages, onAdd, onClose }: { pages: CmsPage[]; onAdd: (la
   );
 }
 
+// ── Constants (Komponenten als virtuelle Seiten) ──────────────────────────────
+const COMPONENT_PAGES: CmsPage[] = [
+  { id: 'component_footer', label: 'Footer',        path: '(Komponente)', is_system: true },
+  { id: 'component_cookie', label: 'Cookie Banner', path: '(Komponente)', is_system: true },
+  { id: 'component_quiz',   label: 'Quiz',          path: '(Komponente)', is_system: true },
+];
+
+const COMPONENT_SECTIONS: Record<string, SectInstance> = {
+  'component_footer': { id: 'virtual_footer', page_id: 'component_footer', section_instance: 'footer',       section_type: 'component_footer', label: 'Footer',             sort_order: 0, hidden: false },
+  'component_cookie': { id: 'virtual_cookie', page_id: 'component_cookie', section_instance: 'cookie',       section_type: 'component_cookie', label: 'Cookie Banner',      sort_order: 0, hidden: false },
+  'component_quiz':   { id: 'virtual_quiz',   page_id: 'component_quiz',   section_instance: 'quiz_section', section_type: 'component_quiz',   label: 'Quiz Einstellungen', sort_order: 0, hidden: false },
+};
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function CmsPage() {
   const [pages, setPages]               = useState<CmsPage[]>([]);
@@ -503,23 +589,41 @@ export default function CmsPage() {
   // Load pages on mount
   useEffect(() => {
     fetch('/api/admin/pages').then(r => r.json()).then(j => {
-      if (j.ok && j.data?.length) { setPages(j.data); setSelectedPage(j.data[0]); }
+      if (j.ok && j.data?.length) {
+        const allPages = [...j.data, ...COMPONENT_PAGES];
+        setPages(allPages);
+        setSelectedPage(j.data[0]);
+      }
     }).catch(() => {});
   }, []);
 
   // Load sections + content when page changes
+  const isComponentPage = (pageId: string) => pageId.startsWith('component_');
+
   const loadPage = useCallback(async (page: CmsPage) => {
     setLoading(true); setError(''); setDirty(new Set());
     try {
-      const [sR, cR] = await Promise.all([
-        fetch(`/api/admin/sections?page_id=${page.id}`).then(r => r.json()),
-        fetch(`/api/admin/content?page=${page.id}`).then(r => r.json()),
-      ]);
-      setSections(sR.ok ? sR.data || [] : []);
-      if (cR.ok) {
-        const map: CM = {};
-        for (const e of (cR.data || [])) map[`${e.section_key}::${e.field_key}`] = e.value;
-        setContent(map);
+      if (isComponentPage(page.id)) {
+        // Komponenten: virtuelle Sektion + Inhalte aus CMS API
+        const virtualSection = COMPONENT_SECTIONS[page.id];
+        setSections(virtualSection ? [virtualSection] : []);
+        const cR = await fetch(`/api/admin/content?page=${page.id}`).then(r => r.json());
+        if (cR.ok) {
+          const map: CM = {};
+          for (const e of (cR.data || [])) map[`${e.section_key}::${e.field_key}`] = e.value;
+          setContent(map);
+        }
+      } else {
+        const [sR, cR] = await Promise.all([
+          fetch(`/api/admin/sections?page_id=${page.id}`).then(r => r.json()),
+          fetch(`/api/admin/content?page=${page.id}`).then(r => r.json()),
+        ]);
+        setSections(sR.ok ? sR.data || [] : []);
+        if (cR.ok) {
+          const map: CM = {};
+          for (const e of (cR.data || [])) map[`${e.section_key}::${e.field_key}`] = e.value;
+          setContent(map);
+        }
       }
     } catch (e: any) { setError(e.message); }
     finally { setLoading(false); }
@@ -544,7 +648,6 @@ export default function CmsPage() {
     if (!selectedPage) return;
     setSaving(true); setError('');
     try {
-      // 1. Inhalte speichern
       const contentKeys = Array.from(dirty).filter(k => !k.startsWith('__'));
       if (contentKeys.length) {
         const updates = contentKeys.map(key => {
@@ -554,8 +657,10 @@ export default function CmsPage() {
         const res = await fetch('/api/admin/content', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ page: selectedPage.id, updates }) });
         if (!(await res.json()).ok) throw new Error('Content-Fehler');
       }
-      // 2. Reihenfolge + Sichtbarkeit
-      await fetch('/api/admin/sections', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ page_id: selectedPage.id, updates: sections.map((s, i) => ({ id: s.id, sort_order: i, hidden: s.hidden })) }) });
+      // Reihenfolge + Sichtbarkeit nur für normale Seiten
+      if (!isComponentPage(selectedPage.id)) {
+        await fetch('/api/admin/sections', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ page_id: selectedPage.id, updates: sections.map((s, i) => ({ id: s.id, sort_order: i, hidden: s.hidden })) }) });
+      }
       setDirty(new Set()); setSavedAt(new Date());
     } catch (e: any) { setError(e.message); }
     finally { setSaving(false); }
@@ -582,10 +687,18 @@ export default function CmsPage() {
   const onDragEnd = () => { draggingId.current = null; };
 
   const duplicateSection = async (s: SectInstance) => {
-    if (!selectedPage) return;
+    if (!selectedPage || isComponentPage(selectedPage.id)) return;
     const res  = await fetch('/api/admin/sections', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ page_id: selectedPage.id, section_type: s.section_type, label: s.label, source_instance: s.section_instance }) });
     const json = await res.json();
-    if (json.ok) setSections(prev => [...prev, json.data]);
+    if (json.ok) {
+      // Direkt nach der original Sektion einfügen
+      setSections(prev => {
+        const idx = prev.findIndex(x => x.id === s.id);
+        const next = [...prev];
+        next.splice(idx + 1, 0, json.data);
+        return next;
+      });
+    }
   };
 
   const deleteSection = async (s: SectInstance) => {
