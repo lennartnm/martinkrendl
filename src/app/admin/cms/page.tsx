@@ -239,13 +239,13 @@ const COOKIEBANNER_SECTIONS: Sect[] = [
 type Mode = 'page' | 'component';
 
 const PAGE_OPTIONS   = [
-  { value: 'home',  label: 'Startseite',  icon: '🏠' },
-  { value: 'danke', label: 'Danke-Seite', icon: '✅' },
+  { value: 'home',  label: 'Startseite'  },
+  { value: 'danke', label: 'Danke-Seite' },
 ];
 const COMPONENT_OPTIONS = [
-  { value: 'footer',       label: 'Footer',       icon: '📄' },
-  { value: 'quiz',         label: 'Quiz',          icon: '🎯' },
-  { value: 'cookiebanner', label: 'Cookie Banner', icon: '🍪' },
+  { value: 'footer',       label: 'Footer'        },
+  { value: 'quiz',         label: 'Quiz'           },
+  { value: 'cookiebanner', label: 'Cookie Banner'  },
 ];
 
 const SECTIONS_BY_KEY: Record<string, Sect[]> = {
@@ -450,7 +450,6 @@ export default function CmsPage() {
   const selectOption = (newMode: Mode, key: string) => { setMode(newMode); setSelectedKey(key); setDropdownOpen(false); };
 
   const currentLabel = mode === 'page' ? (PAGE_OPTIONS.find(p => p.value === selectedKey)?.label ?? selectedKey) : (COMPONENT_OPTIONS.find(c => c.value === selectedKey)?.label ?? selectedKey);
-  const currentIcon  = mode === 'page' ? (PAGE_OPTIONS.find(p => p.value === selectedKey)?.icon ?? '📄') : (COMPONENT_OPTIONS.find(c => c.value === selectedKey)?.icon ?? '🧩');
 
   if (loading) return <div className="flex h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" style={{ color: brand }} /></div>;
 
@@ -483,7 +482,6 @@ export default function CmsPage() {
           <p className="mb-1.5 text-xs font-semibold uppercase tracking-widest text-[#9CA3AF]">Bearbeiten</p>
           <button type="button" onClick={() => setDropdownOpen(v => !v)} className="flex h-11 w-full items-center justify-between rounded-[4px] border border-neutral-200 bg-white px-4 text-sm font-semibold text-[#2F2F2F] shadow-sm transition hover:border-[#884A4A]">
             <div className="flex items-center gap-2">
-              <span>{currentIcon}</span>
               <span>{currentLabel}</span>
               <span className={`ml-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${mode === 'page' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'}`}>{mode === 'page' ? 'Seite' : 'Komponente'}</span>
             </div>
@@ -498,7 +496,7 @@ export default function CmsPage() {
               </div>
               {PAGE_OPTIONS.map(opt => (
                 <button key={opt.value} type="button" onClick={() => selectOption('page', opt.value)} className={`flex w-full items-center gap-2 px-4 py-2.5 text-sm font-medium transition hover:bg-[#FDF8F8] ${mode === 'page' && selectedKey === opt.value ? 'bg-[#FDF8F8] font-semibold text-[#884A4A]' : 'text-[#2F2F2F]'}`}>
-                  <span>{opt.icon}</span>{opt.label}{mode === 'page' && selectedKey === opt.value && <CheckCircle className="ml-auto h-3.5 w-3.5 text-[#884A4A]" />}
+                  {opt.label}{mode === 'page' && selectedKey === opt.value && <CheckCircle className="ml-auto h-3.5 w-3.5 text-[#884A4A]" />}
                 </button>
               ))}
 
@@ -510,7 +508,7 @@ export default function CmsPage() {
               </div>
               {COMPONENT_OPTIONS.map(opt => (
                 <button key={opt.value} type="button" onClick={() => selectOption('component', opt.value)} className={`flex w-full items-center gap-2 px-4 py-2.5 text-sm font-medium transition hover:bg-[#FDF8F8] ${mode === 'component' && selectedKey === opt.value ? 'bg-[#FDF8F8] font-semibold text-[#884A4A]' : 'text-[#2F2F2F]'}`}>
-                  <span>{opt.icon}</span>{opt.label}{mode === 'component' && selectedKey === opt.value && <CheckCircle className="ml-auto h-3.5 w-3.5 text-[#884A4A]" />}
+                  {opt.label}{mode === 'component' && selectedKey === opt.value && <CheckCircle className="ml-auto h-3.5 w-3.5 text-[#884A4A]" />}
                 </button>
               ))}
               <div className="h-1.5" />
