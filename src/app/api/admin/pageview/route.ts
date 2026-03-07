@@ -14,12 +14,10 @@ export async function POST(req: NextRequest) {
     const referrer = body.referrer || req.headers.get('referer') || null;
     const ua = req.headers.get('user-agent') || '';
 
-    // Simple device detection
     const isMobile = /mobile|android|iphone|ipad/i.test(ua);
     const isTablet = /ipad|tablet/i.test(ua);
     const device = isTablet ? 'tablet' : isMobile ? 'mobile' : 'desktop';
 
-    // Simple browser detection
     let browser = 'other';
     if (/chrome/i.test(ua) && !/edge/i.test(ua)) browser = 'chrome';
     else if (/safari/i.test(ua) && !/chrome/i.test(ua)) browser = 'safari';
@@ -27,10 +25,7 @@ export async function POST(req: NextRequest) {
     else if (/edge/i.test(ua)) browser = 'edge';
 
     await supabase.from('pageviews').insert({
-      page,
-      referrer,
-      device,
-      browser,
+      page, referrer, device, browser,
       utm_source: body.utm_source || null,
       utm_medium: body.utm_medium || null,
       utm_campaign: body.utm_campaign || null,
@@ -48,9 +43,20 @@ export async function GET(req: NextRequest) {
   const session = await getAdminSession();
   if (!session) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
-  const days = parseInt(req.nextUrl.searchParams.get('days') || '30', 10);
-  const since = new Date(Date.now() - days * 86400000).toISOString();
-  const prevSince = new Date(Date.now() - days * 2 * 86400000).toISOString();
+  // Support ?from=YYYY-MM-DD&to=YYYY-MM-DD or legacy ?days=N
+  const fromParam = req.nextUrl.searchParams.get('from');
+  const toParam   = req.nextUrl.searchParams.get('to');
+  const legacyDays = parseInt(req.nextUrl.searchParams.get('days') || '30', 10);
+
+  const since = fromParam
+    ? new Date(fromParam + 'T00:00:00').toISOString()
+    : new Date(Date.now() - legacyDays * 86400000).toISOString();
+  const until = toParam
+    ? new Date(toParam + 'T23:59:59').toISOString()
+    : new Date().toISOString();
+
+  const diffMs   = new Date(until).getTime() - new Date(since).getTime();
+  const diffDays = Math.max(Math.ceil(diffMs / 86400000), 1);
 
   try {
     // Total all time
@@ -61,9 +67,9 @@ export async function GET(req: NextRequest) {
     const { count: today } = await supabase.from('pageviews').select('*', { count: 'exact', head: true }).gte('created_at', todayStart.toISOString());
 
     // Period
-    const { count: period } = await supabase.from('pageviews').select('*', { count: 'exact', head: true }).gte('created_at', since);
+    const { count: period } = await supabase.from('pageviews').select('*', { count: 'exact', head: true }).gte('created_at', since).lte('created_at', until);
 
-    // Prev 7 days for trend
+    // Trend: compare last 7 days vs previous 7 days
     const week1Since = new Date(Date.now() - 7 * 86400000).toISOString();
     const week2Since = new Date(Date.now() - 14 * 86400000).toISOString();
     const { count: w1 } = await supabase.from('pageviews').select('*', { count: 'exact', head: true }).gte('created_at', week1Since);
@@ -72,11 +78,11 @@ export async function GET(req: NextRequest) {
 
     // Daily breakdown
     const { data: rawDaily } = await supabase
-      .from('pageviews').select('created_at').gte('created_at', since).order('created_at');
+      .from('pageviews').select('created_at').gte('created_at', since).lte('created_at', until).order('created_at');
 
     const dailyMap: Record<string, number> = {};
-    for (let i = days - 1; i >= 0; i--) {
-      const d = new Date(Date.now() - i * 86400000);
+    for (let i = diffDays - 1; i >= 0; i--) {
+      const d = new Date(new Date(until).getTime() - i * 86400000);
       const key = d.toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit' });
       dailyMap[key] = 0;
     }
@@ -87,18 +93,15 @@ export async function GET(req: NextRequest) {
     const daily = Object.entries(dailyMap).map(([date, views]) => ({ date, views }));
 
     // Top pages
-    const { data: rawPages } = await supabase.from('pageviews').select('page').gte('created_at', since);
+    const { data: rawPages } = await supabase.from('pageviews').select('page').gte('created_at', since).lte('created_at', until);
     const pageMap: Record<string, number> = {};
     for (const r of rawPages || []) { const p = r.page || '/'; pageMap[p] = (pageMap[p] || 0) + 1; }
     const topPages = Object.entries(pageMap).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([path, views]) => ({ path, views }));
 
     // Devices
-    const { data: rawDevices } = await supabase.from('pageviews').select('device').gte('created_at', since);
+    const { data: rawDevices } = await supabase.from('pageviews').select('device').gte('created_at', since).lte('created_at', until);
     const devices = { mobile: 0, desktop: 0, tablet: 0 };
-    for (const r of rawDevices || []) {
-      const d = r.device as 'mobile' | 'desktop' | 'tablet';
-      if (d in devices) devices[d]++;
-    }
+    for (const r of rawDevices || []) { const d = r.device as 'mobile' | 'desktop' | 'tablet'; if (d in devices) devices[d]++; }
 
     return NextResponse.json({ ok: true, total: total || 0, today: today || 0, period: period || 0, trend, daily, topPages, devices });
   } catch (e: any) {
