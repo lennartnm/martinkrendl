@@ -69,5 +69,14 @@ export async function POST(req: NextRequest) {
   const pagePath = body.page === 'home' ? '/' : `/${body.page}`;
   revalidatePath(pagePath);
 
+  // Für Komponenten: alle Seiten revalidieren, die diese Komponente verwenden
+  if (body.page === 'component_footer' || body.page === 'component_cookie') {
+    revalidatePath('/');
+    revalidatePath('/danke');
+  }
+  if (body.page === 'danke') {
+    revalidatePath('/danke');
+  }
+
   return NextResponse.json({ ok: true, revalidated: pagePath });
 }
