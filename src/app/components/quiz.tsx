@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { MapPin, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -156,17 +156,49 @@ function IconAnswerCard({
   );
 }
 
+// Funnel step tracking helper
+function trackFunnelStep(step: string) {
+  try {
+    const sessionId = (typeof window !== 'undefined' && (window as any).__quizSessionId) || null;
+    fetch('/api/admin/quiz-funnel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ step, session_id: sessionId }),
+    }).catch(() => {});
+  } catch {}
+}
+
 export default function Quiz() {
   const [step, setStep] = useState<0 | 1 | 2 | 3 | 4>(0);
   const [answers, setAnswers] = useState<Answers>({});
   const [loading, setLoading] = useState(false);
   const sentLeadRef = useRef(false);
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const trackedSteps = useRef<Set<string>>(new Set());
+
+  // Track quiz 'view' once on mount
+  useEffect(() => {
+    if (!trackedSteps.current.has('view')) {
+      trackedSteps.current.add('view');
+      // Generate a session id for this quiz session
+      if (typeof window !== 'undefined') {
+        (window as any).__quizSessionId = Math.random().toString(36).slice(2);
+      }
+      trackFunnelStep('view');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const startLoadingStep = (data: Partial<Answers>) => {
     setAnswers((prev) => ({ ...prev, ...data }));
     setLoading(true);
     setStep(3);
+
+    // Track q3 answer
+    if (!trackedSteps.current.has('q3')) {
+      trackedSteps.current.add('q3');
+      trackFunnelStep('q3');
+    }
 
     if (loadingTimeoutRef.current) {
       clearTimeout(loadingTimeoutRef.current);
@@ -175,6 +207,11 @@ export default function Quiz() {
     loadingTimeoutRef.current = setTimeout(() => {
       setLoading(false);
       setStep(4);
+      // Track form reached
+      if (!trackedSteps.current.has('form')) {
+        trackedSteps.current.add('form');
+        trackFunnelStep('form');
+      }
       loadingTimeoutRef.current = null;
     }, 1800);
   };
@@ -186,6 +223,14 @@ export default function Quiz() {
     }
 
     setAnswers((prev) => ({ ...prev, ...data }));
+
+    // Track step completion
+    const stepKey = step === 0 ? 'q1' : step === 1 ? 'q2' : null;
+    if (stepKey && !trackedSteps.current.has(stepKey)) {
+      trackedSteps.current.add(stepKey);
+      trackFunnelStep(stepKey);
+    }
+
     setStep((prev) => (prev + 1) as 0 | 1 | 2 | 3 | 4);
   };
 
@@ -233,6 +278,9 @@ export default function Quiz() {
         sentLeadRef.current = true;
       } catch {}
     }
+
+    // Track funnel submit
+    trackFunnelStep('submit');
 
     try {
       await fetch('/api/lead', {
