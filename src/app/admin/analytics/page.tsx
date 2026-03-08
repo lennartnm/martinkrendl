@@ -456,6 +456,8 @@ export default function AnalyticsPage() {
   const [funnelCounts, setFunnelCounts] = useState<FunnelCounts>({});
   const [funnelDaily, setFunnelDaily]   = useState<FunnelDaily>([]);
   const [funnelLoading, setFunnelLoading] = useState(true);
+  const [selectedQuizId, setSelectedQuizId] = useState<string>('all');
+  const [quizList, setQuizList] = useState<{id:string;label:string}[]>([]);
 
   // Changelog
   const [changelog, setChangelog]   = useState<ChangelogEntry[]>([]);
@@ -477,12 +479,13 @@ export default function AnalyticsPage() {
   const loadFunnel = useCallback(async () => {
     setFunnelLoading(true);
     try {
-      const res  = await fetch(`/api/admin/quiz-funnel?from=${fromDate}&to=${toDate}`);
+      const qParam = selectedQuizId && selectedQuizId !== 'all' ? `&quiz_id=${selectedQuizId}` : '';
+      const res  = await fetch(`/api/admin/quiz-funnel?from=${fromDate}&to=${toDate}${qParam}`);
       const json = await res.json();
       if (json.ok) { setFunnelCounts(json.stepCounts || {}); setFunnelDaily(json.daily || []); }
     } catch {}
     finally { setFunnelLoading(false); }
-  }, [fromDate, toDate]);
+  }, [fromDate, toDate, selectedQuizId]);
 
   const loadChangelog = async () => {
     setClLoading(true);
@@ -496,6 +499,11 @@ export default function AnalyticsPage() {
 
   useEffect(() => { loadPageviews(); loadFunnel(); }, [loadPageviews, loadFunnel]);
   useEffect(() => { loadChangelog(); }, []);
+  useEffect(() => {
+    fetch('/api/admin/quiz-configs').then(r=>r.json()).then(j=>{
+      if(j.ok) setQuizList([{id:'all',label:'Alle Quizze'},...(j.data||[])]);
+    }).catch(()=>{});
+  }, []);
 
   const addChangelog = async (description: string, category: string) => {
     try {
@@ -613,6 +621,19 @@ export default function AnalyticsPage() {
         {/* ══ Funnel Tab ═════════════════════════════════════════════════════ */}
         {tab === 'funnel' && (
           <div className="space-y-4">
+
+            {/* ── Quiz Selector ── */}
+            {quizList.length > 1 && (
+              <div className="flex items-center gap-3 rounded-[4px] border border-neutral-200 bg-white px-4 py-3 shadow-sm">
+                <BarChart2 className="h-4 w-4 shrink-0" style={{ color: brand }} />
+                <span className="text-sm font-semibold text-neutral-600">Quiz-Variante:</span>
+                <select value={selectedQuizId} onChange={e=>{setSelectedQuizId(e.target.value);}}
+                  className="h-9 flex-1 max-w-xs rounded-[4px] border border-neutral-200 px-3 text-sm outline-none focus:border-[#884A4A]">
+                  {quizList.map(q=><option key={q.id} value={q.id}>{q.label}</option>)}
+                </select>
+                <span className="text-xs text-neutral-400">Funnel-Daten werden nach Quiz gefiltert</span>
+              </div>
+            )}
 
             {/* ① Große Timeline mit KPIs + Änderungen */}
             <div className="rounded-[4px] border border-neutral-200 bg-white p-5 shadow-sm">

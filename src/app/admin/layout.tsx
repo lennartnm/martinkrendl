@@ -3,7 +3,7 @@
 
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const brand   = '#884A4A';
 const graphite = '#2F2F2F';
@@ -61,6 +61,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router   = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loggingOut, setLoggingOut]   = useState(false);
+  const [fontFamily, setFontFamily]   = useState('Open Sans');
+  const [fontUrl, setFontUrl]         = useState('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap');
+
+  useEffect(() => {
+    fetch('/api/settings').then(r=>r.json()).then(j=>{
+      if (j.ok && j.data) {
+        if (j.data.font_family) setFontFamily(j.data.font_family);
+        if (j.data.font_url) setFontUrl(j.data.font_url);
+      }
+    }).catch(()=>{});
+  }, []);
 
   if (pathname === '/admin/login') return <>{children}</>;
 
@@ -88,8 +99,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap');
-        body, button, input, textarea, select, a { font-family: 'Open Sans', sans-serif !important; }
+        @import url('${fontUrl}');
+        body, button, input, textarea, select, a { font-family: '${fontFamily}', sans-serif !important; }
       `}</style>
 
       {/* Mobile overlay */}

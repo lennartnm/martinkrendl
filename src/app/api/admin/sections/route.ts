@@ -46,13 +46,29 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const session = await getAdminSession();
   if (!session) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-  const { page_id, updates } = await req.json().catch(() => ({}));
+  const { page_id, updates, settings } = await req.json().catch(() => ({}));
   if (!page_id || !updates?.length) return NextResponse.json({ error: 'page_id and updates required' }, { status: 400 });
   for (const u of updates) {
     const patch: Record<string, unknown> = {};
     if (u.sort_order !== undefined) patch.sort_order = u.sort_order;
     if (u.hidden !== undefined) patch.hidden = u.hidden;
     if (Object.keys(patch).length) await supabase.from('cms_sections').update(patch).eq('id', u.id);
+  }
+  // Save header/footer settings into cms_content
+  if (settings && typeof settings === 'object') {
+    const settingsEntries = [
+      { field_key: 'show_header', value: String(settings.header_enabled !== false) },
+      { field_key: 'show_footer', value: String(settings.footer_enabled !== false) },
+    ];
+    for (const entry of settingsEntries) {
+      await supabase.from('cms_content').upsert({
+        page: page_id,
+        section_key: 'layout',
+        field_key: entry.field_key,
+        value: entry.value,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'page,section_key,field_key' });
+    }
   }
   const { data: pageData } = await supabase.from('cms_pages').select('path').eq('id', page_id).single();
   if (pageData?.path) revalidatePath(pageData.path);

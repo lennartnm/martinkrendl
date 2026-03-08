@@ -48,6 +48,18 @@ async function getSections(page: string): Promise<CmsSection[]> {
   }
 }
 
+// ── Global Settings (font etc.) ───────────────────────────────────────────────
+async function getGlobalSettings(): Promise<Record<string, string>> {
+  try {
+    const { data } = await supabase.from("global_settings").select("*");
+    const map: Record<string, string> = {};
+    for (const row of data || []) map[row.key] = row.value;
+    return map;
+  } catch {
+    return {};
+  }
+}
+
 // ── Fallbacks ─────────────────────────────────────────────────────────────────
 const FALLBACK: Record<string, string> = {
   "colors::brand":      "#884A4A",
@@ -169,12 +181,47 @@ function CmsImage({ src, alt, fill, width, height, className, priority }: {
     : <Image src={src} alt={alt} width={width || 400} height={height || 300} className={className} />;
 }
 
+// Rich text renderer: **bold** and *italic* support
+function RichText({ text }: { text: string }) {
+  if (!text) return null;
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) return <strong key={i}>{part.slice(2,-2)}</strong>;
+        if (part.startsWith('*') && part.endsWith('*')) return <em key={i}>{part.slice(1,-1)}</em>;
+        return part;
+      })}
+    </>
+  );
+}
+
 export default async function Page() {
-  const [cms, dbSections] = await Promise.all([
+  const [cms, dbSections, headerCms, globalSettings] = await Promise.all([
     getContent("home"),
     getSections("home"),
+    getContent("component_header"),
+    getGlobalSettings(),
   ]);
   const c = (key: string) => cms[key] ?? FALLBACK[key] ?? "";
+
+  // Layout settings (header/footer visibility)
+  const showHeader = cms["layout::show_header"] !== "false";
+  const showFooter = cms["layout::show_footer"] !== "false";
+
+  // Header from CMS component (fallback to home page values)
+  const headerLogoText = headerCms["header::logo_text"] || c("header::logo_text") || "MARTIN KRENDL";
+  const headerCtaLabel = headerCms["header::cta_label"] || c("header::cta_label") || "Kostenloses Kennenlernen";
+  const headerCtaLink  = headerCms["header::cta_link"]  || c("links::header_cta")  || "#quiz";
+  const headerBg       = headerCms["header::bg_color"]  || c("colors::header_bg")  || "#884A4A";
+  const headerShowTopbar = headerCms["header::show_topbar"] !== "false";
+  const headerTopbarText = headerCms["header::topbar_text"] || "Gesangsunterricht in Steyr oder online 🎶";
+  const headerTopbarBg   = headerCms["header::topbar_bg"]   || "#e0e0e0";
+  const headerTopbarColor = headerCms["header::topbar_color"] || "#333333";
+
+  // Global font
+  const fontFamily = globalSettings["font_family"] || "Open Sans";
+  const fontUrl    = globalSettings["font_url"]    || `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}:wght@400;600;700;800&display=swap`;
 
   // Sektionsreihenfolge aus DB; Fallback wenn DB noch leer
   const activeSections = dbSections.length > 0
@@ -187,7 +234,6 @@ export default async function Page() {
   const darkGray     = c("colors::dark_gray");
   const lightGray    = c("colors::light_gray");
   const quizBg       = c("colors::quiz_bg");
-  const headerBg     = c("colors::header_bg");
 
   // Dynamischer Helfer: Wert aus CMS lesen, mit section_instance als Kontext
   // Für Legacy-Sektionen (instance = type) funktioniert c() direkt
@@ -582,9 +628,9 @@ export default async function Page() {
       } as CSSProperties}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap');
+        @import url('${fontUrl}');
         html { scroll-behavior: smooth; }
-        body { font-family: 'Open Sans', sans-serif; color: var(--graphite); background: #ffffff; }
+        body { font-family: '${fontFamily}', sans-serif; color: var(--graphite); background: #ffffff; }
         input[type='range'] { -webkit-appearance: none; appearance: none; background: transparent; }
         input[type='range']::-webkit-slider-runnable-track { height: 4px; border-radius: 9999px; background: #e5e5e5; }
         input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; margin-top: -5px; height: 14px; width: 14px; border-radius: 9999px; background: var(--brand); cursor: pointer; border: 2px solid white; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
@@ -592,25 +638,28 @@ export default async function Page() {
         input[type='range']::-moz-range-thumb { height: 14px; width: 14px; border: 2px solid white; border-radius: 9999px; background: var(--brand); cursor: pointer; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
       `}</style>
 
-      <TopHeader />
+      {showHeader && headerShowTopbar && (
+        <TopHeader text={headerTopbarText} bgColor={headerTopbarBg} textColor={headerTopbarColor} />
+      )}
 
-      {/* Header is always shown */}
-      <header className="sticky top-0 z-50 border-b border-white/10" style={{ backgroundColor: headerBg }}>
-        <div className={`${sectionWidth} flex h-20 items-center justify-between`}>
-          <div className="text-left text-lg font-extrabold tracking-[0.18em] text-white md:text-xl">
-            {c("header::logo_text")}
+      {showHeader && (
+        <header className="sticky top-0 z-50 border-b border-white/10" style={{ backgroundColor: headerBg }}>
+          <div className={`${sectionWidth} flex h-20 items-center justify-between`}>
+            <div className="text-left text-lg font-extrabold tracking-[0.18em] text-white md:text-xl">
+              {headerLogoText}
+            </div>
+            <a href={headerCtaLink}>
+              <Button variant="secondary" className="rounded-[4px] px-6 py-3 font-semibold text-white">
+                {headerCtaLabel}
+              </Button>
+            </a>
           </div>
-          <a href={c("links::header_cta")}>
-            <Button variant="secondary" className="rounded-[4px] px-6 py-3 font-semibold text-white">
-              {c("header::cta_label")}
-            </Button>
-          </a>
-        </div>
-      </header>
+        </header>
+      )}
 
       {orderedSections as React.ReactNode[]}
 
-      <Footer />
+      {showFooter && <Footer />}
     </main>
   );
 }

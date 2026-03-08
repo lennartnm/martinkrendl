@@ -15,6 +15,7 @@ export async function POST(req: NextRequest) {
     await supabase.from('quiz_funnel_events').insert({
       step,
       session_id: body.session_id || null,
+      quiz_id: body.quiz_id || 'default',
       created_at: new Date().toISOString(),
     });
     return NextResponse.json({ ok: true });
@@ -31,6 +32,7 @@ export async function GET(req: NextRequest) {
   const fromParam  = req.nextUrl.searchParams.get('from');
   const toParam    = req.nextUrl.searchParams.get('to');
   const legacyDays = parseInt(req.nextUrl.searchParams.get('days') || '30', 10);
+  const quizId     = req.nextUrl.searchParams.get('quiz_id') || null;
 
   const since = fromParam
     ? new Date(fromParam + 'T00:00:00').toISOString()
@@ -47,23 +49,34 @@ export async function GET(req: NextRequest) {
     const stepCounts: Record<string, number> = {};
 
     for (const step of STEPS) {
-      const { count } = await supabase
+      let q = supabase
         .from('quiz_funnel_events')
         .select('*', { count: 'exact', head: true })
         .eq('step', step)
         .gte('created_at', since)
         .lte('created_at', until);
+
+      if (quizId && quizId !== 'all') {
+        q = (q as any).eq('quiz_id', quizId);
+      }
+
+      const { count } = await q;
       stepCounts[step] = count || 0;
     }
 
-    // Daily breakdown for view + submit
-    const { data: rawDaily } = await supabase
+    let dailyQuery = supabase
       .from('quiz_funnel_events')
       .select('step, created_at')
       .in('step', ['view', 'submit'])
       .gte('created_at', since)
       .lte('created_at', until)
       .order('created_at');
+
+    if (quizId && quizId !== 'all') {
+      dailyQuery = (dailyQuery as any).eq('quiz_id', quizId);
+    }
+
+    const { data: rawDaily } = await dailyQuery;
 
     const dailyMap: Record<string, { views: number; submits: number }> = {};
     for (let i = diffDays - 1; i >= 0; i--) {
