@@ -486,7 +486,10 @@ function SectionRow({section,content,dirty,onChange,onUpload,onToggleHide,isDrag
 }) {
   const [open,setOpen]=useState(false);
   const [openGroups,setOpenGroups]=useState<Record<string,boolean>>({});
-  const isLeg=section.section_instance===section.section_type||(section.section_instance.length<30&&!section.section_instance.match(/_[a-z0-9]{6,}$/));
+  // Modern section_instance is generated as `${section_type}_${Date.now().toString(36)}` (7+ chars base36) optionally with `_${random4}`
+  // Legacy instances are static human-readable strings like 'hero', 'header', 'quiz_section', 'danke_header', etc.
+  const modernPattern = /^.+_[a-z0-9]{7,}(_[a-z0-9]{2,})?$/;
+  const isLeg = !modernPattern.test(section.section_instance);
   const LEG:Record<string,string>={hero:'hero_legacy',logos:'logos_legacy',feature_cards_3:'feature_cards_3_legacy',feature_cards_4:'feature_cards_4_legacy',quote:'quote_legacy',video_carousel:'video_carousel_legacy',flowing_text:'flowing_text_legacy',testimonials:'testimonials_legacy',about:'about_legacy',reviews:'reviews_legacy',final_cta:'final_cta_legacy'};
   const rt=isLeg&&LEG[section.section_type]?LEG[section.section_type]:section.section_type;
   const def=SECT_MAP[rt]??SECT_MAP[section.section_type];

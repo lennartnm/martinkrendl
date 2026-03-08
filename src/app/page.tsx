@@ -480,7 +480,7 @@ export default async function Page() {
     ),
     quiz: (instance) => (
       <section key="quiz" id="quiz" className="scroll-mt-28 py-14 md:py-20" style={{ backgroundColor: quizBg }}>
-        <div className={sectionWidth}><Quiz /></div>
+        <div className={sectionWidth}><Quiz quizId={ci(instance, "quiz_id") || "component_quiz"} /></div>
       </section>
     ),
     testimonials: (instance) => (

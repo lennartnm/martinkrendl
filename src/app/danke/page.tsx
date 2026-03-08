@@ -6,13 +6,15 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import Footer from '@/components/ui/Footer';
+import TopHeader from '@/components/TopHeader';
 
-async function getDankeContent(): Promise<Record<string, string>> {
+async function getCmsContent(page: string): Promise<Record<string, string>> {
   try {
     const { data, error } = await supabase
       .from('cms_content')
       .select('section_key, field_key, value')
-      .eq('page', 'danke');
+      .eq('page', page);
     if (error || !data) return {};
     const map: Record<string, string> = {};
     for (const entry of data) {
@@ -22,6 +24,15 @@ async function getDankeContent(): Promise<Record<string, string>> {
   } catch {
     return {};
   }
+}
+
+async function getGlobalSettings(): Promise<Record<string, string>> {
+  try {
+    const { data } = await supabase.from('global_settings').select('*');
+    const map: Record<string, string> = {};
+    for (const row of data || []) map[row.key] = row.value;
+    return map;
+  } catch { return {}; }
 }
 
 // Fallbacks – werden angezeigt, wenn noch kein CMS-Eintrag existiert
@@ -39,15 +50,36 @@ const FALLBACK: Record<string, string> = {
 };
 
 export default async function DankePage() {
-  const cms = await getDankeContent();
+  const [cms, headerCms, globalSettings] = await Promise.all([
+    getCmsContent('danke'),
+    getCmsContent('component_header'),
+    getGlobalSettings(),
+  ]);
+
   const c = (key: string) => cms[key] ?? FALLBACK[key] ?? '';
 
   const brand     = c('colors::brand')      || '#884A4A';
   const graphite  = c('colors::graphite')   || '#2F2F2F';
   const lightGray = c('colors::light_gray') || '#6B6B6B';
-  const headerBg  = c('colors::header_bg')  || brand;
 
-  const logoText  = c('danke_header::logo_text');
+  // Layout toggles (header/footer visibility)
+  const showHeader = cms['layout::show_header'] !== 'false';
+  const showFooter = cms['layout::show_footer'] !== 'false';
+
+  // Header from component_header CMS (same as other pages)
+  const headerLogoText    = headerCms['header::logo_text']    || c('danke_header::logo_text') || 'MARTIN KRENDL';
+  const headerCtaLabel    = headerCms['header::cta_label']    || 'Zurück zur Startseite';
+  const headerCtaLink     = headerCms['header::cta_link']     || '/';
+  const headerBg          = headerCms['header::bg_color']     || c('colors::header_bg') || brand;
+  const headerShowTopbar  = headerCms['header::show_topbar']  !== 'false';
+  const headerTopbarText  = headerCms['header::topbar_text']  || 'Gesangsunterricht in Steyr oder online 🎶';
+  const headerTopbarBg    = headerCms['header::topbar_bg']    || '#e0e0e0';
+  const headerTopbarColor = headerCms['header::topbar_color'] || '#333333';
+
+  // Font
+  const fontFamily = globalSettings['font_family'] || 'Open Sans';
+  const fontUrl    = globalSettings['font_url']    || `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}:wght@400;600;700;800&display=swap`;
+
   const title     = c('danke_hero::title');
   const subtitle  = c('danke_hero::subtitle');
   const ctaLabel  = c('danke_hero::cta_label');
@@ -59,23 +91,30 @@ export default async function DankePage() {
       style={{ '--brand': brand, '--graphite': graphite, '--lightGray': lightGray } as CSSProperties}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap');
-        body { font-family: 'Open Sans', sans-serif; color: ${graphite}; background: #ffffff; }
+        @import url('${fontUrl}');
+        body { font-family: '${fontFamily}', sans-serif; color: ${graphite}; background: #ffffff; }
       `}</style>
 
+      {/* Topbar */}
+      {showHeader && headerShowTopbar && (
+        <TopHeader text={headerTopbarText} bgColor={headerTopbarBg} textColor={headerTopbarColor} />
+      )}
+
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-white/10" style={{ backgroundColor: headerBg }}>
-        <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 flex h-20 items-center justify-between">
-          <div className="text-left text-lg font-extrabold tracking-[0.18em] text-white md:text-xl">
-            {logoText}
+      {showHeader && (
+        <header className="sticky top-0 z-50 border-b border-white/10" style={{ backgroundColor: headerBg }}>
+          <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 flex h-20 items-center justify-between">
+            <div className="text-left text-lg font-extrabold tracking-[0.18em] text-white md:text-xl">
+              {headerLogoText}
+            </div>
+            <Link href={ctaLink}>
+              <Button variant="secondary" className="rounded-[4px] px-6 py-3 font-semibold text-white">
+                {headerCtaLabel}
+              </Button>
+            </Link>
           </div>
-          <Link href="/">
-            <Button variant="secondary" className="rounded-[4px] px-6 py-3 font-semibold text-white">
-              Zurück zur Startseite
-            </Button>
-          </Link>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Content */}
       <section className="flex min-h-[calc(100vh-80px)] items-center py-16 md:py-24">
@@ -116,6 +155,9 @@ export default async function DankePage() {
           </div>
         </div>
       </section>
+
+      {showFooter && <Footer />}
     </main>
   );
 }
+
