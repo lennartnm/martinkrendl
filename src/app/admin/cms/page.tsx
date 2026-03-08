@@ -833,6 +833,7 @@ export default function CmsPage() {
   const [headerEnabled,setHeaderEnabled]=useState(true);
   const [footerEnabled,setFooterEnabled]=useState(true);
   const [duplicatingId,setDuplicatingId]=useState<string|null>(null);
+  const [buildStatus,setBuildStatus]=useState<{state:'building'|'done'|'deleting';label:string;path?:string}|null>(null);
   const draggingId=useRef<string|null>(null);
   const pageDropRef=useRef<HTMLDivElement>(null);
 
@@ -954,19 +955,35 @@ export default function CmsPage() {
   };
 
   const createPage=async(label:string,path:string,sourceId?:string)=>{
-    const res=await fetch('/api/admin/pages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({label,path,source_page:sourceId})});
+    // Extract slug from /p/<slug>
+    const slug=path.replace(/^\/p\//,'');
+    setBuildStatus({state:'building',label});
+    const res=await fetch('/api/admin/github-page',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({label,slug,source_page:sourceId})});
     const json=await res.json();
-    if(json.ok){setPages(p=>[...p,json.data]);setSelectedPage(json.data);}
-    else{alert('Fehler: '+(json.error||'Seite konnte nicht angelegt werden'));}
+    if(json.ok){
+      setPages(p=>[...p,json.data]);
+      setSelectedPage(json.data);
+      setBuildStatus({state:'done',label,path:json.path});
+      setTimeout(()=>setBuildStatus(null),8000);
+    } else {
+      setBuildStatus(null);
+      alert('Fehler: '+(json.error||'Seite konnte nicht angelegt werden'));
+    }
   };
 
   const deletePage=async(page:CmsPage)=>{
     if(page.is_system)return;
-    if(!confirm(`Seite "${page.label}" wirklich löschen?`))return;
-    const res=await fetch('/api/admin/pages',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:page.id})});
+    if(!confirm(`Seite "${page.label}" wirklich löschen?\n\nDie Seite wird sofort aus GitHub entfernt und ist nach dem nächsten Build (~60s) nicht mehr erreichbar.`))return;
+    const res=await fetch('/api/admin/github-page',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:page.id})});
     const json=await res.json().catch(()=>({}));
-    if(json.ok){setPages(p=>{const n=p.filter(x=>x.id!==page.id);setSelectedPage(n[0]||null);return n;});}
-    else{alert('Fehler beim Löschen: '+(json.error||'Unbekannter Fehler'));}
+    if(json.ok){
+      setPages(p=>{const n=p.filter(x=>x.id!==page.id);setSelectedPage(n[0]||null);return n;});
+      setBuildStatus({state:'deleting',label:page.label});
+      setTimeout(()=>setBuildStatus(null),6000);
+    } else {
+      alert('Fehler beim Löschen: '+(json.error||'Unbekannter Fehler'));
+    }
   };
 
   const totalDirty=dirty.size;
@@ -978,6 +995,20 @@ export default function CmsPage() {
   return (
     <>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(currentFont)}:wght@400;600;700;800&display=swap'); *{font-family:'${currentFont}',sans-serif!important}`}</style>
+      {/* Build Status Banner */}
+      {buildStatus&&(
+        <div className={`fixed bottom-5 right-5 z-[100] flex items-center gap-3 rounded-xl px-4 py-3 shadow-2xl text-sm font-semibold transition-all ${buildStatus.state==='done'?'bg-emerald-600 text-white':buildStatus.state==='deleting'?'bg-red-500 text-white':'bg-[#884A4A] text-white'}`}>
+          {buildStatus.state==='building'&&<Loader2 className="h-4 w-4 animate-spin shrink-0"/>}
+          {buildStatus.state==='done'&&<CheckCircle className="h-4 w-4 shrink-0"/>}
+          {buildStatus.state==='deleting'&&<Trash2 className="h-4 w-4 shrink-0"/>}
+          <div>
+            {buildStatus.state==='building'&&<span>Seite "{buildStatus.label}" wird in GitHub erstellt…</span>}
+            {buildStatus.state==='done'&&<span>✓ Seite "{buildStatus.label}" ist live — Vercel baut gerade (~60s)</span>}
+            {buildStatus.state==='deleting'&&<span>Seite "{buildStatus.label}" gelöscht — Vercel baut gerade</span>}
+          </div>
+          <button onClick={()=>setBuildStatus(null)} className="ml-2 opacity-70 hover:opacity-100"><X className="h-3.5 w-3.5"/></button>
+        </div>
+      )}
       {showAddSection&&<AddSectionDialog onAdd={addSection} onClose={()=>setShowAddSection(false)}/>}
       {showNewPage&&<NewPageDialog pages={pages} onAdd={createPage} onClose={()=>setShowNewPage(false)}/>}
       {showNewQuiz&&<NewQuizDialog pages={pages} onAdd={async(label,srcId)=>{
