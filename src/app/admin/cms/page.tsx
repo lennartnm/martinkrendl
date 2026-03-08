@@ -518,7 +518,7 @@ function SectionRow({section,content,dirty,onChange,onUpload,onToggleHide,isDrag
             const gDirty=gf.some(f=>dirty.has(resolveKey(f,section.section_instance)));
             return (
               <div key={gKey} className="rounded-[4px] border border-neutral-100 overflow-hidden">
-                <button type="button" onClick={()=>setOpenGroups(p=>({...p,[gKey]:!p[gKey]}));}
+                <button type="button" onClick={()=>setOpenGroups(p=>({...p,[gKey]:!p[gKey]}))}
                   className="flex w-full items-center gap-2 px-3 py-2 bg-neutral-50 hover:bg-neutral-100 transition text-left">
                   <span className="h-2 w-2 rounded-full shrink-0" style={{backgroundColor:gm.color}}/>
                   <span className="text-xs font-semibold text-neutral-600">{gm.label}</span>
