@@ -235,6 +235,162 @@ export default async function Page() {
         <div className={sectionWidth}><div className="mx-auto max-w-2xl text-center text-white">
           <h2 className="text-3xl font-extrabold md:text-4xl"><RT text={ci(inst,"title")||""}/></h2>
           {ci(inst,"text")&&<p className="mt-4 text-lg leading-8 text-white/85"><RT text={ci(inst,"text")}/></p>}
+          {ci(inst,"cta_label")&&<a href={ci(inst,"cta_link")||"#"} className="mt-8 inline-block rounded-[4px] border-2 border-white px-8 py-4 font-bold text-white">{ci(inst,"cta_label")}</a>}
+        </div></div>
+      </section>);
+    },
+    stats_row: (inst) => {
+      const s1={num:ci(inst,"stat_1_number"),label:ci(inst,"stat_1_label")};
+      const s2={num:ci(inst,"stat_2_number"),label:ci(inst,"stat_2_label")};
+      const s3={num:ci(inst,"stat_3_number"),label:ci(inst,"stat_3_label")};
+      const s4={num:ci(inst,"stat_4_number"),label:ci(inst,"stat_4_label")};
+      const stats=[s1,s2,s3,s4].filter(s=>s.num);
+      return(<section key={inst} className="py-14 md:py-20 bg-white">
+        <div className={sectionWidth}><div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+          {stats.map((s,i)=><div key={i} className="text-center">
+            <div className="text-4xl font-extrabold md:text-5xl" style={{color:brand}}>{s.num}</div>
+            <div className="mt-2 text-sm font-semibold" style={{color:darkGray}}>{s.label}</div>
+          </div>)}
+        </div></div>
+      </section>);
+    },
+    faq: (inst) => {
+      const faqs=[
+        {q:ci(inst+"1","question"),a:ci(inst+"1","answer")},
+        {q:ci(inst+"2","question"),a:ci(inst+"2","answer")},
+        {q:ci(inst+"3","question"),a:ci(inst+"3","answer")},
+        {q:ci(inst+"4","question"),a:ci(inst+"4","answer")},
+        {q:ci(inst+"5","question"),a:ci(inst+"5","answer")},
+      ].filter(f=>f.q);
+      return(<section key={inst} className="py-14 md:py-20">
+        <div className={sectionWidth}><div className="mx-auto max-w-3xl">
+          {ci(inst,"title")&&<h2 className="text-3xl font-extrabold md:text-4xl text-center mb-10"><RT text={ci(inst,"title")}/></h2>}
+          <div className="space-y-3">{faqs.map((faq,i)=><details key={i} className="group rounded-[4px] border border-neutral-200 bg-white">
+            <summary className="flex cursor-pointer items-center justify-between px-5 py-4 font-semibold text-neutral-800 list-none">
+              <RT text={faq.q}/><span className="ml-4 shrink-0 text-neutral-400 group-open:rotate-45 transition-transform duration-200">+</span>
+            </summary>
+            <div className="px-5 pb-4 text-sm leading-7" style={{color:darkGray}}><RT text={faq.a}/></div>
+          </details>)}</div>
+        </div></div>
+      </section>);
+    },
+    steps: (inst) => {
+      const steps=[
+        {title:ci(inst+"1","title"),text:ci(inst+"1","text")},
+        {title:ci(inst+"2","title"),text:ci(inst+"2","text")},
+        {title:ci(inst+"3","title"),text:ci(inst+"3","text")},
+        {title:ci(inst+"4","title"),text:ci(inst+"4","text")},
+      ].filter(s=>s.title);
+      return(<section key={inst} className="py-14 md:py-20">
+        <div className={sectionWidth}>
+          {ci(inst,"title")&&<div className="mx-auto mb-10 max-w-3xl text-center"><h2 className="text-3xl font-extrabold md:text-4xl"><RT text={ci(inst,"title")}/></h2>{ci(inst,"text")&&<p className="mt-4" style={{color:lightGray}}><RT text={ci(inst,"text")}/></p>}</div>}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {steps.map((step,i)=><div key={i} className="rounded-[4px] border border-neutral-200 bg-white p-6">
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full text-lg font-extrabold text-white" style={{backgroundColor:brand}}>{i+1}</div>
+              <h3 className="font-bold text-neutral-800"><RT text={step.title}/></h3>
+              {step.text&&<p className="mt-2 text-sm leading-7" style={{color:darkGray}}><RT text={step.text}/></p>}
+            </div>)}
+          </div>
+        </div>
+      </section>);
+    },
+    text_columns: (inst) => (<section key={inst} className="py-14 md:py-20">
+      <div className={sectionWidth}>
+        {ci(inst,"title")&&<h2 className="text-3xl font-extrabold md:text-4xl text-center mb-10"><RT text={ci(inst,"title")}/></h2>}
+        <div className="grid gap-8 md:grid-cols-2">
+          <div>
+            {ci(inst,"col_1_title")&&<h3 className="text-xl font-bold mb-3"><RT text={ci(inst,"col_1_title")}/></h3>}
+            {ci(inst,"col_1_text")&&<p className="text-base leading-8" style={{color:darkGray}}><RT text={ci(inst,"col_1_text")}/></p>}
+          </div>
+          <div>
+            {ci(inst,"col_2_title")&&<h3 className="text-xl font-bold mb-3"><RT text={ci(inst,"col_2_title")}/></h3>}
+            {ci(inst,"col_2_text")&&<p className="text-base leading-8" style={{color:darkGray}}><RT text={ci(inst,"col_2_text")}/></p>}
+          </div>
+        </div>
+      </div>
+    </section>),
+    image_fullwidth: (inst) => {
+      const img=ci(inst,"image"); const title=ci(inst,"title");
+      const opStr=ci(inst,"overlay_opacity")||"0.4";
+      const op=parseFloat(opStr)||0.4;
+      const overlayBg="rgba(0,0,0,"+op+")";
+      return(<section key={inst} className="relative overflow-hidden" style={{maxHeight:"600px"}}>
+        {img&&<img src={img} alt="" className="w-full object-cover" style={{maxHeight:"600px"}}/>}
+        {(title||op>0)&&<div className="absolute inset-0 flex items-center justify-center" style={{backgroundColor:overlayBg}}>
+          {title&&<h2 className="px-4 text-center text-3xl font-extrabold text-white md:text-5xl"><RT text={title}/></h2>}
+        </div>}
+      </section>);
+    },
+    checklist: (inst) => {
+      const items=[
+        ci(inst+"1","item"),ci(inst+"2","item"),ci(inst+"3","item"),
+        ci(inst+"4","item"),ci(inst+"5","item"),ci(inst+"6","item"),
+      ].filter(Boolean);
+      return(<section key={inst} className="py-14 md:py-20">
+        <div className={sectionWidth}><div className="mx-auto max-w-3xl">
+          {ci(inst,"title")&&<h2 className="mb-4 text-3xl font-extrabold md:text-4xl"><RT text={ci(inst,"title")}/></h2>}
+          {ci(inst,"text")&&<p className="mb-8 text-base leading-8" style={{color:darkGray}}><RT text={ci(inst,"text")}/></p>}
+          <div className="grid gap-3 md:grid-cols-2">{items.map((item,i)=><div key={i} className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{backgroundColor:brand}}>✓</div>
+            <p className="text-base leading-7" style={{color:graphite}}><RT text={item}/></p>
+          </div>)}</div>
+          {ci(inst,"cta_label")&&<div className="mt-8"><a href={ci(inst,"cta_link")||"#"} className="inline-block rounded-[4px] px-7 py-3.5 font-semibold text-white" style={{backgroundColor:brand}}>{ci(inst,"cta_label")}</a></div>}
+        </div></div>
+      </section>);
+    },
+    image_gallery: (inst) => {
+      const imgs=[
+        {src:ci(inst+"1","image"),cap:ci(inst+"1","caption")},
+        {src:ci(inst+"2","image"),cap:ci(inst+"2","caption")},
+        {src:ci(inst+"3","image"),cap:ci(inst+"3","caption")},
+      ].filter(g=>g.src);
+      return(<section key={inst} className="py-14 md:py-20">
+        <div className={sectionWidth}>
+          {ci(inst,"title")&&<h2 className="mb-10 text-3xl font-extrabold md:text-4xl text-center"><RT text={ci(inst,"title")}/></h2>}
+          <div className="grid gap-4 md:grid-cols-3">
+            {imgs.map((img,i)=><div key={i}>
+              <div className="relative aspect-square overflow-hidden rounded-[4px]"><CmsImage src={img.src} alt={img.cap||""} fill className="object-cover"/></div>
+              {img.cap&&<p className="mt-2 text-center text-sm text-neutral-500">{img.cap}</p>}
+            </div>)}
+          </div>
+        </div>
+      </section>);
+    },
+    text_centered: (inst) => (<section key={inst} className="py-14 md:py-20">
+      <div className={sectionWidth}><div className="mx-auto max-w-3xl text-center">
+        {ci(inst,"label")&&<p className="mb-4 text-sm font-semibold uppercase tracking-widest" style={{color:brand}}>{ci(inst,"label")}</p>}
+        {ci(inst,"title")&&<h2 className="text-3xl font-extrabold md:text-4xl"><RT text={ci(inst,"title")}/></h2>}
+        {ci(inst,"text")&&<p className="mt-5 text-lg leading-8" style={{color:darkGray}}><RT text={ci(inst,"text")}/></p>}
+        {ci(inst,"cta_label")&&<div className="mt-8"><a href={ci(inst,"cta_link")||"#"} className="inline-block rounded-[4px] px-8 py-4 font-bold text-white" style={{backgroundColor:brand}}>{ci(inst,"cta_label")}</a></div>}
+      </div></div>
+    </section>),
+    pricing: (inst) => {
+      const pkgs=[
+        {name:ci(inst+"1","name"),price:ci(inst+"1","price"),desc:ci(inst+"1","desc"),cta:ci(inst+"1","cta_label"),link:ci(inst+"1","cta_link")},
+        {name:ci(inst+"2","name"),price:ci(inst+"2","price"),desc:ci(inst+"2","desc"),cta:ci(inst+"2","cta_label"),link:ci(inst+"2","cta_link")},
+        {name:ci(inst+"3","name"),price:ci(inst+"3","price"),desc:ci(inst+"3","desc"),cta:ci(inst+"3","cta_label"),link:ci(inst+"3","cta_link")},
+      ].filter(p=>p.name);
+      return(<section key={inst} className="py-14 md:py-20">
+        <div className={sectionWidth}>
+          {ci(inst,"title")&&<div className="mx-auto mb-10 max-w-3xl text-center"><h2 className="text-3xl font-extrabold md:text-4xl"><RT text={ci(inst,"title")}/></h2>{ci(inst,"text")&&<p className="mt-4" style={{color:lightGray}}><RT text={ci(inst,"text")}/></p>}</div>}
+          <div className="grid gap-6 md:grid-cols-3">
+            {pkgs.map((pkg,i)=><div key={i} className={"rounded-[4px] border-2 bg-white p-8 text-center"+(i===1?" shadow-xl scale-105":"")} style={{borderColor:i===1?brand:"#E5E7EB"}}>
+              {i===1&&<div className="mb-3 inline-block rounded-full px-3 py-1 text-xs font-bold text-white" style={{backgroundColor:brand}}>Empfohlen</div>}
+              <h3 className="text-xl font-bold">{pkg.name}</h3>
+              <div className="my-4 text-4xl font-extrabold" style={{color:brand}}>{pkg.price}</div>
+              {pkg.desc&&<p className="mb-6 text-sm leading-7" style={{color:darkGray}}><RT text={pkg.desc}/></p>}
+              {pkg.cta&&<a href={pkg.link||"#"} className="block rounded-[4px] px-6 py-3 font-semibold text-white" style={{backgroundColor:brand}}>{pkg.cta}</a>}
+            </div>)}
+          </div>
+        </div>
+      </section>);
+    },
+    cta_banner: (inst) => {
+      const bg=ci(inst,"bg_color")||brand;
+      return(<section key={inst} className="py-14 md:py-20" style={{backgroundColor:bg}}>
+        <div className={sectionWidth}><div className="mx-auto max-w-2xl text-center text-white">
+          <h2 className="text-3xl font-extrabold md:text-4xl"><RT text={ci(inst,"title")||""}/></h2>
+          {ci(inst,"text")&&<p className="mt-4 text-lg leading-8 text-white/85"><RT text={ci(inst,"text")}/></p>}
           {ci(inst,"cta_label")&&<a href={ci(inst,"cta_link")||"#"} className="mt-8 inline-block rounded-[4px] px-8 py-4 font-bold text-white hover:opacity-90 border-2 border-white">{ci(inst,"cta_label")}</a>}
         </div></div>
       </section>);
