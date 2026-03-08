@@ -17,10 +17,22 @@ type Field = { section_key: string; field_key: string; label: string; type: FT; 
 type SectInstance = { id: string; page_id: string; section_instance: string; section_type: string; label: string; sort_order: number; hidden: boolean };
 type CmsPage = { id: string; label: string; path: string; is_system: boolean };
 
-const GOOGLE_FONTS = [
-  'Open Sans','Roboto','Lato','Montserrat','Poppins','Raleway',
-  'Nunito','Playfair Display','Merriweather','Source Sans 3',
-  'Inter','DM Sans','Outfit','Plus Jakarta Sans','Figtree',
+const GOOGLE_FONTS: {name:string;url:string;preview:string}[] = [
+  {name:'Open Sans',   url:'https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap',    preview:'Singen mit Leichtigkeit'},
+  {name:'Roboto',      url:'https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap',       preview:'Stimme und Technik'},
+  {name:'Lato',        url:'https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap',             preview:'Freier, sicherer singen'},
+  {name:'Montserrat',  url:'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap',   preview:'Gesangsunterricht Steyr'},
+  {name:'Poppins',     url:'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap',      preview:'Deine Stimme entfalten'},
+  {name:'Raleway',     url:'https://fonts.googleapis.com/css2?family=Raleway:wght@400;600;700;800&display=swap',      preview:'Klang und Ausdruck'},
+  {name:'Nunito',      url:'https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap',       preview:'Mit Freude singen lernen'},
+  {name:'Playfair Display', url:'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&display=swap', preview:'Die Kunst des Singens'},
+  {name:'Merriweather',url:'https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&display=swap',    preview:'Voiceation Methode'},
+  {name:'Source Sans 3',url:'https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;900&display=swap',preview:'Klarheit und Präzision'},
+  {name:'Inter',       url:'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',   preview:'Moderner Gesangsunterricht'},
+  {name:'DM Sans',     url:'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap',     preview:'Stimme neu entdecken'},
+  {name:'Outfit',      url:'https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap',      preview:'Singen ohne Grenzen'},
+  {name:'Plus Jakarta Sans',url:'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap',preview:'Höhen leicht erreichen'},
+  {name:'Figtree',     url:'https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap', preview:'Ausdruck und Emotion'},
 ];
 
 // Groups config
@@ -147,9 +159,14 @@ function QuizSelectorField({ value, isDirty, onChange }: { value: string; isDirt
     <div className="space-y-1.5">
       <div className="flex items-center gap-2"><Settings className="h-3.5 w-3.5 text-neutral-400"/><span className="text-sm font-semibold text-neutral-800">Quiz auswählen</span>{isDirty&&<DirtyBadge/>}</div>
       <div className="pl-5">
-        <select value={value||'component_quiz'} onChange={e=>onChange(e.target.value)} className="h-10 w-full rounded-[4px] border border-neutral-200 px-3 text-sm outline-none focus:border-[#884A4A]" style={{borderColor:isDirty?'#F59E0B':'#E5E7EB'}}>
-          {quizzes.map(q=><option key={q.id} value={q.id}>{q.label}</option>)}
-        </select>
+        <div className="relative">
+          <select value={value||'component_quiz'} onChange={e=>onChange(e.target.value)}
+            className="h-10 w-full appearance-none rounded-[4px] border bg-white px-3 pr-8 text-sm outline-none transition focus:ring-2 focus:ring-[#884A4A]/20"
+            style={{borderColor:isDirty?'#F59E0B':'#E5E7EB',borderWidth:'1px'}}>
+            {quizzes.map(q=><option key={q.id} value={q.id}>{q.label}</option>)}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400"/>
+        </div>
       </div>
     </div>
   );
@@ -581,26 +598,30 @@ function AddSectionDialog({onAdd,onClose}:{onAdd:(type:string,label:string)=>voi
 
 function NewPageDialog({pages,onAdd,onClose}:{pages:CmsPage[];onAdd:(label:string,path:string,sourceId?:string)=>void;onClose:()=>void}) {
   const [label,setLabel]=useState('');const [path,setPath]=useState('/');const [src,setSrc]=useState('');
-  // Only real pages (not components/quiz variants) as templates
   const realPages=pages.filter(p=>!p.id.startsWith('component_')&&!p.id.startsWith('quiz_'));
+  // Auto-generate path from label
+  const handleLabelChange=(v:string)=>{
+    setLabel(v);
+    if(!path||path==='/'){const auto='/'+v.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');setPath(auto||'/');}
+  };
   return (
     <Modal title="Neue Seite anlegen" onClose={onClose}>
       <div className="space-y-3">
-        <div><label className="mb-1 block text-xs font-semibold text-neutral-500">NAME DER SEITE</label><input value={label} onChange={e=>setLabel(e.target.value)} placeholder="z.B. Landingpage Herbst" className="h-10 w-full rounded-[4px] border border-neutral-200 px-3 text-sm outline-none focus:border-[#884A4A]"/></div>
+        <div><label className="mb-1 block text-xs font-semibold text-neutral-500">NAME DER SEITE</label><input value={label} onChange={e=>handleLabelChange(e.target.value)} placeholder="z.B. Landingpage Herbst" className="h-10 w-full rounded-[4px] border border-neutral-200 px-3 text-sm outline-none focus:border-[#884A4A]"/></div>
         <div>
-          <label className="mb-1 block text-xs font-semibold text-neutral-500">URL-PFAD</label>
+          <label className="mb-1 block text-xs font-semibold text-neutral-500">WEBADRESSE</label>
           <input value={path} onChange={e=>setPath(e.target.value)} placeholder="/landingpage-herbst" className="h-10 w-full rounded-[4px] border border-neutral-200 px-3 font-mono text-sm outline-none focus:border-[#884A4A]"/>
-          <p className="mt-1 text-xs text-neutral-400">Die Seite wird unter <code className="bg-neutral-100 px-1 rounded">/p/[slug]</code> erreichbar sein (generische Route).</p>
+          <p className="mt-1 text-xs text-neutral-400">Die Seite wird unter dieser Adresse erreichbar sein, z.B. <code className="bg-neutral-100 px-1 rounded">deinedomain.at/landingpage-herbst</code></p>
         </div>
         <div>
           <label className="mb-1 block text-xs font-semibold text-neutral-500">SEKTIONEN KOPIEREN VON (optional)</label>
-          <select value={src} onChange={e=>setSrc(e.target.value)} className="h-10 w-full rounded-[4px] border border-neutral-200 px-3 text-sm outline-none focus:border-[#884A4A]">
+          <select value={src} onChange={e=>setSrc(e.target.value)} className="h-10 w-full rounded-[4px] border border-neutral-200 px-3 text-sm outline-none focus:border-[#884A4A] bg-white">
             <option value="">— Leere Seite starten —</option>
-            {realPages.map(p=><option key={p.id} value={p.id}>{p.label} ({p.path})</option>)}
+            {realPages.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}
           </select>
         </div>
         <div className="rounded-[4px] border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
-          <strong>✓ Dynamische Route vorhanden:</strong> Neue Seiten werden automatisch unter <code className="bg-emerald-100 px-1 rounded">/p/[slug]</code> erreichbar. Kein Code-Einsatz nötig.
+          ✓ Neue Seiten sind nach dem Anlegen sofort online — ohne Programmieraufwand.
         </div>
       </div>
       <button onClick={()=>{if(label&&path){onAdd(label,path,src||undefined);onClose();}}} disabled={!label||!path} className="mt-4 w-full h-10 rounded-[4px] text-sm font-semibold text-white disabled:opacity-40" style={{backgroundColor:brand}}>
@@ -613,24 +634,36 @@ function NewPageDialog({pages,onAdd,onClose}:{pages:CmsPage[];onAdd:(label:strin
 function FontPanel({currentFont,onSave}:{currentFont:string;onSave:(f:string)=>void}) {
   const [sel,setSel]=useState(currentFont);const [saving,setSaving]=useState(false);
   useEffect(()=>{setSel(currentFont);},[currentFont]);
-  const save=async()=>{setSaving(true);await fetch('/api/admin/font-settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({font:sel})});setSaving(false);onSave(sel);};
+  // Preload all font stylesheets so previews render correctly
+  useEffect(()=>{
+    GOOGLE_FONTS.forEach(f=>{
+      if(!document.querySelector(`link[href="${f.url}"]`)){
+        const link=document.createElement('link');link.rel='stylesheet';link.href=f.url;document.head.appendChild(link);
+      }
+    });
+  },[]);
+  const selFont=GOOGLE_FONTS.find(f=>f.name===sel)||GOOGLE_FONTS[0];
+  const save=async()=>{setSaving(true);await fetch('/api/admin/font-settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({font:sel,url:selFont.url})});setSaving(false);onSave(sel);};
   return (
-    <div className="rounded-[4px] border border-neutral-200 bg-white p-5 space-y-3">
-      <div className="flex items-center gap-2"><Type className="h-4 w-4 text-neutral-400"/><h3 className="font-bold text-neutral-800 text-sm">Globale Schriftart</h3></div>
-      <p className="text-xs text-neutral-400">Gilt für alle Seiten, Admin-Bereich und Login-Seite.</p>
-      <div className="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto">
+    <div className="rounded-[4px] border border-neutral-200 bg-white p-5 space-y-4 shadow-sm">
+      <div className="flex items-center gap-2"><Type className="h-4 w-4 text-neutral-400"/><h3 className="font-bold text-neutral-800 text-sm">Globale Schriftart</h3><span className="ml-auto text-xs text-neutral-400">Gilt für alle öffentlichen Seiten</span></div>
+      <div className="grid grid-cols-1 gap-1.5 max-h-64 overflow-y-auto pr-1">
         {GOOGLE_FONTS.map(f=>(
-          <button key={f} type="button" onClick={()=>setSel(f)}
-            className={`rounded-[4px] border px-3 py-2 text-left text-sm transition ${sel===f?'border-[#884A4A] bg-[#FDF8F8] font-semibold text-[#884A4A]':'border-neutral-200 text-neutral-700 hover:bg-neutral-50'}`}
-            style={{fontFamily:f}}>{f}</button>
+          <button key={f.name} type="button" onClick={()=>setSel(f.name)}
+            className={`rounded-[4px] border px-4 py-2.5 text-left transition flex items-center gap-3 ${sel===f.name?'border-[#884A4A] bg-[#FDF8F8]':'border-neutral-100 hover:border-neutral-300 hover:bg-neutral-50'}`}>
+            <span className={`text-xs w-24 shrink-0 ${sel===f.name?'font-semibold text-[#884A4A]':'text-neutral-400'}`}>{f.name}</span>
+            <span className="text-sm text-neutral-700" style={{fontFamily:f.name}}>{f.preview}</span>
+            {sel===f.name&&<CheckCircle className="h-3.5 w-3.5 shrink-0 ml-auto text-[#884A4A]"/>}
+          </button>
         ))}
       </div>
-      <div className="rounded-[4px] bg-neutral-50 border border-neutral-200 p-3">
-        <p className="text-xs text-neutral-400 mb-1">Vorschau</p>
-        <p className="text-base" style={{fontFamily:sel}}>Sing freier, sicherer und mit mehr Ausdruck.</p>
+      <div className="rounded-[4px] bg-neutral-50 border border-neutral-100 px-4 py-3">
+        <p className="text-[10px] uppercase tracking-wider text-neutral-400 mb-2">Vorschau — {sel}</p>
+        <p className="text-xl font-bold leading-tight" style={{fontFamily:sel}}>Sing freier, sicherer</p>
+        <p className="text-sm text-neutral-500 mt-1" style={{fontFamily:sel}}>und mit mehr Ausdruck durch die Voiceation Methode.</p>
       </div>
-      <button onClick={save} disabled={saving} className="h-9 w-full rounded-[4px] text-sm font-semibold text-white disabled:opacity-40 flex items-center justify-center gap-2" style={{backgroundColor:brand}}>
-        {saving?<Loader2 className="h-4 w-4 animate-spin"/>:<Save className="h-4 w-4"/>}{saving?'Speichern...':'Schriftart übernehmen'}
+      <button onClick={save} disabled={saving} className="h-10 w-full rounded-[4px] text-sm font-semibold text-white disabled:opacity-40 flex items-center justify-center gap-2" style={{backgroundColor:brand}}>
+        {saving?<Loader2 className="h-4 w-4 animate-spin"/>:<Save className="h-4 w-4"/>}{saving?'Wird gespeichert...':'Schriftart übernehmen'}
       </button>
     </div>
   );
@@ -695,6 +728,7 @@ export default function CmsPage() {
 
   const loadPage=useCallback(async(page:CmsPage)=>{
     setLoading(true);setError('');setDirty(new Set());
+    setHeaderEnabled(true);setFooterEnabled(true);
     try {
       if(isComp(page.id)&&!isQuiz(page.id)){
         const vs=COMPONENT_SECTIONS[page.id];setSections(vs?[vs]:[]);
@@ -832,50 +866,57 @@ export default function CmsPage() {
 
         <div className="flex flex-wrap items-center gap-2">
           <div ref={pageDropRef} className="relative">
-            <button type="button" onClick={()=>setPageDropOpen(v=>!v)} className="flex h-10 items-center gap-2 rounded-[4px] border border-neutral-200 bg-white px-4 text-sm font-semibold text-neutral-700 shadow-sm transition hover:border-[#884A4A]">
-              <Globe className="h-4 w-4 text-neutral-400"/>
-              <span>{selectedPage?.label??'Seite wählen'}</span>
-              <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] text-neutral-400 font-normal">{selectedPage?.path}</span>
-              <ChevronDown className={`h-4 w-4 text-neutral-400 transition-transform ${pageDropOpen?'rotate-180':''}`}/>
+            <button type="button" onClick={()=>setPageDropOpen(v=>!v)}
+              className={`flex h-10 items-center gap-2 rounded-[4px] border bg-white px-3.5 text-sm font-semibold text-neutral-700 shadow-sm transition ${pageDropOpen?'border-[#884A4A] ring-2 ring-[#884A4A]/10':'border-neutral-200 hover:border-neutral-300'}`}>
+              <Globe className="h-4 w-4 text-neutral-400 shrink-0"/>
+              <span className="max-w-[160px] truncate">{selectedPage?.label??'Seite wählen'}</span>
+              {selectedPage&&<span className="rounded-md bg-neutral-100 px-1.5 py-0.5 text-[10px] text-neutral-400 font-normal font-mono truncate max-w-[100px]">{selectedPage.path}</span>}
+              <ChevronDown className={`h-4 w-4 text-neutral-400 transition-transform duration-150 shrink-0 ${pageDropOpen?'rotate-180':''}`}/>
             </button>
             {pageDropOpen&&(
-              <div className="absolute left-0 top-full z-50 mt-1 min-w-[280px] overflow-hidden rounded-[4px] border border-neutral-200 bg-white shadow-lg">
+              <div className="absolute left-0 top-full z-50 mt-1.5 min-w-[300px] overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-xl">
                 {realPages.length>0&&<>
-                  <div className="px-3 pt-2 pb-1 text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Seiten</div>
+                  <div className="px-3 pt-3 pb-1.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Seiten</div>
                   {realPages.map(p=>(
-                    <div key={p.id} onClick={()=>{setSelectedPage(p);setPageDropOpen(false);}} className={`group flex cursor-pointer items-center gap-2 px-4 py-2.5 transition hover:bg-[#FDF8F8] ${selectedPage?.id===p.id?'bg-[#FDF8F8]':''}`}>
-                      <FileText className="h-3.5 w-3.5 shrink-0 text-neutral-300"/>
-                      <span className={`flex-1 text-sm ${selectedPage?.id===p.id?'font-semibold text-[#884A4A]':'font-medium text-neutral-700'}`}>{p.label}</span>
-                      <span className="font-mono text-xs text-neutral-400">{p.path}</span>
-                      {!p.is_system&&<button type="button" onClick={e=>{e.stopPropagation();deletePage(p);}} className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition"><Trash2 className="h-3 w-3"/></button>}
-                      {selectedPage?.id===p.id&&<CheckCircle className="h-3.5 w-3.5 shrink-0 text-[#884A4A]"/>}
+                    <div key={p.id} onClick={()=>{setSelectedPage(p);setPageDropOpen(false);}} className={`group flex cursor-pointer items-center gap-2.5 px-3 py-2.5 transition ${selectedPage?.id===p.id?'bg-[#FDF8F8]':'hover:bg-neutral-50'}`}>
+                      <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${selectedPage?.id===p.id?'bg-[#884A4A]/10':'bg-neutral-100'}`}>
+                        <FileText className={`h-3.5 w-3.5 ${selectedPage?.id===p.id?'text-[#884A4A]':'text-neutral-400'}`}/>
+                      </div>
+                      <span className={`flex-1 min-w-0 truncate text-sm ${selectedPage?.id===p.id?'font-semibold text-[#884A4A]':'font-medium text-neutral-700'}`}>{p.label}</span>
+                      <span className="font-mono text-[10px] text-neutral-400 shrink-0">{p.path}</span>
+                      {!p.is_system&&<button type="button" onClick={e=>{e.stopPropagation();deletePage(p);}} className="opacity-0 group-hover:opacity-100 ml-1 flex h-5 w-5 items-center justify-center rounded text-red-400 hover:bg-red-50 hover:text-red-500 transition"><Trash2 className="h-3 w-3"/></button>}
                     </div>
                   ))}
                 </>}
                 {quizPages.length>0&&<>
-                  <div className="px-3 pt-2 pb-1 text-[10px] font-bold text-neutral-400 uppercase tracking-wider border-t border-neutral-100">Quiz-Varianten</div>
+                  <div className="mx-3 my-1 border-t border-neutral-100"/>
+                  <div className="px-3 pt-1.5 pb-1.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Quiz-Varianten</div>
                   {quizPages.map(p=>(
-                    <div key={p.id} onClick={()=>{setSelectedPage(p);setPageDropOpen(false);}} className={`group flex cursor-pointer items-center gap-2 px-4 py-2.5 transition hover:bg-[#FDF8F8] ${selectedPage?.id===p.id?'bg-[#FDF8F8]':''}`}>
-                      <Hash className="h-3.5 w-3.5 shrink-0 text-neutral-300"/>
-                      <span className={`flex-1 text-sm ${selectedPage?.id===p.id?'font-semibold text-[#884A4A]':'font-medium text-neutral-700'}`}>{p.label}</span>
-                      {!p.is_system&&<button type="button" onClick={e=>{e.stopPropagation();deletePage(p);}} className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition"><Trash2 className="h-3 w-3"/></button>}
-                      {selectedPage?.id===p.id&&<CheckCircle className="h-3.5 w-3.5 shrink-0 text-[#884A4A]"/>}
+                    <div key={p.id} onClick={()=>{setSelectedPage(p);setPageDropOpen(false);}} className={`group flex cursor-pointer items-center gap-2.5 px-3 py-2.5 transition ${selectedPage?.id===p.id?'bg-[#FDF8F8]':'hover:bg-neutral-50'}`}>
+                      <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${selectedPage?.id===p.id?'bg-[#884A4A]/10':'bg-neutral-100'}`}>
+                        <Hash className={`h-3.5 w-3.5 ${selectedPage?.id===p.id?'text-[#884A4A]':'text-neutral-400'}`}/>
+                      </div>
+                      <span className={`flex-1 min-w-0 truncate text-sm ${selectedPage?.id===p.id?'font-semibold text-[#884A4A]':'font-medium text-neutral-700'}`}>{p.label}</span>
+                      {!p.is_system&&<button type="button" onClick={e=>{e.stopPropagation();deletePage(p);}} className="opacity-0 group-hover:opacity-100 ml-1 flex h-5 w-5 items-center justify-center rounded text-red-400 hover:bg-red-50 hover:text-red-500 transition"><Trash2 className="h-3 w-3"/></button>}
                     </div>
                   ))}
                 </>}
                 {compPages.length>0&&<>
-                  <div className="px-3 pt-2 pb-1 text-[10px] font-bold text-neutral-400 uppercase tracking-wider border-t border-neutral-100">Komponenten</div>
+                  <div className="mx-3 my-1 border-t border-neutral-100"/>
+                  <div className="px-3 pt-1.5 pb-1.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Komponenten</div>
                   {compPages.map(p=>(
-                    <div key={p.id} onClick={()=>{setSelectedPage(p);setPageDropOpen(false);}} className={`group flex cursor-pointer items-center gap-2 px-4 py-2.5 transition hover:bg-[#FDF8F8] ${selectedPage?.id===p.id?'bg-[#FDF8F8]':''}`}>
-                      <Layout className="h-3.5 w-3.5 shrink-0 text-neutral-300"/>
-                      <span className={`flex-1 text-sm ${selectedPage?.id===p.id?'font-semibold text-[#884A4A]':'font-medium text-neutral-700'}`}>{p.label}</span>
-                      {selectedPage?.id===p.id&&<CheckCircle className="h-3.5 w-3.5 shrink-0 text-[#884A4A]"/>}
+                    <div key={p.id} onClick={()=>{setSelectedPage(p);setPageDropOpen(false);}} className={`group flex cursor-pointer items-center gap-2.5 px-3 py-2.5 transition ${selectedPage?.id===p.id?'bg-[#FDF8F8]':'hover:bg-neutral-50'}`}>
+                      <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${selectedPage?.id===p.id?'bg-[#884A4A]/10':'bg-neutral-100'}`}>
+                        <Layout className={`h-3.5 w-3.5 ${selectedPage?.id===p.id?'text-[#884A4A]':'text-neutral-400'}`}/>
+                      </div>
+                      <span className={`flex-1 min-w-0 truncate text-sm ${selectedPage?.id===p.id?'font-semibold text-[#884A4A]':'font-medium text-neutral-700'}`}>{p.label}</span>
                     </div>
                   ))}
                 </>}
-                <div className="border-t border-neutral-100"/>
-                <button type="button" onClick={()=>{setPageDropOpen(false);setShowNewPage(true);}} className="flex w-full items-center gap-2 px-4 py-2.5 text-sm font-semibold text-[#884A4A] transition hover:bg-[#FDF8F8]">
-                  <Plus className="h-4 w-4"/> Neue Seite anlegen
+                <div className="mx-3 my-1 border-t border-neutral-100"/>
+                <button type="button" onClick={()=>{setPageDropOpen(false);setShowNewPage(true);}} className="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm font-semibold text-[#884A4A] transition hover:bg-[#FDF8F8]">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#884A4A]/10"><Plus className="h-3.5 w-3.5 text-[#884A4A]"/></div>
+                  Neue Seite anlegen
                 </button>
                 <button type="button" onClick={async()=>{
                   setPageDropOpen(false);
@@ -887,8 +928,9 @@ export default function CmsPage() {
                     const np:CmsPage={...json.data,path:'(Quiz-Variante)',is_system:false};
                     setPages(prev=>[...prev,np]);setSelectedPage(np);
                   }
-                }} className="flex w-full items-center gap-2 px-4 py-2.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50">
-                  <Plus className="h-4 w-4"/> Quiz duplizieren / neu anlegen
+                }} className="flex w-full items-center gap-2.5 px-3 py-2.5 mb-1 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-emerald-100"><Plus className="h-3.5 w-3.5 text-emerald-600"/></div>
+                  Quiz-Variante anlegen
                 </button>
               </div>
             )}
@@ -901,16 +943,17 @@ export default function CmsPage() {
         </div>
 
         {isNormal&&(
-          <div className="flex items-center gap-4 rounded-[4px] border border-neutral-200 bg-white px-4 py-3">
-            <span className="text-sm font-semibold text-neutral-600">Auf dieser Seite anzeigen:</span>
-            <label className="flex cursor-pointer items-center gap-2">
-              <input type="checkbox" checked={headerEnabled} onChange={e=>{setHeaderEnabled(e.target.checked);setDirty(p=>new Set([...p,'__settings__']));}} className="h-4 w-4 rounded accent-[#884A4A]"/>
-              <span className="text-sm text-neutral-700">Header</span>
-            </label>
-            <label className="flex cursor-pointer items-center gap-2">
-              <input type="checkbox" checked={footerEnabled} onChange={e=>{setFooterEnabled(e.target.checked);setDirty(p=>new Set([...p,'__settings__']));}} className="h-4 w-4 rounded accent-[#884A4A]"/>
-              <span className="text-sm text-neutral-700">Footer</span>
-            </label>
+          <div className="flex items-center gap-5 rounded-[4px] border border-neutral-200 bg-white px-4 py-3">
+            <span className="text-sm font-semibold text-neutral-600">Sichtbar auf dieser Seite:</span>
+            {([['Header',headerEnabled,setHeaderEnabled],['Footer',footerEnabled,setFooterEnabled]] as const).map(([lbl,val,setter])=>(
+              <label key={lbl} className="flex cursor-pointer items-center gap-2.5 select-none">
+                <button type="button" role="switch" aria-checked={val} onClick={()=>{(setter as (v:boolean)=>void)(!val);setDirty(p=>new Set([...p,'__settings__']));}}
+                  className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none ${val?'bg-[#884A4A]':'bg-neutral-200'}`}>
+                  <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${val?'translate-x-[18px]':'translate-x-[3px]'}`}/>
+                </button>
+                <span className="text-sm text-neutral-700">{lbl}</span>
+              </label>
+            ))}
           </div>
         )}
 

@@ -32,13 +32,25 @@ export async function POST(req: NextRequest) {
     const { data: sourceSections } = await supabase
       .from('cms_sections').select('*').eq('page_id', source_page).order('sort_order');
     if (sourceSections?.length) {
-      await supabase.from('cms_sections').insert(
-        sourceSections.map(s => ({ page_id: id, section_instance: s.section_instance, section_type: s.section_type, label: s.label, sort_order: s.sort_order, hidden: s.hidden }))
-      );
+      // Build a mapping from old section_instance → new section_instance
+      const instanceMap: Record<string, string> = {};
+      const newSections = sourceSections.map(s => {
+        const newInstance = `${s.section_type}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,6)}`;
+        instanceMap[s.section_instance] = newInstance;
+        return { page_id: id, section_instance: newInstance, section_type: s.section_type, label: s.label, sort_order: s.sort_order, hidden: s.hidden };
+      });
+      await supabase.from('cms_sections').insert(newSections);
+      // Copy content with remapped section_keys
       const { data: sourceContent } = await supabase.from('cms_content').select('*').eq('page', source_page);
       if (sourceContent?.length) {
         await supabase.from('cms_content').insert(
-          sourceContent.map(c => ({ page: id, section_key: c.section_key, field_key: c.field_key, value: c.value, updated_at: new Date().toISOString() }))
+          sourceContent.map(c => ({
+            page: id,
+            section_key: instanceMap[c.section_key] ?? c.section_key,
+            field_key: c.field_key,
+            value: c.value,
+            updated_at: new Date().toISOString()
+          }))
         );
       }
     }

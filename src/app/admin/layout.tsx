@@ -54,6 +54,15 @@ const navItems = [
       </svg>
     ),
   },
+  {
+    href: '/admin/account',
+    label: 'Account',
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+    ),
+  },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -87,6 +96,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (pathname.startsWith('/admin/crm')) return 'CRM / Leads';
     if (pathname.startsWith('/admin/seo')) return 'SEO Einstellungen';
     if (pathname.startsWith('/admin/analytics')) return 'Analytics';
+    if (pathname.startsWith('/admin/account')) return 'Account-Einstellungen';
     return 'Admin';
   })();
 
