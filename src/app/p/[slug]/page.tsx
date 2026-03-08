@@ -26,22 +26,18 @@ type CmsSection = { section_instance: string; section_type: string; hidden: bool
 
 async function getPageBySlug(slug: string) {
   try {
-    // Try exact path match first (/p/slug)
     const fullPath = `/p/${slug}`;
+    // Try path match first (canonical for new pages)
     const { data: byPath } = await supabase
-      .from("cms_pages")
-      .select("*")
-      .eq("path", fullPath)
-      .single();
+      .from("cms_pages").select("*").eq("path", fullPath).maybeSingle();
     if (byPath) return byPath;
 
-    // Fallback: try by ID
+    // Fallback: id may be slug directly (new pages) or slug with underscores (legacy)
     const { data: byId } = await supabase
-      .from("cms_pages")
-      .select("*")
-      .eq("id", slug)
-      .single();
-    return byId || null;
+      .from("cms_pages").select("*")
+      .in("id", [slug, slug.replace(/-/g, "_")])
+      .limit(1);
+    return byId?.[0] ?? null;
   } catch {
     return null;
   }

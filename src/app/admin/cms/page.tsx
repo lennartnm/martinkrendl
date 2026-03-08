@@ -152,20 +152,43 @@ function TextField({ label, hint, type, value, isDirty, onChange }: { label: str
 
 function QuizSelectorField({ value, isDirty, onChange }: { value: string; isDirty: boolean; onChange: (v:string)=>void }) {
   const [quizzes, setQuizzes] = useState<{id:string;label:string}[]>([]);
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
   useEffect(()=>{
     fetch('/api/admin/quiz-configs').then(r=>r.json()).then(j=>{if(j.ok)setQuizzes(j.data||[]);}).catch(()=>{});
   },[]);
+  useEffect(()=>{
+    const h=(e:MouseEvent)=>{if(ref.current&&!ref.current.contains(e.target as Node))setOpen(false);};
+    document.addEventListener('mousedown',h);return()=>document.removeEventListener('mousedown',h);
+  },[]);
+  const activeId = value||'component_quiz';
+  const current = quizzes.find(q=>q.id===activeId);
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-2"><Settings className="h-3.5 w-3.5 text-neutral-400"/><span className="text-sm font-semibold text-neutral-800">Quiz auswählen</span>{isDirty&&<DirtyBadge/>}</div>
-      <div className="pl-5">
+      <div className="pl-5" ref={ref}>
         <div className="relative">
-          <select value={value||'component_quiz'} onChange={e=>onChange(e.target.value)}
-            className="h-10 w-full appearance-none rounded-[4px] border bg-white px-3 pr-8 text-sm outline-none transition focus:ring-2 focus:ring-[#884A4A]/20"
-            style={{borderColor:isDirty?'#F59E0B':'#E5E7EB',borderWidth:'1px'}}>
-            {quizzes.map(q=><option key={q.id} value={q.id}>{q.label}</option>)}
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400"/>
+          <button type="button" onClick={()=>setOpen(v=>!v)}
+            className="flex h-10 w-full items-center justify-between gap-2 rounded-[4px] border bg-white px-3 text-sm text-left transition hover:border-neutral-300"
+            style={{borderColor:isDirty?'#F59E0B':'#E5E7EB'}}>
+            <span className={current?'text-neutral-800 font-medium':'text-neutral-400'}>{current?.label??'Kein Quiz ausgewählt'}</span>
+            <ChevronDown className={`h-4 w-4 shrink-0 text-neutral-400 transition-transform duration-150 ${open?'rotate-180':''}`}/>
+          </button>
+          {open&&(
+            <div className="absolute left-0 top-full z-50 mt-1 w-full overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-xl">
+              {quizzes.map(q=>(
+                <button key={q.id} type="button" onClick={()=>{onChange(q.id);setOpen(false);}}
+                  className={`flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm transition ${activeId===q.id?'bg-[#FDF8F8]':'hover:bg-neutral-50'}`}>
+                  <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition ${activeId===q.id?'border-[#884A4A] bg-[#884A4A]':'border-neutral-300'}`}>
+                    {activeId===q.id&&<div className="h-1.5 w-1.5 rounded-full bg-white"/>}
+                  </div>
+                  <span className={`flex-1 truncate ${activeId===q.id?'font-semibold text-[#884A4A]':'text-neutral-700'}`}>{q.label}</span>
+                  {q.id==='component_quiz'&&<span className="shrink-0 rounded-full bg-neutral-100 px-1.5 py-0.5 text-[10px] text-neutral-400">Standard</span>}
+                  {activeId===q.id&&<CheckCircle className="h-3.5 w-3.5 shrink-0 text-[#884A4A]"/>}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -600,35 +623,141 @@ function AddSectionDialog({onAdd,onClose}:{onAdd:(type:string,label:string)=>voi
 }
 
 function NewPageDialog({pages,onAdd,onClose}:{pages:CmsPage[];onAdd:(label:string,path:string,sourceId?:string)=>void;onClose:()=>void}) {
-  const [label,setLabel]=useState('');const [path,setPath]=useState('/');const [src,setSrc]=useState('');
+  const [label,setLabel]=useState('');
+  const [slug,setSlug]=useState('');
+  const [src,setSrc]=useState('');
+  const [slugTouched,setSlugTouched]=useState(false);
   const realPages=pages.filter(p=>!p.id.startsWith('component_')&&!p.id.startsWith('quiz_'));
-  // Auto-generate path from label
-  const handleLabelChange=(v:string)=>{
-    setLabel(v);
-    if(!path||path==='/'){const auto='/'+v.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');setPath(auto||'/');}
-  };
+
+  const toSlug=(v:string)=>v.toLowerCase()
+    .replace(/[äöüß]/g,(c:string)=>({'ä':'ae','ö':'oe','ü':'ue','ß':'ss'}[c]||c))
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+
+  const handleLabel=(v:string)=>{setLabel(v);if(!slugTouched)setSlug(toSlug(v));};
+  const handleSlug=(v:string)=>{setSlugTouched(true);setSlug(v.toLowerCase().replace(/[^a-z0-9-]/g,'').replace(/^-+/,''));};
+  const canSubmit=label.trim().length>0&&slug.length>0;
+  const finalPath=`/p/${slug}`;
+
   return (
-    <Modal title="Neue Seite anlegen" onClose={onClose}>
-      <div className="space-y-3">
-        <div><label className="mb-1 block text-xs font-semibold text-neutral-500">NAME DER SEITE</label><input value={label} onChange={e=>handleLabelChange(e.target.value)} placeholder="z.B. Landingpage Herbst" className="h-10 w-full rounded-[4px] border border-neutral-200 px-3 text-sm outline-none focus:border-[#884A4A]"/></div>
-        <div>
-          <label className="mb-1 block text-xs font-semibold text-neutral-500">WEBADRESSE</label>
-          <input value={path} onChange={e=>setPath(e.target.value)} placeholder="/landingpage-herbst" className="h-10 w-full rounded-[4px] border border-neutral-200 px-3 font-mono text-sm outline-none focus:border-[#884A4A]"/>
-          <p className="mt-1 text-xs text-neutral-400">Die Seite wird unter dieser Adresse erreichbar sein, z.B. <code className="bg-neutral-100 px-1 rounded">deinedomain.at/landingpage-herbst</code></p>
+    <Modal title="" onClose={onClose}>
+      <div className="mb-5">
+        <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl" style={{backgroundColor:'#884A4A18'}}>
+          <FileText className="h-4 w-4" style={{color:'#884A4A'}}/>
         </div>
+        <h2 className="text-base font-bold text-neutral-900">Neue Seite anlegen</h2>
+        <p className="mt-0.5 text-xs text-neutral-500">Seite ist sofort nach dem Anlegen online erreichbar.</p>
+      </div>
+
+      <div className="space-y-4">
+        {/* Name */}
         <div>
-          <label className="mb-1 block text-xs font-semibold text-neutral-500">SEKTIONEN KOPIEREN VON (optional)</label>
-          <select value={src} onChange={e=>setSrc(e.target.value)} className="h-10 w-full rounded-[4px] border border-neutral-200 px-3 text-sm outline-none focus:border-[#884A4A] bg-white">
-            <option value="">— Leere Seite starten —</option>
-            {realPages.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}
-          </select>
+          <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-neutral-400">Seitenname</label>
+          <input autoFocus value={label} onChange={e=>handleLabel(e.target.value)}
+            placeholder="z.B. Herbst Landingpage"
+            className="h-10 w-full rounded-lg border-2 border-neutral-200 bg-neutral-50 px-3.5 text-sm font-medium text-neutral-800 outline-none transition placeholder:text-neutral-400 focus:border-[#884A4A] focus:bg-white"/>
         </div>
-        <div className="rounded-[4px] border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
-          ✓ Neue Seiten sind nach dem Anlegen sofort online — ohne Programmieraufwand.
+
+        {/* URL slug */}
+        <div>
+          <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-neutral-400">URL-Pfad</label>
+          <div className="flex items-stretch overflow-hidden rounded-lg border-2 border-neutral-200 bg-neutral-50 transition focus-within:border-[#884A4A] focus-within:bg-white">
+            <span className="flex select-none items-center border-r border-neutral-200 bg-neutral-100 px-3 font-mono text-xs text-neutral-400">/p/</span>
+            <input value={slug} onChange={e=>handleSlug(e.target.value)} placeholder="herbst-landingpage"
+              className="h-10 flex-1 bg-transparent px-3 font-mono text-sm text-neutral-800 outline-none placeholder:text-neutral-400"/>
+          </div>
+          {slug.length>0&&(
+            <p className="mt-1 flex items-center gap-1.5 text-[11px] text-neutral-400">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400"/>
+              <span>Erreichbar unter: <span className="font-mono text-neutral-600">{finalPath}</span></span>
+            </p>
+          )}
+        </div>
+
+        {/* Source template */}
+        <div>
+          <label className="mb-1.5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-neutral-400">
+            Vorlage <span className="rounded-full border border-neutral-200 px-1.5 py-0.5 text-[10px] font-normal normal-case tracking-normal">optional</span>
+          </label>
+          <div className="max-h-44 space-y-1 overflow-y-auto">
+            <button type="button" onClick={()=>setSrc('')}
+              className={`flex w-full items-center gap-3 rounded-lg border-2 px-3 py-2 text-left transition ${src===''?'border-[#884A4A] bg-[#FDF8F8]':'border-neutral-200 bg-neutral-50 hover:border-neutral-300 hover:bg-white'}`}>
+              <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition ${src===''?'border-[#884A4A] bg-[#884A4A]':'border-neutral-300'}`}>
+                {src===''&&<div className="h-1.5 w-1.5 rounded-full bg-white"/>}
+              </div>
+              <span className={`text-sm ${src===''?'font-semibold text-[#884A4A]':'font-medium text-neutral-700'}`}>Leere Seite</span>
+              <span className="text-xs text-neutral-400">Sektionen selbst hinzufügen</span>
+            </button>
+            {realPages.map(p=>(
+              <button key={p.id} type="button" onClick={()=>setSrc(p.id)}
+                className={`flex w-full items-center gap-3 rounded-lg border-2 px-3 py-2 text-left transition ${src===p.id?'border-[#884A4A] bg-[#FDF8F8]':'border-neutral-200 bg-neutral-50 hover:border-neutral-300 hover:bg-white'}`}>
+                <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition ${src===p.id?'border-[#884A4A] bg-[#884A4A]':'border-neutral-300'}`}>
+                  {src===p.id&&<div className="h-1.5 w-1.5 rounded-full bg-white"/>}
+                </div>
+                <span className={`flex-1 truncate text-sm ${src===p.id?'font-semibold text-[#884A4A]':'font-medium text-neutral-700'}`}>{p.label}</span>
+                <span className="shrink-0 font-mono text-[10px] text-neutral-400">{p.path}</span>
+                {src===p.id&&<CheckCircle className="h-3.5 w-3.5 shrink-0 text-[#884A4A]"/>}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
-      <button onClick={()=>{if(label&&path){onAdd(label,path,src||undefined);onClose();}}} disabled={!label||!path} className="mt-4 w-full h-10 rounded-[4px] text-sm font-semibold text-white disabled:opacity-40" style={{backgroundColor:brand}}>
-        {src?'Seite duplizieren & anlegen':'Neue Seite anlegen'}
+
+      <button onClick={()=>{if(canSubmit){onAdd(label.trim(),finalPath,src||undefined);onClose();}}} disabled={!canSubmit}
+        className="mt-5 flex h-10 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-40" style={{backgroundColor:'#884A4A'}}>
+        <Plus className="h-4 w-4"/>
+        {src?'Seite duplizieren & anlegen':'Neue Seite erstellen'}
+      </button>
+    </Modal>
+  );
+}
+function NewQuizDialog({pages,onAdd,onClose}:{pages:CmsPage[];onAdd:(label:string,sourceId:string)=>void;onClose:()=>void}) {
+  const [label,setLabel]=useState('');
+  const [src,setSrc]=useState('component_quiz');
+  const quizPages=[{id:'component_quiz',label:'Standard Quiz'},...pages.filter(p=>p.id.startsWith('quiz_'))];
+  const canSubmit=label.trim().length>0;
+  return (
+    <Modal title="" onClose={onClose}>
+      <div className="mb-5">
+        <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50">
+          <Hash className="h-4 w-4 text-emerald-600"/>
+        </div>
+        <h2 className="text-base font-bold text-neutral-900">Quiz-Variante anlegen</h2>
+        <p className="mt-0.5 text-xs text-neutral-500">Erstelle eine eigene Fragebogen-Variante zum A/B-Testen.</p>
+      </div>
+
+      <div className="space-y-4">
+        {/* Name */}
+        <div>
+          <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-neutral-400">Bezeichnung</label>
+          <input autoFocus value={label} onChange={e=>setLabel(e.target.value)}
+            placeholder="z.B. Quiz Herbst 2025"
+            className="h-10 w-full rounded-lg border-2 border-neutral-200 bg-neutral-50 px-3.5 text-sm font-medium text-neutral-800 outline-none transition placeholder:text-neutral-400 focus:border-emerald-500 focus:bg-white"/>
+        </div>
+
+        {/* Source */}
+        <div>
+          <label className="mb-1.5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-neutral-400">
+            Kopieren von <span className="rounded-full border border-neutral-200 px-1.5 py-0.5 text-[10px] font-normal normal-case tracking-normal">optional</span>
+          </label>
+          <div className="space-y-1">
+            {quizPages.map(q=>(
+              <button key={q.id} type="button" onClick={()=>setSrc(q.id)}
+                className={`flex w-full items-center gap-3 rounded-lg border-2 px-3 py-2 text-left transition ${src===q.id?'border-emerald-500 bg-emerald-50':'border-neutral-200 bg-neutral-50 hover:border-neutral-300 hover:bg-white'}`}>
+                <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition ${src===q.id?'border-emerald-500 bg-emerald-500':'border-neutral-300'}`}>
+                  {src===q.id&&<div className="h-1.5 w-1.5 rounded-full bg-white"/>}
+                </div>
+                <span className={`flex-1 truncate text-sm ${src===q.id?'font-semibold text-emerald-700':'font-medium text-neutral-700'}`}>{q.label}</span>
+                {q.id==='component_quiz'&&<span className="shrink-0 rounded-full bg-neutral-100 px-1.5 py-0.5 text-[10px] text-neutral-400">Standard</span>}
+                {src===q.id&&<CheckCircle className="h-3.5 w-3.5 shrink-0 text-emerald-500"/>}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <button onClick={()=>{if(canSubmit){onAdd(label.trim(),src);onClose();}}} disabled={!canSubmit}
+        className="mt-5 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-40">
+        <Plus className="h-4 w-4"/> Quiz-Variante erstellen
       </button>
     </Modal>
   );
@@ -698,6 +827,7 @@ export default function CmsPage() {
   const [pageDropOpen,setPageDropOpen]=useState(false);
   const [showAddSection,setShowAddSection]=useState(false);
   const [showNewPage,setShowNewPage]=useState(false);
+  const [showNewQuiz,setShowNewQuiz]=useState(false);
   const [showFontPanel,setShowFontPanel]=useState(false);
   const [currentFont,setCurrentFont]=useState('Open Sans');
   const [headerEnabled,setHeaderEnabled]=useState(true);
@@ -825,14 +955,18 @@ export default function CmsPage() {
 
   const createPage=async(label:string,path:string,sourceId?:string)=>{
     const res=await fetch('/api/admin/pages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({label,path,source_page:sourceId})});
-    const json=await res.json();if(json.ok){setPages(p=>[...p,json.data]);setSelectedPage(json.data);}
+    const json=await res.json();
+    if(json.ok){setPages(p=>[...p,json.data]);setSelectedPage(json.data);}
+    else{alert('Fehler: '+(json.error||'Seite konnte nicht angelegt werden'));}
   };
 
   const deletePage=async(page:CmsPage)=>{
     if(page.is_system)return;
-    if(!confirm(`Seite "${page.label}" löschen?`))return;
-    await fetch('/api/admin/pages',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:page.id})});
-    setPages(p=>{const n=p.filter(x=>x.id!==page.id);setSelectedPage(n[0]||null);return n;});
+    if(!confirm(`Seite "${page.label}" wirklich löschen?`))return;
+    const res=await fetch('/api/admin/pages',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:page.id})});
+    const json=await res.json().catch(()=>({}));
+    if(json.ok){setPages(p=>{const n=p.filter(x=>x.id!==page.id);setSelectedPage(n[0]||null);return n;});}
+    else{alert('Fehler beim Löschen: '+(json.error||'Unbekannter Fehler'));}
   };
 
   const totalDirty=dirty.size;
@@ -846,6 +980,11 @@ export default function CmsPage() {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(currentFont)}:wght@400;600;700;800&display=swap'); *{font-family:'${currentFont}',sans-serif!important}`}</style>
       {showAddSection&&<AddSectionDialog onAdd={addSection} onClose={()=>setShowAddSection(false)}/>}
       {showNewPage&&<NewPageDialog pages={pages} onAdd={createPage} onClose={()=>setShowNewPage(false)}/>}
+      {showNewQuiz&&<NewQuizDialog pages={pages} onAdd={async(label,srcId)=>{
+        const res=await fetch('/api/admin/quiz-configs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({label,source_id:srcId})});
+        const json=await res.json();
+        if(json.ok){const np:CmsPage={...json.data,path:'(Quiz-Variante)',is_system:false};setPages(prev=>[...prev,np]);setSelectedPage(np);}
+      }} onClose={()=>setShowNewQuiz(false)}/>}
 
       <div className="space-y-5 pb-10">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -921,17 +1060,7 @@ export default function CmsPage() {
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#884A4A]/10"><Plus className="h-3.5 w-3.5 text-[#884A4A]"/></div>
                   Neue Seite anlegen
                 </button>
-                <button type="button" onClick={async()=>{
-                  setPageDropOpen(false);
-                  const label=prompt('Name der neuen Quiz-Variante:');
-                  if(!label)return;
-                  const res=await fetch('/api/admin/quiz-configs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({label,source_id:selectedPage?.id?.startsWith('quiz_')?selectedPage.id:'component_quiz'})});
-                  const json=await res.json();
-                  if(json.ok){
-                    const np:CmsPage={...json.data,path:'(Quiz-Variante)',is_system:false};
-                    setPages(prev=>[...prev,np]);setSelectedPage(np);
-                  }
-                }} className="flex w-full items-center gap-2.5 px-3 py-2.5 mb-1 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50">
+                <button type="button" onClick={()=>{setPageDropOpen(false);setShowNewQuiz(true);}} className="flex w-full items-center gap-2.5 px-3 py-2.5 mb-1 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50">
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-emerald-100"><Plus className="h-3.5 w-3.5 text-emerald-600"/></div>
                   Quiz-Variante anlegen
                 </button>
