@@ -349,6 +349,173 @@ export default async function DynamicPage({ params }: { params: { slug: string }
       );
     },
     about_legacy: (inst) => sectionRenderers["about"](inst),
+
+    // ── Legacy section renderers (copies from home page, using ci() for instance-based lookup) ──
+    logos: (instance) => {
+      const label = ci(instance, "label") || c("logos_section::label");
+      const logo1 = ci(instance, "logo_1") || c("images::logo1");
+      const logo2 = ci(instance, "logo_2") || c("images::logo2");
+      const logo3 = ci(instance, "logo_3") || c("images::logo3");
+      const logos = [logo1, logo2, logo3].filter(Boolean);
+      return (
+        <section key={instance} className="py-12 md:py-14">
+          <div className={sectionWidth}>
+            {label && (
+              <div className="mx-auto mb-8 max-w-3xl text-center">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: brandColor }}>{label}</p>
+              </div>
+            )}
+            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
+              {logos.map((logo, idx) => (
+                <div key={idx} className="flex h-28 w-[min(100%,260px)] items-center justify-center rounded-[4px] border border-neutral-200 bg-white p-4 md:h-32">
+                  <CmsImage src={logo} alt={`Logo ${idx + 1}`} width={180} height={80} className="max-h-14 w-auto object-contain md:max-h-16" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    },
+    logos_legacy: (inst) => sectionRenderers["logos"](inst),
+
+    feature_cards_3: (instance) => {
+      const cards = [1, 2, 3].map(n => ({
+        title: ci(instance + n, "title") || ci(`${instance}${n}`, "title") || c(`feature_card_${n}::title`),
+        text:  ci(instance + n, "text")  || ci(`${instance}${n}`, "text")  || c(`feature_card_${n}::text`),
+      }));
+      const icons = [GraduationCap, Trophy, ShieldCheck];
+      return (
+        <section key={instance} className="pt-8 pb-14 md:pt-10 md:pb-20">
+          <div className={sectionWidth}>
+            <div className="grid gap-4 md:grid-cols-3 md:gap-6">
+              {cards.map((card, i) => {
+                const Icon = icons[i];
+                return (
+                  <div key={i} className="rounded-[4px] px-6 py-8 text-center text-white" style={{ backgroundColor: brandColor }}>
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[4px] border border-white/20 bg-white/10">
+                      <Icon className="h-7 w-7 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold"><RichText text={card.title} /></h3>
+                    <p className="mt-3 text-sm leading-7 text-white/90"><RichText text={card.text} /></p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      );
+    },
+    feature_cards_3_legacy: (inst) => sectionRenderers["feature_cards_3"](inst),
+
+    feature_cards_4: (instance) => {
+      const heading = ci(instance + "h", "title") || ci(`${instance}h`, "title") || c("features_2_heading::title");
+      const subtext = ci(instance + "h", "text")  || ci(`${instance}h`, "text")  || c("features_2_heading::text");
+      const cards = [1, 2, 3, 4].map(n => ({
+        title: ci(instance + n, "title") || ci(`${instance}${n}`, "title") || c(`feature2_card_${n}::title`),
+        text:  ci(instance + n, "text")  || ci(`${instance}${n}`, "text")  || c(`feature2_card_${n}::text`),
+      }));
+      const icons = [Users, Award, Video, MicVocal];
+      const ctaLink = ci("links", "features_cta") || c("links::features_2_cta") || "#quiz";
+      return (
+        <section key={instance} className="py-14 md:py-20">
+          <div className={sectionWidth}>
+            {heading && (
+              <div className="mx-auto mb-10 max-w-3xl text-center">
+                <h2 className="text-3xl font-extrabold md:text-4xl"><RichText text={heading} /></h2>
+                {subtext && <p className="mt-4" style={{ color: lightGray }}><RichText text={subtext} /></p>}
+              </div>
+            )}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 md:gap-6">
+              {cards.map((card, i) => {
+                const Icon = icons[i];
+                return (
+                  <div key={i} className="rounded-[4px] px-5 py-7 text-center text-white" style={{ backgroundColor: brandColor }}>
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[4px] border border-white/20 bg-white/10">
+                      <Icon className="h-7 w-7 text-white" />
+                    </div>
+                    <h3 className="text-lg font-bold"><RichText text={card.title} /></h3>
+                    <p className="mt-3 text-sm leading-7 text-white/90"><RichText text={card.text} /></p>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-8 text-center">
+              <a href={ctaLink}>
+                <Button className="rounded-[4px] px-6 py-3 font-semibold text-white hover:opacity-95" style={{ backgroundColor: brandColor }}>
+                  Zum Kennenlern-Quiz
+                </Button>
+              </a>
+            </div>
+          </div>
+        </section>
+      );
+    },
+    feature_cards_4_legacy: (inst) => sectionRenderers["feature_cards_4"](inst),
+
+    video_carousel: (instance) => {
+      const title = ci(instance, "title") || c("video_section::title");
+      const text  = ci(instance, "text")  || c("video_section::text");
+      const videos = [
+        { src: ci(instance, "vid1") || c("videos::carousel_1_src"), thumbnail: ci(instance, "thumb1") || c("videos::carousel_1_thumb") },
+        { src: ci(instance, "vid2") || c("videos::carousel_2_src"), thumbnail: ci(instance, "thumb2") || c("videos::carousel_2_thumb") },
+        { src: ci(instance, "vid3") || c("videos::carousel_3_src"), thumbnail: ci(instance, "thumb3") || c("videos::carousel_3_thumb") },
+      ].filter(v => v.src);
+      return (
+        <VideoCarousel key={instance} title={title} text={text} brandColor={brandColor} videos={videos} />
+      );
+    },
+    video_carousel_legacy: (inst) => sectionRenderers["video_carousel"](inst),
+
+    testimonials: (instance) => {
+      const t = (n: number, f: string) => ci(`${instance}${n}`, f) || c(`testimonial_${n}::${f}`);
+      const tv = (n: number, f: string) => ci(`${instance}${n}`, f) || c(`videos::testimonial_${n}_${f}`);
+      return (
+        <TestimonialVideos key={instance}
+          t1label={t(1, "label")} t1quote={t(1, "quote")} t1author={t(1, "author")}
+          t1src={tv(1, "src")} t1thumb={tv(1, "thumb")}
+          t2label={t(2, "label")} t2quote={t(2, "quote")} t2author={t(2, "author")}
+          t2src={tv(2, "src")} t2thumb={tv(2, "thumb")}
+          brandColor={brandColor}
+        />
+      );
+    },
+    testimonials_legacy: (inst) => sectionRenderers["testimonials"](inst),
+
+    reviews: (instance) => {
+      const reviewsTitle = ci(instance, "title") || c("reviews::title");
+      const reviewList = [1, 2, 3].map(n => ({
+        text:   ci(`${instance}${n}`, "text")   || c(`review_${n}::text`),
+        author: ci(`${instance}${n}`, "author") || c(`review_${n}::author`),
+      })).filter(r => r.text);
+      return (
+        <section key={instance} className="py-14 md:py-20">
+          <div className={sectionWidth}>
+            {reviewsTitle && (
+              <div className="mx-auto mb-10 max-w-2xl text-center">
+                <h2 className="text-3xl font-extrabold md:text-4xl"><RichText text={reviewsTitle} /></h2>
+              </div>
+            )}
+            <div className="overflow-x-auto pb-4 [scrollbar-width:none] md:overflow-visible">
+              <div className="flex gap-4 md:grid md:grid-cols-3 md:gap-6">
+                {reviewList.map((review, idx) => (
+                  <div key={idx} className="min-w-[88%] rounded-[4px] bg-neutral-100 p-6 md:min-w-0">
+                    <div className="mb-4 flex items-center gap-1">
+                      {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="h-4 w-4 fill-[#D4AF37] text-[#D4AF37]" />)}
+                    </div>
+                    <p className="text-sm leading-7" style={{ color: graphite }}><RichText text={review.text} /></p>
+                    <p className="mt-4 text-sm font-semibold" style={{ color: brandColor }}>– {review.author}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    },
+    reviews_legacy: (inst) => sectionRenderers["reviews"](inst),
+
+    image_text_1: (inst) => sectionRenderers["image_text"](inst),
+    image_text_2: (inst) => sectionRenderers["image_text"](inst),
   };
 
   const orderedSections = activeSections
