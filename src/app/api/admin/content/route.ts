@@ -68,6 +68,11 @@ export async function POST(req: NextRequest) {
   // Seite sofort revalidieren → live ohne Rebuild
   const pagePath = body.page === 'home' ? '/' : `/${body.page}`;
   revalidatePath(pagePath);
+  // Also revalidate the actual /p/<slug> path if this is a CMS page
+  const { data: pageRecord } = await supabase.from('cms_pages').select('path').eq('id', body.page).maybeSingle();
+  if (pageRecord?.path && pageRecord.path !== pagePath) {
+    try { revalidatePath(pageRecord.path); } catch {}
+  }
 
   // Für Komponenten: alle Seiten revalidieren, die diese Komponente verwenden
   if (body.page === 'component_footer' || body.page === 'component_cookie') {

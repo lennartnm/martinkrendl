@@ -229,6 +229,130 @@ export default async function Page() {
     },
     image_text_1: (inst) => render["image_text"](inst),
     image_text_2: (inst) => render["image_text"](inst),
+    cta_banner: (inst) => {
+      const bg=ci(inst,"bg_color")||brand;
+      return(<section key={inst} className="py-14 md:py-20" style={{backgroundColor:bg}}>
+        <div className={sectionWidth}><div className="mx-auto max-w-2xl text-center text-white">
+          <h2 className="text-3xl font-extrabold md:text-4xl"><RT text={ci(inst,"title")||""}/></h2>
+          {ci(inst,"text")&&<p className="mt-4 text-lg leading-8 text-white/85"><RT text={ci(inst,"text")}/></p>}
+          {ci(inst,"cta_label")&&<a href={ci(inst,"cta_link")||"#"} className="mt-8 inline-block rounded-[4px] px-8 py-4 font-bold text-white hover:opacity-90 border-2 border-white">{ci(inst,"cta_label")}</a>}
+        </div></div>
+      </section>);
+    },
+    stats_row: (inst) => {
+      const stats=[1,2,3,4].map(i=>({num:ci(inst,`stat_\${i}_number`),label:ci(inst,`stat_\${i}_label`)})).filter(s=>s.num);
+      return(<section key={inst} className="py-14 md:py-20 bg-white">
+        <div className={sectionWidth}><div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+          {stats.map((s,i)=><div key={i} className="text-center">
+            <div className="text-4xl font-extrabold md:text-5xl" style={{color:brand}}>{s.num}</div>
+            <div className="mt-2 text-sm font-semibold" style={{color:darkGray}}>{s.label}</div>
+          </div>)}
+        </div></div>
+      </section>);
+    },
+    faq: (inst) => {
+      const faqs=[1,2,3,4,5].map(i=>({q:ci(inst+i,"question"),a:ci(inst+i,"answer")})).filter(f=>f.q);
+      return(<section key={inst} className="py-14 md:py-20">
+        <div className={sectionWidth}><div className="mx-auto max-w-3xl">
+          {ci(inst,"title")&&<h2 className="text-3xl font-extrabold md:text-4xl text-center mb-10"><RT text={ci(inst,"title")}/></h2>}
+          <div className="space-y-3">{faqs.map((faq,i)=><details key={i} className="group rounded-[4px] border border-neutral-200 bg-white">
+            <summary className="flex cursor-pointer items-center justify-between px-5 py-4 font-semibold text-neutral-800 list-none">
+              <RT text={faq.q}/><span className="ml-4 shrink-0 text-neutral-400 group-open:rotate-45 transition-transform duration-200">+</span>
+            </summary>
+            <div className="px-5 pb-4 text-sm leading-7" style={{color:darkGray}}><RT text={faq.a}/></div>
+          </details>)}</div>
+        </div></div>
+      </section>);
+    },
+    steps: (inst) => {
+      const steps=[1,2,3,4].map(i=>({title:ci(inst+i,"title"),text:ci(inst+i,"text")})).filter(s=>s.title);
+      return(<section key={inst} className="py-14 md:py-20">
+        <div className={sectionWidth}>
+          {ci(inst,"title")&&<div className="mx-auto mb-10 max-w-3xl text-center"><h2 className="text-3xl font-extrabold md:text-4xl"><RT text={ci(inst,"title")}/></h2>{ci(inst,"text")&&<p className="mt-4" style={{color:lightGray}}><RT text={ci(inst,"text")}/></p>}</div>}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {steps.map((step,i)=><div key={i} className="relative rounded-[4px] border border-neutral-200 bg-white p-6">
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full text-lg font-extrabold text-white" style={{backgroundColor:brand}}>{i+1}</div>
+              <h3 className="font-bold text-neutral-800"><RT text={step.title}/></h3>
+              {step.text&&<p className="mt-2 text-sm leading-7" style={{color:darkGray}}><RT text={step.text}/></p>}
+            </div>)}
+          </div>
+        </div>
+      </section>);
+    },
+    text_columns: (inst) => (<section key={inst} className="py-14 md:py-20">
+      <div className={sectionWidth}>
+        {ci(inst,"title")&&<h2 className="text-3xl font-extrabold md:text-4xl text-center mb-10"><RT text={ci(inst,"title")}/></h2>}
+        <div className="grid gap-8 md:grid-cols-2">
+          {["col_1","col_2"].map((col,i)=><div key={i}>
+            {ci(inst,`\${col}_title`)&&<h3 className="text-xl font-bold mb-3"><RT text={ci(inst,`\${col}_title`)}/></h3>}
+            {ci(inst,`\${col}_text`)&&<p className="text-base leading-8" style={{color:darkGray}}><RT text={ci(inst,`\${col}_text`)}/></p>}
+          </div>)}
+        </div>
+      </div>
+    </section>),
+    image_fullwidth: (inst) => {
+      const img=ci(inst,"image"); const title=ci(inst,"title");
+      const op=parseFloat(ci(inst,"overlay_opacity")||"0.4");
+      return(<section key={inst} className="relative overflow-hidden" style={{maxHeight:"600px"}}>
+        {img&&<img src={img} alt="" className="w-full object-cover" style={{maxHeight:"600px"}}/>}
+        {(title||op>0)&&<div className="absolute inset-0 flex items-center justify-center" style={{backgroundColor:\`rgba(0,0,0,\${op})\`}}>
+          {title&&<h2 className="text-3xl font-extrabold text-white text-center md:text-5xl px-4"><RT text={title}/></h2>}
+        </div>}
+      </section>);
+    },
+    checklist: (inst) => {
+      const items=[1,2,3,4,5,6].map(i=>ci(inst+i,"item")).filter(Boolean);
+      return(<section key={inst} className="py-14 md:py-20">
+        <div className={sectionWidth}><div className="mx-auto max-w-3xl">
+          {ci(inst,"title")&&<h2 className="text-3xl font-extrabold md:text-4xl mb-4"><RT text={ci(inst,"title")}/></h2>}
+          {ci(inst,"text")&&<p className="mb-8 text-base leading-8" style={{color:darkGray}}><RT text={ci(inst,"text")}/></p>}
+          <div className="grid gap-3 md:grid-cols-2">{items.map((item,i)=><div key={i} className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white text-sm font-bold" style={{backgroundColor:brand}}>✓</div>
+            <p className="text-base leading-7" style={{color:graphite}}><RT text={item}/></p>
+          </div>)}</div>
+          {ci(inst,"cta_label")&&<div className="mt-8"><a href={ci(inst,"cta_link")||"#"} className="inline-block rounded-[4px] px-7 py-3.5 font-semibold text-white" style={{backgroundColor:brand}}>{ci(inst,"cta_label")}</a></div>}
+        </div></div>
+      </section>);
+    },
+    image_gallery: (inst) => {
+      const imgs=[1,2,3].map(i=>({src:ci(inst+i,"image"),cap:ci(inst+i,"caption")})).filter(g=>g.src);
+      return(<section key={inst} className="py-14 md:py-20">
+        <div className={sectionWidth}>
+          {ci(inst,"title")&&<h2 className="text-3xl font-extrabold md:text-4xl text-center mb-10"><RT text={ci(inst,"title")}/></h2>}
+          <div className="grid gap-4 md:grid-cols-3">
+            {imgs.map((img,i)=><div key={i}>
+              <div className="relative aspect-square overflow-hidden rounded-[4px]"><CmsImage src={img.src} alt={img.cap||""} fill className="object-cover"/></div>
+              {img.cap&&<p className="mt-2 text-center text-sm text-neutral-500">{img.cap}</p>}
+            </div>)}
+          </div>
+        </div>
+      </section>);
+    },
+    text_centered: (inst) => (<section key={inst} className="py-14 md:py-20">
+      <div className={sectionWidth}><div className="mx-auto max-w-3xl text-center">
+        {ci(inst,"label")&&<p className="mb-4 text-sm font-semibold uppercase tracking-widest" style={{color:brand}}>{ci(inst,"label")}</p>}
+        {ci(inst,"title")&&<h2 className="text-3xl font-extrabold md:text-4xl"><RT text={ci(inst,"title")}/></h2>}
+        {ci(inst,"text")&&<p className="mt-5 text-lg leading-8" style={{color:darkGray}}><RT text={ci(inst,"text")}/></p>}
+        {ci(inst,"cta_label")&&<div className="mt-8"><a href={ci(inst,"cta_link")||"#"} className="inline-block rounded-[4px] px-8 py-4 font-bold text-white" style={{backgroundColor:brand}}>{ci(inst,"cta_label")}</a></div>}
+      </div></div>
+    </section>),
+    pricing: (inst) => {
+      const pkgs=[1,2,3].map(i=>({name:ci(inst+i,"name"),price:ci(inst+i,"price"),desc:ci(inst+i,"desc"),cta:ci(inst+i,"cta_label"),link:ci(inst+i,"cta_link")})).filter(p=>p.name);
+      return(<section key={inst} className="py-14 md:py-20">
+        <div className={sectionWidth}>
+          {ci(inst,"title")&&<div className="mx-auto mb-10 max-w-3xl text-center"><h2 className="text-3xl font-extrabold md:text-4xl"><RT text={ci(inst,"title")}/></h2>{ci(inst,"text")&&<p className="mt-4" style={{color:lightGray}}><RT text={ci(inst,"text")}/></p>}</div>}
+          <div className="grid gap-6 md:grid-cols-3">
+            {pkgs.map((pkg,i)=><div key={i} className={`rounded-[4px] border-2 bg-white p-8 text-center \${i===1?"shadow-xl scale-105":""}`} style={{borderColor:i===1?brand:"#E5E7EB"}}>
+              {i===1&&<div className="mb-3 inline-block rounded-full px-3 py-1 text-xs font-bold text-white" style={{backgroundColor:brand}}>Empfohlen</div>}
+              <h3 className="text-xl font-bold">{pkg.name}</h3>
+              <div className="my-4 text-4xl font-extrabold" style={{color:brand}}>{pkg.price}</div>
+              {pkg.desc&&<p className="mb-6 text-sm leading-7" style={{color:darkGray}}><RT text={pkg.desc}/></p>}
+              {pkg.cta&&<a href={pkg.link||"#"} className="block rounded-[4px] px-6 py-3 font-semibold text-white" style={{backgroundColor:brand}}>{pkg.cta}</a>}
+            </div>)}
+          </div>
+        </div>
+      </section>);
+    },
     logos: (inst) => {
       const logos = [ci(inst,"logo_1")||c("images::logo1"), ci(inst,"logo_2")||c("images::logo2"), ci(inst,"logo_3")||c("images::logo3")].filter(Boolean);
       return (
@@ -363,9 +487,120 @@ export async function POST(req: NextRequest) {
     }
     const { data: srcContent } = await supabase.from('cms_content').select('*').eq('page', source_page);
     if (srcContent?.length) {
-      await supabase.from('cms_content').insert(
-        srcContent.map(c => ({ page: pageId, section_key: instanceMap[c.section_key] ?? c.section_key, field_key: c.field_key, value: c.value, updated_at: new Date().toISOString() }))
-      );
+      // Legacy home page stores some fields under shared section_keys like 'images', 'links', 'videos'
+      // We need to remap these into per-instance keys so ci(newInst, field) works.
+      // Build a reverse map: section_type -> newInstance
+      const typeToNewInst: Record<string, string> = {};
+      for (const [oldInst, newInst] of Object.entries(instanceMap)) {
+        // Find section_type for this old instance from sourceSections
+        const srcSec = sourceSections?.find(s => s.section_instance === oldInst);
+        if (srcSec) typeToNewInst[srcSec.section_type] = newInst;
+      }
+
+      // Legacy key remapping: maps (section_key, field_key) -> (newSectionKey, newFieldKey)
+      const legacyRemap: Array<{sk: string; fk: string; newSk: (ti: typeof typeToNewInst) => string; newFk: string}> = [
+        { sk: 'images', fk: 'hero',       newSk: ti => ti['hero'] || ti['hero_legacy'] || 'hero',     newFk: 'image' },
+        { sk: 'images', fk: 'section1',   newSk: ti => ti['image_text_1'] || ti['image_text'] || '',  newFk: 'image' },
+        { sk: 'images', fk: 'section2',   newSk: ti => ti['image_text_2'] || ti['image_text'] || '',  newFk: 'image' },
+        { sk: 'images', fk: 'quote_bg',   newSk: ti => ti['quote'] || ti['quote_legacy'] || '',        newFk: 'bg' },
+        { sk: 'images', fk: 'about',      newSk: ti => ti['about'] || ti['about_legacy'] || '',        newFk: 'image' },
+        { sk: 'images', fk: 'final_cta',  newSk: ti => ti['final_cta'] || ti['final_cta_legacy'] || '', newFk: 'image' },
+        { sk: 'images', fk: 'logo1',      newSk: ti => ti['logos'] || ti['logos_legacy'] || '',        newFk: 'logo_1' },
+        { sk: 'images', fk: 'logo2',      newSk: ti => ti['logos'] || ti['logos_legacy'] || '',        newFk: 'logo_2' },
+        { sk: 'links',  fk: 'hero_cta',   newSk: ti => ti['hero'] || ti['hero_legacy'] || 'hero',     newFk: 'cta_link' },
+        { sk: 'links',  fk: 'image_text_1_cta', newSk: ti => ti['image_text_1'] || '',               newFk: 'cta_link' },
+        { sk: 'links',  fk: 'image_text_2_cta', newSk: ti => ti['image_text_2'] || '',               newFk: 'cta_link' },
+        { sk: 'links',  fk: 'features_2_cta',   newSk: ti => ti['feature_cards_4'] || ti['feature_cards_4_legacy'] || '', newFk: 'cta_link' },
+        { sk: 'links',  fk: 'final_cta',  newSk: ti => ti['final_cta'] || ti['final_cta_legacy'] || '', newFk: 'cta_link' },
+        { sk: 'logos_section', fk: 'label', newSk: ti => ti['logos'] || ti['logos_legacy'] || '',     newFk: 'label' },
+        { sk: 'quote_section', fk: 'label', newSk: ti => ti['quote'] || ti['quote_legacy'] || '',     newFk: 'label' },
+        { sk: 'quote_section', fk: 'quote', newSk: ti => ti['quote'] || ti['quote_legacy'] || '',     newFk: 'quote' },
+        { sk: 'video_section', fk: 'title', newSk: ti => ti['video_carousel'] || ti['video_carousel_legacy'] || '', newFk: 'title' },
+        { sk: 'video_section', fk: 'text',  newSk: ti => ti['video_carousel'] || ti['video_carousel_legacy'] || '', newFk: 'text' },
+        { sk: 'videos', fk: 'carousel_1_src',   newSk: ti => ti['video_carousel'] || '', newFk: 'vid1' },
+        { sk: 'videos', fk: 'carousel_1_thumb', newSk: ti => ti['video_carousel'] || '', newFk: 'thumb1' },
+        { sk: 'videos', fk: 'carousel_2_src',   newSk: ti => ti['video_carousel'] || '', newFk: 'vid2' },
+        { sk: 'videos', fk: 'carousel_2_thumb', newSk: ti => ti['video_carousel'] || '', newFk: 'thumb2' },
+        { sk: 'videos', fk: 'carousel_3_src',   newSk: ti => ti['video_carousel'] || '', newFk: 'vid3' },
+        { sk: 'videos', fk: 'carousel_3_thumb', newSk: ti => ti['video_carousel'] || '', newFk: 'thumb3' },
+        { sk: 'videos', fk: 'testimonial_1_src',   newSk: ti => ti['testimonials'] || ti['testimonials_legacy'] ? (ti['testimonials'] || ti['testimonials_legacy']) + '1' : '', newFk: 'src' },
+        { sk: 'videos', fk: 'testimonial_1_thumb', newSk: ti => ti['testimonials'] || ti['testimonials_legacy'] ? (ti['testimonials'] || ti['testimonials_legacy']) + '1' : '', newFk: 'thumb' },
+        { sk: 'videos', fk: 'testimonial_2_src',   newSk: ti => ti['testimonials'] || ti['testimonials_legacy'] ? (ti['testimonials'] || ti['testimonials_legacy']) + '2' : '', newFk: 'src' },
+        { sk: 'videos', fk: 'testimonial_2_thumb', newSk: ti => ti['testimonials'] || ti['testimonials_legacy'] ? (ti['testimonials'] || ti['testimonials_legacy']) + '2' : '', newFk: 'thumb' },
+        { sk: 'flowing_text', fk: 'text',  newSk: ti => ti['flowing_text'] || ti['flowing_text_legacy'] || '', newFk: 'text' },
+        { sk: 'reviews', fk: 'title',      newSk: ti => ti['reviews'] || ti['reviews_legacy'] || '', newFk: 'title' },
+        { sk: 'about', fk: 'label',        newSk: ti => ti['about'] || ti['about_legacy'] || '', newFk: 'label' },
+        { sk: 'about', fk: 'title',        newSk: ti => ti['about'] || ti['about_legacy'] || '', newFk: 'title' },
+        { sk: 'about', fk: 'text_1',       newSk: ti => ti['about'] || ti['about_legacy'] || '', newFk: 'text_1' },
+        { sk: 'about', fk: 'text_2',       newSk: ti => ti['about'] || ti['about_legacy'] || '', newFk: 'text_2' },
+        { sk: 'about', fk: 'text_3',       newSk: ti => ti['about'] || ti['about_legacy'] || '', newFk: 'text_3' },
+        { sk: 'final_cta', fk: 'title',    newSk: ti => ti['final_cta'] || ti['final_cta_legacy'] || '', newFk: 'title' },
+        { sk: 'final_cta', fk: 'text',     newSk: ti => ti['final_cta'] || ti['final_cta_legacy'] || '', newFk: 'text' },
+        { sk: 'final_cta', fk: 'cta_label',newSk: ti => ti['final_cta'] || ti['final_cta_legacy'] || '', newFk: 'cta_label' },
+      ];
+
+      // Build legacy-remapped rows (extra rows for shared keys)
+      const remappedRows: any[] = [];
+      for (const row of srcContent) {
+        const remap = legacyRemap.find(r => r.sk === row.section_key && r.fk === row.field_key);
+        if (remap) {
+          const newSk = remap.newSk(typeToNewInst);
+          if (newSk) {
+            remappedRows.push({ page: pageId, section_key: newSk, field_key: remap.newFk, value: row.value, updated_at: new Date().toISOString() });
+          }
+        }
+      }
+
+      // Also handle feature_card_N and feature2_card_N legacy keys
+      const fcMap = [
+        ['feature_card_1', 'feature_cards_3', '1'],
+        ['feature_card_2', 'feature_cards_3', '2'],
+        ['feature_card_3', 'feature_cards_3', '3'],
+        ['features_2_heading', 'feature_cards_4', 'h'],
+        ['feature2_card_1', 'feature_cards_4', '1'],
+        ['feature2_card_2', 'feature_cards_4', '2'],
+        ['feature2_card_3', 'feature_cards_4', '3'],
+        ['feature2_card_4', 'feature_cards_4', '4'],
+        ['testimonial_1', 'testimonials', '1'],
+        ['testimonial_2', 'testimonials', '2'],
+        ['review_1', 'reviews', '1'],
+        ['review_2', 'reviews', '2'],
+        ['review_3', 'reviews', '3'],
+        ['hero', 'hero', ''],
+        ['image_text_1', 'image_text_1', ''],
+        ['image_text_2', 'image_text_2', ''],
+      ];
+      for (const row of srcContent) {
+        const fc = fcMap.find(([sk]) => sk === row.section_key);
+        if (fc) {
+          const [, stype, suffix] = fc;
+          const baseInst = typeToNewInst[stype] || typeToNewInst[stype + '_legacy'] || '';
+          if (baseInst) {
+            const newSk = baseInst + suffix;
+            remappedRows.push({ page: pageId, section_key: newSk, field_key: row.field_key, value: row.value, updated_at: new Date().toISOString() });
+          }
+        }
+      }
+
+      const primaryRows = srcContent.map(row => ({
+        page: pageId,
+        section_key: instanceMap[row.section_key] ?? row.section_key,
+        field_key: row.field_key,
+        value: row.value,
+        updated_at: new Date().toISOString()
+      }));
+
+      // Merge all rows, dedup by section_key+field_key (remapped takes priority)
+      const allRows = [...primaryRows, ...remappedRows];
+      const seen = new Set<string>();
+      const dedupedRows = allRows.filter(r => {
+        const k = \`\${r.section_key}::\${r.field_key}\`;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
+
+      if (dedupedRows.length) await supabase.from('cms_content').insert(dedupedRows);
     }
   }
 

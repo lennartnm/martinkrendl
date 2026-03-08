@@ -114,8 +114,8 @@ function RichToolbar({ value, onChange, taRef }: { value: string; onChange: (v: 
   return (
     <div className="flex items-center gap-1 mb-1">
       <button type="button" title="Fett" onClick={()=>wrap('**','**')} className="flex h-6 w-6 items-center justify-center rounded border border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50 hover:text-neutral-800 transition"><Bold className="h-3 w-3"/></button>
-      <button type="button" title="Kursiv" onClick={()=>wrap('_','_')} className="flex h-6 w-6 items-center justify-center rounded border border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50 hover:text-neutral-800 transition"><Italic className="h-3 w-3"/></button>
-      <span className="ml-1 text-[10px] text-neutral-400">**fett** _kursiv_</span>
+      <button type="button" title="Kursiv" onClick={()=>wrap('*','*')} className="flex h-6 w-6 items-center justify-center rounded border border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50 hover:text-neutral-800 transition"><Italic className="h-3 w-3"/></button>
+      <span className="ml-1 text-[10px] text-neutral-400">**fett** *kursiv*</span>
     </div>
   );
 }
@@ -495,9 +495,359 @@ const SECT_TYPES: {type:string;label:string;addable:boolean;fields:Field[]}[] = 
     {section_key:'danke_hero',field_key:'cta_label',label:'Button Text',type:'text',group:'text'},
     {section_key:'danke_hero',field_key:'cta_link',label:'Button Link',type:'link',group:'links'},
   ]},
+  // ── 10 neue generische Sektionen ────────────────────────────────────────────
+  {type:'cta_banner',label:'CTA Banner (zentriert)',addable:true,fields:[
+    {section_key:'__INST__',field_key:'title',label:'Überschrift',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'text',label:'Text',type:'textarea',group:'text'},
+    {section_key:'__INST__',field_key:'cta_label',label:'Button Text',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'cta_link',label:'Button Link',type:'link',group:'links'},
+    {section_key:'__INST__',field_key:'bg_color',label:'Hintergrundfarbe',type:'color',group:'colors'},
+  ]},
+  {type:'stats_row',label:'Statistik-Zeile',addable:true,fields:[
+    {section_key:'__INST__',field_key:'stat_1_number',label:'Zahl 1',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'stat_1_label',label:'Label 1',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'stat_2_number',label:'Zahl 2',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'stat_2_label',label:'Label 2',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'stat_3_number',label:'Zahl 3',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'stat_3_label',label:'Label 3',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'stat_4_number',label:'Zahl 4',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'stat_4_label',label:'Label 4',type:'text',group:'text'},
+  ]},
+  {type:'faq',label:'FAQ',addable:true,fields:[
+    {section_key:'__INST__',field_key:'title',label:'Überschrift',type:'text',group:'text'},
+    {section_key:'__INST__1',field_key:'question',label:'Frage 1',type:'text',group:'text'},
+    {section_key:'__INST__1',field_key:'answer',label:'Antwort 1',type:'textarea',group:'text'},
+    {section_key:'__INST__2',field_key:'question',label:'Frage 2',type:'text',group:'text'},
+    {section_key:'__INST__2',field_key:'answer',label:'Antwort 2',type:'textarea',group:'text'},
+    {section_key:'__INST__3',field_key:'question',label:'Frage 3',type:'text',group:'text'},
+    {section_key:'__INST__3',field_key:'answer',label:'Antwort 3',type:'textarea',group:'text'},
+    {section_key:'__INST__4',field_key:'question',label:'Frage 4',type:'text',group:'text'},
+    {section_key:'__INST__4',field_key:'answer',label:'Antwort 4',type:'textarea',group:'text'},
+    {section_key:'__INST__5',field_key:'question',label:'Frage 5',type:'text',group:'text'},
+    {section_key:'__INST__5',field_key:'answer',label:'Antwort 5',type:'textarea',group:'text'},
+  ]},
+  {type:'steps',label:'Schritt-für-Schritt',addable:true,fields:[
+    {section_key:'__INST__',field_key:'title',label:'Überschrift',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'text',label:'Unterzeile',type:'textarea',group:'text'},
+    {section_key:'__INST__1',field_key:'title',label:'Schritt 1 – Titel',type:'text',group:'text'},
+    {section_key:'__INST__1',field_key:'text',label:'Schritt 1 – Text',type:'textarea',group:'text'},
+    {section_key:'__INST__2',field_key:'title',label:'Schritt 2 – Titel',type:'text',group:'text'},
+    {section_key:'__INST__2',field_key:'text',label:'Schritt 2 – Text',type:'textarea',group:'text'},
+    {section_key:'__INST__3',field_key:'title',label:'Schritt 3 – Titel',type:'text',group:'text'},
+    {section_key:'__INST__3',field_key:'text',label:'Schritt 3 – Text',type:'textarea',group:'text'},
+    {section_key:'__INST__4',field_key:'title',label:'Schritt 4 – Titel',type:'text',group:'text'},
+    {section_key:'__INST__4',field_key:'text',label:'Schritt 4 – Text',type:'textarea',group:'text'},
+  ]},
+  {type:'text_columns',label:'Text (2 Spalten)',addable:true,fields:[
+    {section_key:'__INST__',field_key:'title',label:'Überschrift',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'col_1_title',label:'Spalte 1 – Titel',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'col_1_text',label:'Spalte 1 – Text',type:'textarea',group:'text'},
+    {section_key:'__INST__',field_key:'col_2_title',label:'Spalte 2 – Titel',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'col_2_text',label:'Spalte 2 – Text',type:'textarea',group:'text'},
+  ]},
+  {type:'image_fullwidth',label:'Vollbreites Bild',addable:true,fields:[
+    {section_key:'__INST__',field_key:'image',label:'Bild',type:'image',group:'media',hint:'Empfohlen: 1920×600px'},
+    {section_key:'__INST__',field_key:'title',label:'Overlay Text',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'overlay_opacity',label:'Overlay Stärke (0–1)',type:'text',group:'settings',hint:'z.B. 0.4'},
+  ]},
+  {type:'checklist',label:'Checkliste',addable:true,fields:[
+    {section_key:'__INST__',field_key:'title',label:'Überschrift',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'text',label:'Einleitungstext',type:'textarea',group:'text'},
+    {section_key:'__INST__1',field_key:'item',label:'Punkt 1',type:'text',group:'text'},
+    {section_key:'__INST__2',field_key:'item',label:'Punkt 2',type:'text',group:'text'},
+    {section_key:'__INST__3',field_key:'item',label:'Punkt 3',type:'text',group:'text'},
+    {section_key:'__INST__4',field_key:'item',label:'Punkt 4',type:'text',group:'text'},
+    {section_key:'__INST__5',field_key:'item',label:'Punkt 5',type:'text',group:'text'},
+    {section_key:'__INST__6',field_key:'item',label:'Punkt 6',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'cta_label',label:'Button Text',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'cta_link',label:'Button Link',type:'link',group:'links'},
+  ]},
+  {type:'image_gallery',label:'Bildgalerie (3er)',addable:true,fields:[
+    {section_key:'__INST__',field_key:'title',label:'Überschrift',type:'text',group:'text'},
+    {section_key:'__INST__1',field_key:'image',label:'Bild 1',type:'image',group:'media'},
+    {section_key:'__INST__1',field_key:'caption',label:'Bildunterschrift 1',type:'text',group:'text'},
+    {section_key:'__INST__2',field_key:'image',label:'Bild 2',type:'image',group:'media'},
+    {section_key:'__INST__2',field_key:'caption',label:'Bildunterschrift 2',type:'text',group:'text'},
+    {section_key:'__INST__3',field_key:'image',label:'Bild 3',type:'image',group:'media'},
+    {section_key:'__INST__3',field_key:'caption',label:'Bildunterschrift 3',type:'text',group:'text'},
+  ]},
+  {type:'text_centered',label:'Text zentriert',addable:true,fields:[
+    {section_key:'__INST__',field_key:'label',label:'Kleines Label',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'title',label:'Überschrift',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'text',label:'Text',type:'textarea',group:'text'},
+    {section_key:'__INST__',field_key:'cta_label',label:'Button Text',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'cta_link',label:'Button Link',type:'link',group:'links'},
+  ]},
+  {type:'pricing',label:'Preisübersicht',addable:true,fields:[
+    {section_key:'__INST__',field_key:'title',label:'Überschrift',type:'text',group:'text'},
+    {section_key:'__INST__',field_key:'text',label:'Unterzeile',type:'textarea',group:'text'},
+    {section_key:'__INST__1',field_key:'name',label:'Paket 1 – Name',type:'text',group:'text'},
+    {section_key:'__INST__1',field_key:'price',label:'Paket 1 – Preis',type:'text',group:'text'},
+    {section_key:'__INST__1',field_key:'desc',label:'Paket 1 – Beschreibung',type:'textarea',group:'text'},
+    {section_key:'__INST__1',field_key:'cta_label',label:'Paket 1 – Button',type:'text',group:'text'},
+    {section_key:'__INST__1',field_key:'cta_link',label:'Paket 1 – Link',type:'link',group:'links'},
+    {section_key:'__INST__2',field_key:'name',label:'Paket 2 – Name',type:'text',group:'text'},
+    {section_key:'__INST__2',field_key:'price',label:'Paket 2 – Preis',type:'text',group:'text'},
+    {section_key:'__INST__2',field_key:'desc',label:'Paket 2 – Beschreibung',type:'textarea',group:'text'},
+    {section_key:'__INST__2',field_key:'cta_label',label:'Paket 2 – Button',type:'text',group:'text'},
+    {section_key:'__INST__2',field_key:'cta_link',label:'Paket 2 – Link',type:'link',group:'links'},
+    {section_key:'__INST__3',field_key:'name',label:'Paket 3 – Name',type:'text',group:'text'},
+    {section_key:'__INST__3',field_key:'price',label:'Paket 3 – Preis',type:'text',group:'text'},
+    {section_key:'__INST__3',field_key:'desc',label:'Paket 3 – Beschreibung',type:'textarea',group:'text'},
+    {section_key:'__INST__3',field_key:'cta_label',label:'Paket 3 – Button',type:'text',group:'text'},
+    {section_key:'__INST__3',field_key:'cta_link',label:'Paket 3 – Link',type:'link',group:'links'},
+  ]},
 ];
 
 const SECT_MAP = Object.fromEntries(SECT_TYPES.map(s=>[s.type,s]));
+
+
+// ── Visual Section Previews ───────────────────────────────────────────────────
+function SectionPreview({type,content,instance}:{type:string;content:CM;instance:string}) {
+  const ci=(inst:string,f:string)=>content[`${inst}::${f}`]||'';
+  const cv=(sk:string,fk:string)=>content[`${sk}::${fk}`]||'';
+  const brand=cv('colors','brand')||'#884A4A';
+  const gray='#6B6B6B';
+
+  // Normalize type for legacy variants
+  const t=type.replace(/_legacy$/,'');
+
+  const Pill=({label}:{label:string})=>(
+    <div className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold text-white" style={{backgroundColor:brand}}>{label}</div>
+  );
+  const MockBtn=({label}:{label:string})=>(
+    <div className="inline-flex items-center rounded-[4px] px-3 py-1.5 text-[11px] font-bold text-white" style={{backgroundColor:brand}}>{label||'Button'}</div>
+  );
+  const MockImg=({src,className}:{src?:string;className?:string})=>src?(
+    <div className={`overflow-hidden rounded-[4px] bg-neutral-100 ${className||''}`}><img src={src} className="h-full w-full object-cover" alt=""/></div>
+  ):<div className={`rounded-[4px] bg-neutral-200 flex items-center justify-center text-neutral-400 text-[10px] ${className||''}`}>Kein Bild</div>;
+  const Stars=()=><div className="flex gap-0.5">{[1,2,3,4,5].map(i=><span key={i} className="text-[#D4AF37] text-[10px]">★</span>)}</div>;
+
+  const wrapClass="pointer-events-none select-none rounded-[4px] border border-dashed border-neutral-200 bg-neutral-50/60 p-3 mb-3 overflow-hidden";
+
+  if(t==='hero') {
+    const img=ci(instance,'image')||cv('images','hero');
+    const title=ci(instance,'title')||cv('hero','title')||'Deine Überschrift';
+    const cta=ci(instance,'cta_label')||cv('hero','cta_label')||'Jetzt anfragen';
+    return(<div className={wrapClass}>
+      <div className="relative h-20 overflow-hidden rounded-[4px]" style={{background:img?'#111':`linear-gradient(135deg,${brand}88,${brand}44)`}}>
+        {img&&<img src={img} className="absolute inset-0 h-full w-full object-cover opacity-60" alt=""/>}
+        <div className="absolute inset-x-0 bottom-0 p-2 text-center">
+          <div className="text-[11px] font-extrabold text-white leading-tight line-clamp-2">{title}</div>
+          <div className="mt-1.5"><MockBtn label={cta}/></div>
+        </div>
+      </div>
+    </div>);
+  }
+  if(t==='image_text'||t==='image_text_1'||t==='image_text_2') {
+    const img=ci(instance,'image')||cv('images','section1');
+    const title=ci(instance,'title')||cv(instance,'title')||'Überschrift';
+    return(<div className={wrapClass}>
+      <div className="flex gap-2 items-center">
+        <MockImg src={img} className="h-14 w-14 shrink-0"/>
+        <div className="flex-1 min-w-0">
+          <div className="text-[11px] font-bold text-neutral-800 line-clamp-1">{title||'Überschrift'}</div>
+          <div className="mt-0.5 space-y-0.5">{[1,2,3].map(i=><div key={i} className="flex items-center gap-1"><span className="h-2 w-2 rounded-full shrink-0" style={{backgroundColor:brand}}/><div className="h-1.5 w-20 rounded-full bg-neutral-200"/></div>)}</div>
+          <div className="mt-1.5"><MockBtn label={ci(instance,'cta_label')||'Mehr erfahren'}/></div>
+        </div>
+      </div>
+    </div>);
+  }
+  if(t==='quote') {
+    const q=ci(instance,'quote')||cv('quote_section','quote')||'„Dein Zitat hier"';
+    const bg=ci(instance,'bg')||cv('images','quote_bg');
+    return(<div className={wrapClass}>
+      <div className="relative rounded-[4px] overflow-hidden p-3" style={{background:bg?'#333':`${brand}dd`}}>
+        {bg&&<img src={bg} className="absolute inset-0 h-full w-full object-cover opacity-30" alt=""/>}
+        <p className="relative text-[11px] italic font-semibold text-white text-center line-clamp-2">"{q}"</p>
+      </div>
+    </div>);
+  }
+  if(t==='flowing_text') {
+    const text=ci(instance,'text')||cv('flowing_text','text')||'Dein Fließtext...';
+    return(<div className={wrapClass}>
+      <div className="rounded-[4px] p-3" style={{backgroundColor:brand}}>
+        <p className="text-[11px] text-white text-center font-medium line-clamp-2">{text}</p>
+      </div>
+    </div>);
+  }
+  if(t==='final_cta') {
+    const title=ci(instance,'title')||cv('final_cta','title')||'Abschluss CTA';
+    const img=ci(instance,'image')||cv('images','final_cta');
+    return(<div className={wrapClass}>
+      <div className="relative rounded-[4px] overflow-hidden p-3" style={{background:img?'#333':`${brand}bb`}}>
+        {img&&<img src={img} className="absolute inset-0 h-full w-full object-cover opacity-30" alt=""/>}
+        <div className="relative text-center">
+          <div className="text-[11px] font-bold text-white line-clamp-1">{title}</div>
+          <div className="mt-1.5"><MockBtn label={ci(instance,'cta_label')||'Jetzt anfragen'}/></div>
+        </div>
+      </div>
+    </div>);
+  }
+  if(t==='logos'||t==='logos_legacy') {
+    const label=ci(instance,'label')||cv('logos_section','label')||'Bekannt aus';
+    return(<div className={wrapClass}>
+      <div className="text-center">
+        <div className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{color:brand}}>{label}</div>
+        <div className="flex justify-center gap-2">{[1,2,3].map(i=><div key={i} className="h-8 w-16 rounded-[4px] border border-neutral-200 bg-white flex items-center justify-center"><div className="h-3 w-10 rounded bg-neutral-200"/></div>)}</div>
+      </div>
+    </div>);
+  }
+  if(t==='feature_cards_3'||t==='feature_cards_3_legacy') {
+    return(<div className={wrapClass}>
+      <div className="grid grid-cols-3 gap-1.5">
+        {[1,2,3].map(i=>{
+          const title=ci(instance+i,'title')||cv(`feature_card_${i}`,'title')||`Feature ${i}`;
+          return(<div key={i} className="rounded-[4px] p-2 text-center text-white" style={{backgroundColor:brand}}>
+            <div className="mx-auto mb-1 h-5 w-5 rounded bg-white/20"/>
+            <div className="text-[9px] font-bold line-clamp-1">{title}</div>
+          </div>);
+        })}
+      </div>
+    </div>);
+  }
+  if(t==='feature_cards_4'||t==='feature_cards_4_legacy') {
+    const title=ci(instance+'h','title')||cv('features_2_heading','title')||'Was dich erwartet';
+    return(<div className={wrapClass}>
+      <div className="text-[11px] font-bold text-center mb-2 line-clamp-1">{title}</div>
+      <div className="grid grid-cols-4 gap-1">
+        {[1,2,3,4].map(i=>{
+          const t2=ci(instance+i,'title')||cv(`feature2_card_${i}`,'title')||`Punkt ${i}`;
+          return(<div key={i} className="rounded-[4px] p-1.5 text-center text-white" style={{backgroundColor:brand}}>
+            <div className="mx-auto mb-0.5 h-4 w-4 rounded bg-white/20"/>
+            <div className="text-[8px] font-bold line-clamp-1">{t2}</div>
+          </div>);
+        })}
+      </div>
+    </div>);
+  }
+  if(t==='reviews'||t==='reviews_legacy') {
+    return(<div className={wrapClass}>
+      <div className="text-[11px] font-bold text-center mb-2">{ci(instance,'title')||cv('reviews','title')||'Stimmen'}</div>
+      <div className="grid grid-cols-3 gap-1.5">
+        {[1,2,3].map(i=>{
+          const text=ci(instance+i,'text')||cv(`review_${i}`,'text')||'Bewertungstext...';
+          return(<div key={i} className="rounded-[4px] bg-neutral-100 p-2">
+            <Stars/>
+            <p className="mt-0.5 text-[9px] line-clamp-2 text-neutral-600">{text}</p>
+          </div>);
+        })}
+      </div>
+    </div>);
+  }
+  if(t==='about'||t==='about_legacy') {
+    const img=ci(instance,'image')||cv('images','about');
+    const title=ci(instance,'title')||cv('about','title')||'Über mich';
+    return(<div className={wrapClass}>
+      <div className="flex gap-2 items-center">
+        <div className="h-12 w-12 rounded-full shrink-0 overflow-hidden bg-neutral-200">{img&&<img src={img} className="h-full w-full object-cover" alt=""/>}</div>
+        <div><div className="text-[11px] font-bold line-clamp-1">{title}</div><div className="mt-0.5 space-y-0.5">{[0,1,2].map(j=><div key={j} className="h-1.5 rounded-full bg-neutral-200" style={{width:`${70-j*15}%`}}/>)}</div></div>
+      </div>
+    </div>);
+  }
+  if(t==='video_carousel'||t==='video_carousel_legacy') {
+    const title=ci(instance,'title')||cv('video_section','title')||'Videos';
+    return(<div className={wrapClass}>
+      <div className="text-[11px] font-bold mb-2">{title}</div>
+      <div className="flex gap-1.5 overflow-hidden">{[1,2,3].map(i=><div key={i} className="h-12 w-20 shrink-0 rounded-[4px] bg-neutral-800 flex items-center justify-center"><span className="text-white text-[16px]">▶</span></div>)}</div>
+    </div>);
+  }
+  if(t==='testimonials'||t==='testimonials_legacy') {
+    return(<div className={wrapClass}>
+      <div className="grid grid-cols-2 gap-1.5">
+        {[1,2].map(i=><div key={i} className="rounded-[4px] bg-neutral-800 p-2 flex items-center justify-center"><span className="text-white text-[12px]">▶</span></div>)}
+      </div>
+    </div>);
+  }
+  if(t==='quiz') return(<div className={wrapClass}>
+    <div className="rounded-[4px] p-3" style={{backgroundColor:cv('colors','quiz_bg')||'#F7F7F7'}}>
+      <div className="text-[11px] font-bold text-center mb-1">Quiz</div>
+      <div className="grid grid-cols-2 gap-1.5">{[1,2].map(i=><div key={i} className="h-8 rounded-[4px] border-2 border-neutral-300 bg-white"/>)}</div>
+    </div>
+  </div>);
+  // New section types
+  if(t==='cta_banner') {
+    const bg=ci(instance,'bg_color')||brand;
+    return(<div className={wrapClass}>
+      <div className="rounded-[4px] p-3 text-center" style={{backgroundColor:bg}}>
+        <div className="text-[11px] font-bold text-white line-clamp-1">{ci(instance,'title')||'CTA Überschrift'}</div>
+        <div className="mt-1.5"><MockBtn label={ci(instance,'cta_label')||'Jetzt starten'}/></div>
+      </div>
+    </div>);
+  }
+  if(t==='stats_row') return(<div className={wrapClass}>
+    <div className="grid grid-cols-4 gap-1.5 text-center">
+      {[1,2,3,4].map(i=><div key={i} className="rounded-[4px] p-2" style={{backgroundColor:brand+'11'}}>
+        <div className="text-sm font-extrabold" style={{color:brand}}>{ci(instance,`stat_${i}_number`)||'100+'}</div>
+        <div className="text-[9px] text-neutral-500">{ci(instance,`stat_${i}_label`)||`Statistik ${i}`}</div>
+      </div>)}
+    </div>
+  </div>);
+  if(t==='faq') return(<div className={wrapClass}>
+    <div className="text-[11px] font-bold mb-2">{ci(instance,'title')||'Häufige Fragen'}</div>
+    {[1,2,3].map(i=><div key={i} className="border-b border-neutral-200 py-1.5 flex items-center justify-between">
+      <span className="text-[10px] text-neutral-700 line-clamp-1">{ci(instance+i,'question')||`Frage ${i}`}</span>
+      <span className="text-neutral-300 text-xs">+</span>
+    </div>)}
+  </div>);
+  if(t==='steps') return(<div className={wrapClass}>
+    <div className="text-[11px] font-bold mb-2">{ci(instance,'title')||'So funktioniert es'}</div>
+    <div className="space-y-1.5">{[1,2,3].map(i=><div key={i} className="flex items-center gap-2">
+      <div className="h-5 w-5 shrink-0 rounded-full flex items-center justify-center text-white text-[10px] font-bold" style={{backgroundColor:brand}}>{i}</div>
+      <span className="text-[10px] text-neutral-700 line-clamp-1">{ci(instance+i,'title')||`Schritt ${i}`}</span>
+    </div>)}</div>
+  </div>);
+  if(t==='text_columns') return(<div className={wrapClass}>
+    <div className="text-[11px] font-bold text-center mb-2">{ci(instance,'title')||'Überschrift'}</div>
+    <div className="grid grid-cols-2 gap-2">{['col_1','col_2'].map((col,i)=><div key={i}>
+      <div className="text-[10px] font-bold mb-1">{ci(instance,`${col}_title`)||`Spalte ${i+1}`}</div>
+      <div className="space-y-0.5">{[1,2,3].map(j=><div key={j} className="h-1.5 w-full rounded-full bg-neutral-200"/>)}</div>
+    </div>)}</div>
+  </div>);
+  if(t==='image_fullwidth') {
+    const img=ci(instance,'image');
+    const title=ci(instance,'title');
+    return(<div className={wrapClass}>
+      <div className="relative h-16 rounded-[4px] overflow-hidden bg-neutral-200">
+        {img&&<img src={img} className="absolute inset-0 h-full w-full object-cover" alt=""/>}
+        {title&&<div className="absolute inset-0 flex items-center justify-center bg-black/40"><span className="text-[11px] font-bold text-white">{title}</span></div>}
+      </div>
+    </div>);
+  }
+  if(t==='checklist') return(<div className={wrapClass}>
+    <div className="text-[11px] font-bold mb-2">{ci(instance,'title')||'Checkliste'}</div>
+    <div className="space-y-1">{[1,2,3,4].map(i=><div key={i} className="flex items-center gap-1.5">
+      <span className="h-3.5 w-3.5 shrink-0 rounded flex items-center justify-center text-white text-[9px]" style={{backgroundColor:brand}}>✓</span>
+      <span className="text-[10px] text-neutral-700 line-clamp-1">{ci(instance+i,'item')||`Punkt ${i}`}</span>
+    </div>)}</div>
+  </div>);
+  if(t==='image_gallery') return(<div className={wrapClass}>
+    <div className="text-[11px] font-bold mb-2">{ci(instance,'title')||'Galerie'}</div>
+    <div className="grid grid-cols-3 gap-1.5">{[1,2,3].map(i=><div key={i}>
+      <MockImg src={ci(instance+i,'image')} className="h-14 w-full"/>
+      {ci(instance+i,'caption')&&<div className="mt-0.5 text-[9px] text-center text-neutral-500 line-clamp-1">{ci(instance+i,'caption')}</div>}
+    </div>)}</div>
+  </div>);
+  if(t==='text_centered') return(<div className={wrapClass}>
+    <div className="text-center">
+      {ci(instance,'label')&&<div className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{color:brand}}>{ci(instance,'label')}</div>}
+      <div className="text-[11px] font-bold line-clamp-1">{ci(instance,'title')||'Überschrift'}</div>
+      <div className="mt-0.5 space-y-0.5 mb-2">{[1,2].map(j=><div key={j} className="h-1.5 rounded-full bg-neutral-200 mx-auto" style={{width:`${80-j*20}%`}}/>)}</div>
+      <MockBtn label={ci(instance,'cta_label')||'Mehr erfahren'}/>
+    </div>
+  </div>);
+  if(t==='pricing') return(<div className={wrapClass}>
+    <div className="text-[11px] font-bold text-center mb-2">{ci(instance,'title')||'Preisübersicht'}</div>
+    <div className="grid grid-cols-3 gap-1.5">{[1,2,3].map(i=><div key={i} className={`rounded-[4px] p-2 text-center border ${i===2?'border-2':'border-neutral-200'}`} style={i===2?{borderColor:brand}:{}}>
+      <div className="text-[9px] font-bold mb-0.5">{ci(instance+i,'name')||`Paket ${i}`}</div>
+      <div className="text-sm font-extrabold" style={{color:brand}}>{ci(instance+i,'price')||'€99'}</div>
+    </div>)}</div>
+  </div>);
+  // Fallback
+  return(<div className={`${wrapClass} text-center`}>
+    <div className="text-[10px] text-neutral-400 py-2">Vorschau nicht verfügbar</div>
+  </div>);
+}
 
 function SectionRow({section,content,dirty,onChange,onUpload,onToggleHide,isDragging,onDragStart,onDragOver,onDrop,onDragEnd,onDuplicate,onDelete,duplicating}:{
   section:SectInstance;content:CM;dirty:Set<string>;
@@ -554,6 +904,7 @@ function SectionRow({section,content,dirty,onChange,onUpload,onToggleHide,isDrag
       </div>
       {open&&fields.length>0&&(
         <div className="border-t border-neutral-100 px-4 py-3 space-y-2">
+          <SectionPreview type={section.section_type} content={content} instance={section.section_instance}/>
           {gKeys.map(gKey=>{
             const gm=GROUP_META[gKey]||{label:gKey,color:'#6B7280'};
             const gf=grouped[gKey];
