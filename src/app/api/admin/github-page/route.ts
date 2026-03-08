@@ -216,7 +216,7 @@ function generatePageFile(pageId: string, label: string): string {
 }
 
 
-}
+
 
 // ─── POST: create page ────────────────────────────────────────────────────────
 
