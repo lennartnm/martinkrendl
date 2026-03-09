@@ -69,19 +69,19 @@ export async function GET(req: NextRequest) {
     // Total all time
     const { count: total } = await supabase.from('pageviews').select('*', { count: 'exact', head: true });
 
-    // Today
-    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-    const { count: today } = await supabase.from('pageviews').select('*', { count: 'exact', head: true }).gte('created_at', todayStart.toISOString());
-
-    // Period
+    // Period (current selected range)
     const { count: period } = await supabase.from('pageviews').select('*', { count: 'exact', head: true }).gte('created_at', since).lte('created_at', until);
 
-    // Trend: compare last 7 days vs previous 7 days
-    const week1Since = new Date(Date.now() - 7 * 86400000).toISOString();
-    const week2Since = new Date(Date.now() - 14 * 86400000).toISOString();
-    const { count: w1 } = await supabase.from('pageviews').select('*', { count: 'exact', head: true }).gte('created_at', week1Since);
-    const { count: w2 } = await supabase.from('pageviews').select('*', { count: 'exact', head: true }).gte('created_at', week2Since).lt('created_at', week1Since);
-    const trend = w2 && w2 > 0 ? Math.round(((w1! - w2) / w2) * 100) : 0;
+    // Previous period (same duration, immediately before)
+    const prevUntil = new Date(new Date(since).getTime() - 1).toISOString();
+    const prevSince = new Date(new Date(since).getTime() - diffMs).toISOString();
+    const { count: prevPeriod } = await supabase.from('pageviews').select('*', { count: 'exact', head: true }).gte('created_at', prevSince).lte('created_at', prevUntil);
+
+    // Trend: current period vs previous period
+    const trend = prevPeriod && prevPeriod > 0 ? Math.round(((period! - prevPeriod) / prevPeriod) * 100) : 0;
+
+    // Avg per day in period
+    const avgPerDay = diffDays > 0 ? Math.round((period || 0) / diffDays) : 0;
 
     // Daily breakdown
     const { data: rawDaily } = await supabase
@@ -110,7 +110,7 @@ export async function GET(req: NextRequest) {
     const devices = { mobile: 0, desktop: 0, tablet: 0 };
     for (const r of rawDevices || []) { const d = r.device as 'mobile' | 'desktop' | 'tablet'; if (d in devices) devices[d]++; }
 
-    return NextResponse.json({ ok: true, total: total || 0, today: today || 0, period: period || 0, trend, daily, topPages, devices });
+    return NextResponse.json({ ok: true, total: total || 0, period: period || 0, prevPeriod: prevPeriod || 0, trend, avgPerDay, daily, topPages, devices });
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: e.message }, { status: 500 });
   }

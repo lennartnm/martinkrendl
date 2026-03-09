@@ -15,7 +15,7 @@ const brand = '#884A4A';
 type DailyEntry  = { date: string; views: number };
 type PageEntry   = { path: string; views: number };
 type Devices     = { mobile: number; desktop: number; tablet: number };
-type Stats = { total: number; today: number; period: number; trend: number; daily: DailyEntry[]; topPages: PageEntry[]; devices: Devices };
+type Stats = { total: number; period: number; prevPeriod: number; trend: number; avgPerDay: number; daily: DailyEntry[]; topPages: PageEntry[]; devices: Devices };
 type FunnelCounts = Record<string, number>;
 type FunnelDaily  = { date: string; views: number; submits: number }[];
 type ChangelogEntry = { id: string; description: string; category: string; created_at: string };
@@ -624,10 +624,10 @@ export default function AnalyticsPage() {
               {/* KPI cards */}
               <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                 {[
-                  { label: 'Gesamt Aufrufe', value: stats?.total ?? 0,  sub: 'Alle Zeit' },
-                  { label: 'Heute',          value: stats?.today ?? 0,  sub: 'Seit Mitternacht' },
-                  { label: `${diffDays} Tage`, value: stats?.period ?? 0, sub: 'Im Zeitraum' },
-                  { label: 'Trend (7 Tage)', value: stats?.trend != null ? `${stats.trend > 0 ? '+' : ''}${stats.trend}%` : '–', sub: 'vs. Vorwoche', trend: true },
+                  { label: 'Aufrufe im Zeitraum', value: stats?.period ?? 0,    sub: activeSpecial === '3h' ? 'Letzte 3 Stunden' : activeSpecial === 'today' ? 'Seit Mitternacht' : `${diffDays} Tag${diffDays !== 1 ? 'e' : ''}` },
+                  { label: 'Gesamt Aufrufe',       value: stats?.total ?? 0,    sub: 'Alle Zeit' },
+                  { label: 'Ø pro Tag',            value: stats?.avgPerDay ?? 0, sub: 'Im Zeitraum' },
+                  { label: 'Trend',                value: stats?.trend != null ? `${stats.trend > 0 ? '+' : ''}${stats.trend}%` : '–', sub: 'vs. Vorperiode', trend: true },
                 ].map(card => (
                   <div key={card.label} className="rounded-[4px] border border-neutral-200 bg-white p-5 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-wider text-[#6B6B6B]">{card.label}</p>
