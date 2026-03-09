@@ -599,6 +599,52 @@ const SECT_TYPES: {type:string;label:string;addable:boolean;fields:Field[]}[] = 
   ]},
 ];
 
+const SECT_DESCRIPTIONS:Record<string,string>={
+  'hero':'Überschrift, Unterzeile, CTA-Button und Hintergrundbild',
+  'hero_legacy':'Überschrift, Unterzeile, CTA-Button und Hintergrundbild',
+  'image_text_1':'Bild links, Überschrift, Beschreibungstext und Bullet-Points',
+  'image_text_2':'Bild rechts, Überschrift und Beschreibungstext',
+  'image_text':'Bild, Überschrift und Beschreibungstext',
+  'quote':'Zitat mit Hintergrundbild',
+  'quote_legacy':'Zitat mit Hintergrundbild',
+  'flowing_text':'Farbiger Textblock über die gesamte Breite',
+  'flowing_text_legacy':'Farbiger Textblock über die gesamte Breite',
+  'final_cta':'Abschluss-Bereich mit Überschrift und Button',
+  'final_cta_legacy':'Abschluss-Bereich mit Überschrift und Button',
+  'logos':'Logostreifen mit Referenz-Logos',
+  'logos_legacy':'Logostreifen mit Referenz-Logos',
+  'feature_cards_3':'Drei Feature-Karten nebeneinander',
+  'feature_cards_3_legacy':'Drei Feature-Karten nebeneinander',
+  'feature_cards_4':'Vier Feature-Karten mit Überschrift',
+  'feature_cards_4_legacy':'Vier Feature-Karten mit Überschrift',
+  'reviews':'Kunden-Bewertungen und Testimonials',
+  'reviews_legacy':'Kunden-Bewertungen und Testimonials',
+  'about':'Portrait-Bild und persönlicher Text',
+  'about_legacy':'Portrait-Bild und persönlicher Text',
+  'video_carousel':'Horizontales Video-Karussell',
+  'video_carousel_legacy':'Horizontales Video-Karussell',
+  'testimonials':'Video-Testimonials von Schülern',
+  'testimonials_legacy':'Video-Testimonials von Schülern',
+  'quiz':'Interaktiver Quiz-Funnel zur Lead-Generierung',
+  'component_quiz':'Quiz-Fragen, Formular und Farben',
+  'component_header':'Logo, CTA-Button und Hintergrundfarbe',
+  'component_footer':'Kontaktinfos, Links und Social Media',
+  'component_cookie':'Cookie-Zustimmungsbanner',
+  'danke_header':'Logo und Navigation der Danke-Seite',
+  'danke_hero':'Bestätigungstext und Zurück-Button',
+  'cta_banner':'Farbiger Banner mit Überschrift und Button',
+  'stats_row':'Vier Kennzahlen nebeneinander',
+  'faq':'Häufige Fragen als Akkordeon',
+  'steps':'Schritt-für-Schritt Ablauf',
+  'text_columns':'Zweispaltiger Textbereich',
+  'image_fullwidth':'Vollbreites Bild mit optionalem Overlay-Text',
+  'checklist':'Checkliste mit Häkchen-Punkten',
+  'image_gallery':'Drei Bilder nebeneinander',
+  'text_centered':'Zentrierter Textbereich mit Button',
+  'pricing':'Drei Preis-Pakete im Vergleich',
+  'global_colors':'Brand-Farbe und globale Farbpalette',
+};
+
 const SECT_MAP = Object.fromEntries(SECT_TYPES.map(s=>[s.type,s]));
 
 
@@ -759,12 +805,15 @@ function SectionPreview({type,content,instance}:{type:string;content:CM;instance
       </div>
     </div>);
   }
-  if(t==='quiz') return(<div className={wrapClass}>
-    <div className="rounded-[4px] p-3" style={{backgroundColor:cv('colors','quiz_bg')||'#F7F7F7'}}>
-      <div className="text-[11px] font-bold text-center mb-1">Quiz</div>
-      <div className="grid grid-cols-2 gap-1.5">{[1,2].map(i=><div key={i} className="h-8 rounded-[4px] border-2 border-neutral-300 bg-white"/>)}</div>
-    </div>
-  </div>);
+  if(t==='quiz') {
+    const quizBg=ci(instance,'bg_color')||cv('colors','quiz_bg')||'#F7F7F7';
+    return(<div className={wrapClass}>
+      <div className="rounded-[4px] p-3" style={{backgroundColor:quizBg}}>
+        <div className="text-[11px] font-bold text-center mb-1" style={{color:quizBg==='#F7F7F7'||quizBg.toLowerCase()==='#f7f7f7'?'#111':'#111'}}>Quiz</div>
+        <div className="grid grid-cols-2 gap-1.5">{[1,2].map(i=><div key={i} className="h-8 rounded-[4px] border-2 border-neutral-300 bg-white"/>)}</div>
+      </div>
+    </div>);
+  }
   // New section types
   if(t==='cta_banner') {
     const bg=ci(instance,'bg_color')||brand;
@@ -886,7 +935,10 @@ function SectionRow({section,content,dirty,onChange,onUpload,onToggleHide,isDrag
         <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-neutral-300 hover:text-neutral-400"/>
         <button type="button" onClick={()=>setOpen(v=>!v)} className="flex flex-1 items-center gap-2 text-left min-w-0">
           {open?<ChevronDown className="h-4 w-4 shrink-0 text-neutral-400"/>:<ChevronRight className="h-4 w-4 shrink-0 text-neutral-400"/>}
-          <span className={`truncate text-sm font-semibold ${section.hidden?'text-neutral-400 line-through':'text-neutral-800'}`}>{section.label}</span>
+          <span className="flex min-w-0 flex-col gap-0">
+            <span className={`truncate text-sm font-semibold leading-tight ${section.hidden?'text-neutral-400 line-through':'text-neutral-800'}`}>{section.label}</span>
+            {!open&&<span className="truncate text-[11px] text-neutral-400 leading-tight">{SECT_DESCRIPTIONS[section.section_type]||SECT_DESCRIPTIONS[section.section_type.replace(/_legacy$/,'')]||'Inhalt dieser Sektion bearbeiten'}</span>}
+          </span>
           {hasDirty&&<DirtyBadge/>}
           {fields.length===0&&<span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] text-neutral-400">keine Felder</span>}
         </button>
@@ -1139,8 +1191,29 @@ export default function CmsPage() {
 
   const addSection=async(type:string,label:string)=>{
     if(!selectedPage)return;
-    const res=await fetch('/api/admin/sections',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({page_id:selectedPage.id,section_type:type,label})});
-    const json=await res.json();if(json.ok)setSections(p=>[...p,json.data]);
+    try {
+      const res=await fetch('/api/admin/sections',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({page_id:selectedPage.id,section_type:type,label})});
+      const json=await res.json();
+      if(json.ok){
+        setSections(p=>[...p,json.data]);
+        // Also seed default content for this section type so it's immediately editable
+        const def=SECT_MAP[type];
+        if(def){
+          const instance=json.data.section_instance;
+          const seeds:Array<{section_key:string;field_key:string;value:string}>=[];
+          def.fields.forEach(f=>{
+            const sk=f.section_key.replace(/__INST__/g,instance);
+            seeds.push({section_key:sk,field_key:f.field_key,value:''});
+          });
+          if(seeds.length){
+            await fetch('/api/admin/content',{method:'POST',headers:{'Content-Type':'application/json'},
+              body:JSON.stringify({page:selectedPage.id,updates:seeds})});
+          }
+        }
+      } else {
+        setError(json.error||'Sektion konnte nicht hinzugefügt werden');
+      }
+    } catch(e:any){setError(e.message);}
   };
 
   const totalDirty=dirty.size;
@@ -1196,18 +1269,7 @@ export default function CmsPage() {
                     </div>
                   ))}
                 </>}
-                {quizPages.length>0&&<>
-                  <div className="mx-3 my-1 border-t border-neutral-100"/>
-                  <div className="px-3 pt-1.5 pb-1.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Quiz-Varianten</div>
-                  {quizPages.map(p=>(
-                    <div key={p.id} onClick={()=>{setSelectedPage(p);setPageDropOpen(false);}} className={`group flex cursor-pointer items-center gap-2.5 px-3 py-2.5 transition ${selectedPage?.id===p.id?'bg-[#FDF8F8]':'hover:bg-neutral-50'}`}>
-                      <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${selectedPage?.id===p.id?'bg-[#884A4A]/10':'bg-neutral-100'}`}>
-                        <Hash className={`h-3.5 w-3.5 ${selectedPage?.id===p.id?'text-[#884A4A]':'text-neutral-400'}`}/>
-                      </div>
-                      <span className={`flex-1 min-w-0 truncate text-sm ${selectedPage?.id===p.id?'font-semibold text-[#884A4A]':'font-medium text-neutral-700'}`}>{p.label}</span>
-                    </div>
-                  ))}
-                </>}
+
                 {compPages.length>0&&<>
                   <div className="mx-3 my-1 border-t border-neutral-100"/>
                   <div className="px-3 pt-1.5 pb-1.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Komponenten</div>
