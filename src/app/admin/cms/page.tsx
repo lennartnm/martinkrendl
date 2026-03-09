@@ -323,6 +323,12 @@ const SECT_TYPES: {type:string;label:string;addable:boolean;fields:Field[]}[] = 
     {section_key:'links',field_key:'header_cta',label:'Button Link',type:'link',group:'links'},
     {section_key:'colors',field_key:'header_bg',label:'Hintergrundfarbe',type:'color',group:'colors'},
   ]},
+  {type:'component_topbar',label:'TopHeader',addable:false,fields:[
+    {section_key:'header',field_key:'topbar_text',label:'Text',type:'text',group:'text'},
+    {section_key:'header',field_key:'topbar_bg',label:'Hintergrundfarbe',type:'color',group:'colors'},
+    {section_key:'header',field_key:'topbar_color',label:'Textfarbe',type:'color',group:'colors'},
+    {section_key:'header',field_key:'show_topbar',label:'Sichtbar (true/false)',type:'text',group:'settings',hint:'true oder false'},
+  ]},
   {type:'component_footer',label:'Footer',addable:false,fields:[
     {section_key:'footer',field_key:'logo_text',label:'Logo Text',type:'text',group:'text'},
     {section_key:'footer',field_key:'tagline',label:'Tagline',type:'text',group:'text'},
@@ -628,6 +634,7 @@ const SECT_DESCRIPTIONS:Record<string,string>={
   'quiz':'Interaktiver Quiz-Funnel zur Lead-Generierung',
   'component_quiz':'Quiz-Fragen, Formular und Farben',
   'component_header':'Logo, CTA-Button und Hintergrundfarbe',
+  'component_topbar':'Ankündigungsleiste oben auf der Seite',
   'component_footer':'Kontaktinfos, Links und Social Media',
   'component_cookie':'Cookie-Zustimmungsbanner',
   'danke_header':'Logo und Navigation der Danke-Seite',
@@ -811,6 +818,17 @@ function SectionPreview({type,content,instance}:{type:string;content:CM;instance
       <div className="rounded-[4px] p-3" style={{backgroundColor:quizBg}}>
         <div className="text-[11px] font-bold text-center mb-1" style={{color:quizBg==='#F7F7F7'||quizBg.toLowerCase()==='#f7f7f7'?'#111':'#111'}}>Quiz</div>
         <div className="grid grid-cols-2 gap-1.5">{[1,2].map(i=><div key={i} className="h-8 rounded-[4px] border-2 border-neutral-300 bg-white"/>)}</div>
+      </div>
+    </div>);
+  }
+  if(t==='component_topbar') {
+    const text=cv('header','topbar_text')||'Gesangsunterricht in Steyr oder online 🎶';
+    const bg=cv('header','topbar_bg')||'#e0e0e0';
+    const color=cv('header','topbar_color')||'#333333';
+    return(<div className={wrapClass}>
+      <div className="flex items-center justify-center gap-2 rounded-[4px] px-3 py-2 text-[11px] font-medium" style={{backgroundColor:bg,color}}>
+        <span className="line-clamp-1">{text}</span>
+        <span className="text-[10px] opacity-60">✕</span>
       </div>
     </div>);
   }
@@ -1063,12 +1081,14 @@ function FontPanel({currentFont,onSave}:{currentFont:string;onSave:(f:string)=>v
 
 const COMPONENT_PAGES: CmsPage[] = [
   {id:'component_header',label:'Header',path:'(Komponente)',is_system:true},
+  {id:'component_topbar',label:'TopHeader',path:'(Komponente)',is_system:true},
   {id:'component_footer',label:'Footer',path:'(Komponente)',is_system:true},
   {id:'component_cookie',label:'Cookie Banner',path:'(Komponente)',is_system:true},
   {id:'component_quiz',label:'Quiz (Standard)',path:'(Komponente)',is_system:true},
 ];
 const COMPONENT_SECTIONS: Record<string,SectInstance> = {
   'component_header':{id:'virtual_header',page_id:'component_header',section_instance:'header',section_type:'component_header',label:'Header',sort_order:0,hidden:false},
+  'component_topbar':{id:'virtual_topbar',page_id:'component_topbar',section_instance:'topbar',section_type:'component_topbar',label:'TopHeader',sort_order:0,hidden:false},
   'component_footer':{id:'virtual_footer',page_id:'component_footer',section_instance:'footer',section_type:'component_footer',label:'Footer',sort_order:0,hidden:false},
   'component_cookie':{id:'virtual_cookie',page_id:'component_cookie',section_instance:'cookie',section_type:'component_cookie',label:'Cookie Banner',sort_order:0,hidden:false},
   'component_quiz':{id:'virtual_quiz',page_id:'component_quiz',section_instance:'quiz_section',section_type:'component_quiz',label:'Quiz Einstellungen',sort_order:0,hidden:false},
@@ -1090,6 +1110,7 @@ export default function CmsPage() {
   const [currentFont,setCurrentFont]=useState('Open Sans');
   const [headerEnabled,setHeaderEnabled]=useState(true);
   const [footerEnabled,setFooterEnabled]=useState(true);
+  const [topbarEnabled,setTopbarEnabled]=useState(true);
   const draggingId=useRef<string|null>(null);
   const pageDropRef=useRef<HTMLDivElement>(null);
 
@@ -1105,10 +1126,10 @@ export default function CmsPage() {
   useEffect(()=>{
     fetch('/api/admin/pages').then(r=>r.json()).then(j=>{
       if(j.ok&&j.data?.length){
-        fetch('/api/admin/quiz-configs').then(r2=>r2.json()).then(j2=>{
-          const qv:CmsPage[]=(j2.data||[]).filter((q:any)=>q.id!=='component_quiz').map((q:any)=>({...q,path:'(Quiz-Variante)',is_system:false}));
-          setPages([...j.data,...COMPONENT_PAGES,...qv]);setSelectedPage(j.data[0]);
-        }).catch(()=>{setPages([...j.data,...COMPONENT_PAGES]);setSelectedPage(j.data[0]);});
+        // Filter out test/quiz_* pages - only real pages + components
+        const realPagesData = j.data.filter((p:any)=>!p.id.startsWith('quiz_')&&p.id!=='p/test'&&p.id!=='test');
+        setPages([...realPagesData,...COMPONENT_PAGES]);
+        setSelectedPage(realPagesData[0]||null);
       }
     }).catch(()=>{});
   },[]);
@@ -1118,7 +1139,7 @@ export default function CmsPage() {
 
   const loadPage=useCallback(async(page:CmsPage)=>{
     setLoading(true);setError('');setDirty(new Set());
-    setHeaderEnabled(true);setFooterEnabled(true);
+    setHeaderEnabled(true);setFooterEnabled(true);setTopbarEnabled(true);
     try {
       if(isComp(page.id)&&!isQuiz(page.id)){
         const vs=COMPONENT_SECTIONS[page.id];setSections(vs?[vs]:[]);
@@ -1136,8 +1157,10 @@ export default function CmsPage() {
           // Load header/footer state from layout settings in content
           const showH=(cR.data||[]).find((e:any)=>e.section_key==='layout'&&e.field_key==='show_header');
           const showF=(cR.data||[]).find((e:any)=>e.section_key==='layout'&&e.field_key==='show_footer');
+          const showT=(cR.data||[]).find((e:any)=>e.section_key==='layout'&&e.field_key==='show_topbar');
           setHeaderEnabled(showH?showH.value!=='false':true);
           setFooterEnabled(showF?showF.value!=='false':true);
+          setTopbarEnabled(showT?showT.value!=='false':true);
         }
       }
     } catch(e:any){setError(e.message);}
@@ -1159,7 +1182,7 @@ export default function CmsPage() {
         if(!(await res.json()).ok)throw new Error('Content-Fehler');
       }
       if(!isComp(selectedPage.id)&&!isQuiz(selectedPage.id)){
-        await fetch('/api/admin/sections',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({page_id:selectedPage.id,updates:sections.map((s,i)=>({id:s.id,sort_order:i,hidden:s.hidden})),settings:{header_enabled:headerEnabled,footer_enabled:footerEnabled}})});
+        await fetch('/api/admin/sections',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({page_id:selectedPage.id,updates:sections.map((s,i)=>({id:s.id,sort_order:i,hidden:s.hidden})),settings:{header_enabled:headerEnabled,footer_enabled:footerEnabled,topbar_enabled:topbarEnabled}})});
       }
       setDirty(new Set());setSavedAt(new Date());
     } catch(e:any){setError(e.message);}
@@ -1220,7 +1243,7 @@ export default function CmsPage() {
   const isNormal=selectedPage&&!isComp(selectedPage.id)&&!isQuiz(selectedPage.id);
   const realPages=pages.filter(p=>!p.id.startsWith('component_')&&!p.id.startsWith('quiz_'));
   const compPages=pages.filter(p=>p.id.startsWith('component_'));
-  const quizPages=pages.filter(p=>p.id.startsWith('quiz_'));
+
 
   return (
     <>
@@ -1295,7 +1318,7 @@ export default function CmsPage() {
         {isNormal&&(
           <div className="flex items-center gap-5 rounded-[4px] border border-neutral-200 bg-white px-4 py-3">
             <span className="text-sm font-semibold text-neutral-600">Sichtbar auf dieser Seite:</span>
-            {([['Header',headerEnabled,setHeaderEnabled],['Footer',footerEnabled,setFooterEnabled]] as const).map(([lbl,val,setter])=>(
+            {([['TopHeader',topbarEnabled,setTopbarEnabled],['Header',headerEnabled,setHeaderEnabled],['Footer',footerEnabled,setFooterEnabled]] as const).map(([lbl,val,setter])=>(
               <label key={lbl} className="flex cursor-pointer items-center gap-2.5 select-none">
                 <button type="button" role="switch" aria-checked={val} onClick={()=>{(setter as (v:boolean)=>void)(!val);setDirty(p=>new Set([...p,'__settings__']));}}
                   className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none ${val?'bg-[#884A4A]':'bg-neutral-200'}`}>

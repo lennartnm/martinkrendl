@@ -59,6 +59,7 @@ export async function PATCH(req: NextRequest) {
     const settingsEntries = [
       { field_key: 'show_header', value: String(settings.header_enabled !== false) },
       { field_key: 'show_footer', value: String(settings.footer_enabled !== false) },
+      { field_key: 'show_topbar', value: String(settings.topbar_enabled !== false) },
     ];
     for (const entry of settingsEntries) {
       await supabase.from('cms_content').upsert({

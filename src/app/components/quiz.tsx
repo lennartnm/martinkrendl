@@ -72,6 +72,8 @@ function IconAnswerCard({title,icon:Icon,onClick,brand}:{title:string;icon:React
 
 function trackFunnelStep(step:string, quizId:string) {
   try {
+    // Only track on public-facing pages, never in the admin panel
+    if(typeof window!=='undefined'&&window.location.pathname.startsWith('/admin'))return;
     const sessionId=(typeof window!=='undefined'&&(window as any).__quizSessionId)||null;
     fetch('/api/admin/quiz-funnel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({step,session_id:sessionId,quiz_id:quizId})}).catch(()=>{});
   } catch {}
