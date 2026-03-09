@@ -83,5 +83,20 @@ export async function POST(req: NextRequest) {
     revalidatePath('/danke');
   }
 
+  // Mirror global color fields (section_key='colors') to page='home' so the live site always reads them
+  const colorUpdates = body.updates.filter((u: { section_key: string }) => u.section_key === 'colors');
+  if (colorUpdates.length > 0 && body.page !== 'home') {
+    const mirrorData = colorUpdates.map((u: { field_key: string; value: string }) => ({
+      page: 'home',
+      section_key: 'colors',
+      field_key: u.field_key,
+      value: String(u.value).trim(),
+      updated_at: new Date().toISOString(),
+      updated_by: userId || null,
+    }));
+    await supabase.from('cms_content').upsert(mirrorData, { onConflict: 'page,section_key,field_key' });
+    revalidatePath('/');
+  }
+
   return NextResponse.json({ ok: true, revalidated: pagePath });
 }

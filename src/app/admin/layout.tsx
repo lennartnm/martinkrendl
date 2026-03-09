@@ -1,6 +1,7 @@
 'use client';
 // src/app/admin/layout.tsx
 
+import React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
@@ -100,6 +101,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return 'Admin';
   })();
 
+  // Dynamic browser tab title
+  React.useEffect(() => {
+    document.title = `${pageTitle} – Martin Krendl Admin`;
+  }, [pageTitle]);
+
   return (
     <div
       className="flex min-h-screen"
@@ -161,8 +167,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
-        {/* Logout */}
-        <div className="border-t border-white/10 p-3">
+        {/* Powered by + Logout */}
+        <div className="border-t border-white/10 p-3 space-y-1">
+          <a href="https://digitalisierungshilfe.at" target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 py-2 rounded-[4px] hover:bg-white/5 transition group">
+            <svg className="h-3.5 w-3.5 shrink-0 text-white/30 group-hover:text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span className="text-[10px] text-white/30 group-hover:text-white/50 leading-tight">powered by<br/><span className="font-semibold text-white/40 group-hover:text-white/60">digitalisierungshilfe.at</span></span>
+          </a>
           <button onClick={handleLogout} disabled={loggingOut}
             className="flex w-full items-center gap-3 rounded-[4px] px-3 py-2.5 text-sm font-semibold text-white/60 transition hover:bg-white/5 hover:text-white disabled:opacity-40">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

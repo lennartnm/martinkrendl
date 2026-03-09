@@ -903,19 +903,14 @@ function SectionPreview({type,content,instance}:{type:string;content:CM;instance
   }
   if(t==='quiz') {
     const quizBg=ci(instance,'bg_color')||cv('colors','quiz_bg')||'#F7F7F7';
-    const q1=cv('quiz_q1','question')||'Bereit für deine unverbindliche Probestunde?';
+    const title=cv('quiz_section','title')||'Bereit für deine Probestunde?';
+    const subtitle=cv('quiz_section','subtitle')||'Beantworte 3 kurze Fragen – dauert nur 1 Minute.';
     const H=220;
     return outer(H,
-      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:quizBg,padding:'28px 140px',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:14}}>
-        <div style={{fontSize:20,fontWeight:800,color:'#111',textAlign:'center'}}>{q1}</div>
-        <div style={{fontSize:12,color:lightGray,textAlign:'center'}}>Tippe einfach auf eine Antwort, um deine Anfrage zu starten.</div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginTop:8,width:'100%'}}>
-          {[cv('quiz_q1','option_1')||'Ja, ich bin gespannt',cv('quiz_q1','option_2')||'Noch unsicher'].map((opt,i)=>(
-            <div key={i} style={{borderRadius:4,border:`2px solid ${i===0?brand:'#e5e7eb'}`,backgroundColor:i===0?brand+'10':'white',padding:'12px 8px',textAlign:'center',fontWeight:600,fontSize:13,color:i===0?brand:'#555'}}>
-              {opt}
-            </div>
-          ))}
-        </div>
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:quizBg,padding:'28px 140px',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12}}>
+        <div style={{fontSize:20,fontWeight:800,color:'#111',textAlign:'center',lineHeight:1.3}}>{title}</div>
+        {subtitle&&<div style={{fontSize:12,color:lightGray,textAlign:'center',lineHeight:1.5}}>{subtitle}</div>}
+        <div style={{backgroundColor:brand,color:'white',borderRadius:4,padding:'10px 24px',fontWeight:700,fontSize:13,marginTop:8}}>Quiz starten</div>
       </div>
     );
   }
@@ -976,18 +971,18 @@ function SectionPreview({type,content,instance}:{type:string;content:CM;instance
     );
   }
   if(t==='component_quiz') {
-    const q1=cv('quiz_q1','question')||'Bereit für deine unverbindliche Probestunde?';
+    // component_quiz: title/subtitle stored under quiz_section::{field}, bg under colors::quiz_bg
+    const title=cv('quiz_section','title')||'Bereit für deine Probestunde?';
+    const subtitle=cv('quiz_section','subtitle')||'Beantworte 3 kurze Fragen – dauert nur 1 Minute.';
     const quizBg=cv('colors','quiz_bg')||'#F7F7F7';
-    const H=200;
+    const btnLabel=cv('quiz_section','cta_label')||'Starten';
+    const H=220;
     return outer(H,
-      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:quizBg,padding:'28px 140px',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:14}}>
-        <div style={{fontSize:18,fontWeight:800,color:'#111',textAlign:'center'}}>{q1}</div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginTop:8,width:'100%'}}>
-          {[cv('quiz_q1','option_1')||'Ja, ich bin gespannt',cv('quiz_q1','option_2')||'Noch unsicher'].map((opt,i)=>(
-            <div key={i} style={{border:`2px solid ${i===0?brand:'#e5e7eb'}`,backgroundColor:i===0?brand+'15':'white',borderRadius:4,padding:'12px',textAlign:'center',fontWeight:600,fontSize:12,color:i===0?brand:'#555'}}>
-              {opt}
-            </div>
-          ))}
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:quizBg,padding:'28px 140px',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12}}>
+        <div style={{fontSize:20,fontWeight:800,color:'#111',textAlign:'center',lineHeight:1.3}}>{title}</div>
+        {subtitle&&<div style={{fontSize:12,color:'#6b7280',textAlign:'center',lineHeight:1.5,maxWidth:500}}>{subtitle}</div>}
+        <div style={{display:'flex',gap:12,marginTop:6}}>
+          <div style={{backgroundColor:brand,color:'white',borderRadius:4,padding:'10px 24px',fontWeight:700,fontSize:13}}>{btnLabel}</div>
         </div>
       </div>
     );
