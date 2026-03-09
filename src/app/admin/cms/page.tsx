@@ -1303,45 +1303,53 @@ function AddSectionDialog({onAdd,onClose}:{onAdd:(type:string,label:string)=>voi
 }
 
 // Build a single Google Fonts URL that loads ALL fonts at once for previews
+// Build URL loading all fonts at once (Google Fonts supports up to ~100 families per request)
 const ALL_FONTS_URL = 'https://fonts.googleapis.com/css2?' +
-  GOOGLE_FONTS.map(f=>`family=${encodeURIComponent(f.name)}:wght@400;600;700;800`).join('&') +
-  '&display=swap';
+  GOOGLE_FONTS.map(f=>`family=${encodeURIComponent(f.name)}:ital,wght@0,400;0,700;0,800`).join('&') +
+  '&display=block';
 
 function FontPanel({currentFont,onSave}:{currentFont:string;onSave:(f:string)=>void}) {
   const [sel,setSel]=useState(currentFont);
   const [saving,setSaving]=useState(false);
-  const [fontsLoaded,setFontsLoaded]=useState(false);
+  const [ready,setReady]=useState(false);
   useEffect(()=>{setSel(currentFont);},[currentFont]);
-  // Load all fonts in a single request so previews actually render
   useEffect(()=>{
-    if(document.getElementById('cms-all-fonts-link'))return setFontsLoaded(true);
-    const link=document.createElement('link');
-    link.id='cms-all-fonts-link';link.rel='stylesheet';link.href=ALL_FONTS_URL;
-    link.onload=()=>setFontsLoaded(true);
-    document.head.appendChild(link);
+    // Inject stylesheet + wait for document.fonts to be ready
+    const inject=()=>{
+      if(!document.getElementById('cms-all-fonts')){
+        const s=document.createElement('link');s.id='cms-all-fonts';s.rel='stylesheet';
+        s.href=ALL_FONTS_URL;document.head.prepend(s);
+      }
+      // Attempt to load each font explicitly so browser actually downloads them
+      Promise.allSettled(
+        GOOGLE_FONTS.map(f=>document.fonts.load(`700 14px '${f.name}'`))
+      ).then(()=>setReady(true));
+    };
+    if(document.fonts){inject();}else{setReady(true);}
   },[]);
   const selFont=GOOGLE_FONTS.find(f=>f.name===sel)||GOOGLE_FONTS[0];
   const save=async()=>{setSaving(true);await fetch('/api/admin/font-settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({font:sel,url:selFont.url})});setSaving(false);onSave(sel);};
   return (
     <div className="rounded-[4px] border border-neutral-200 bg-white p-5 space-y-4 shadow-sm">
       <div className="flex items-center gap-2"><Type className="h-4 w-4 text-neutral-400"/><h3 className="font-bold text-neutral-800 text-sm">Globale Schriftart</h3><span className="ml-auto text-xs text-neutral-400">Gilt für alle öffentlichen Seiten</span></div>
-      {!fontsLoaded&&<p className="text-xs text-neutral-400 text-center py-2">Schriftarten werden geladen…</p>}
-      <div className={`grid grid-cols-1 gap-1.5 max-h-64 overflow-y-auto pr-1 transition-opacity ${fontsLoaded?'opacity-100':'opacity-0'}`}>
+      {!ready&&<div className="flex items-center justify-center gap-2 py-3 text-xs text-neutral-400"><Loader2 className="h-3.5 w-3.5 animate-spin"/>Schriftarten werden geladen…</div>}
+      <div className={`grid grid-cols-1 gap-1 max-h-72 overflow-y-auto pr-1 ${ready?'':'hidden'}`}>
         {GOOGLE_FONTS.map(f=>(
           <button key={f.name} type="button" onClick={()=>setSel(f.name)}
             className={`rounded-[4px] border px-4 py-2.5 text-left transition flex items-center gap-3 ${sel===f.name?'border-[#884A4A] bg-[#FDF8F8]':'border-neutral-100 hover:border-neutral-300 hover:bg-neutral-50'}`}>
-            <span className={`text-xs w-24 shrink-0 ${sel===f.name?'font-semibold text-[#884A4A]':'text-neutral-400'}`}>{f.name}</span>
-            {/* Preview text in THIS font - works because all fonts are loaded */}
-            <span style={{fontFamily:`'${f.name}', sans-serif`,fontSize:14,color:'#374151',flex:1}}>{f.preview}</span>
+            <span className={`text-xs w-28 shrink-0 ${sel===f.name?'font-semibold text-[#884A4A]':'text-neutral-400'}`}>{f.name}</span>
+            <span style={{fontFamily:`'${f.name}',sans-serif`,fontSize:15,color:'#111827',flex:1,lineHeight:'1.4'}}>{f.preview}</span>
             {sel===f.name&&<CheckCircle className="h-3.5 w-3.5 shrink-0 ml-auto text-[#884A4A]"/>}
           </button>
         ))}
       </div>
-      <div className="rounded-[4px] bg-neutral-50 border border-neutral-100 px-4 py-3">
-        <p className="text-[10px] uppercase tracking-wider text-neutral-400 mb-2">Vorschau — {sel}</p>
-        <p className="text-xl font-bold leading-tight" style={{fontFamily:`'${sel}', sans-serif`}}>Sing freier, sicherer</p>
-        <p className="text-sm text-neutral-500 mt-1" style={{fontFamily:`'${sel}', sans-serif`}}>und mit mehr Ausdruck durch die Voiceation Methode.</p>
-      </div>
+      {ready&&(
+        <div className="rounded-[4px] bg-neutral-50 border border-neutral-100 px-4 py-3 space-y-1">
+          <p className="text-[10px] uppercase tracking-wider text-neutral-400">Vorschau — {sel}</p>
+          <p className="text-xl font-bold" style={{fontFamily:`'${sel}',sans-serif`}}>Sing freier, sicherer</p>
+          <p className="text-sm text-neutral-500" style={{fontFamily:`'${sel}',sans-serif`}}>und mit mehr Ausdruck durch die Voiceation Methode.</p>
+        </div>
+      )}
       <button onClick={save} disabled={saving} className="h-10 w-full rounded-[4px] text-sm font-semibold text-white disabled:opacity-40 flex items-center justify-center gap-2" style={{backgroundColor:brand}}>
         {saving?<Loader2 className="h-4 w-4 animate-spin"/>:<Save className="h-4 w-4"/>}{saving?'Wird gespeichert...':'Schriftart übernehmen'}
       </button>
@@ -1352,7 +1360,6 @@ function FontPanel({currentFont,onSave}:{currentFont:string;onSave:(f:string)=>v
 function ColorPanel({content,onChange,onSave,saving}:{content:CM;onChange:(k:string,v:string)=>void;onSave:()=>void;saving:boolean}) {
   const fields=[
     {key:'colors::brand',     label:'Brand-Farbe',       hint:'Buttons, Akzente, Links'},
-    {key:'colors::quiz_bg',   label:'Quiz Hintergrund',  hint:'Hintergrundfarbe der Quiz-Sektion'},
     {key:'colors::graphite',  label:'Textfarbe dunkel',  hint:'Haupt-Fließtext'},
     {key:'colors::dark_gray', label:'Textfarbe mittel',  hint:'Sekundäre Überschriften'},
     {key:'colors::light_gray',label:'Textfarbe hell',    hint:'Untertitel, Subtexte'},
@@ -1567,7 +1574,7 @@ export default function CmsPage() {
 
   return (
     <>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(currentFont)}:wght@400;600;700;800&display=swap'); *{font-family:'${currentFont}',sans-serif!important}`}</style>
+
 
       <div className="space-y-5 pb-10">
         <div className="flex flex-wrap items-start justify-between gap-4">

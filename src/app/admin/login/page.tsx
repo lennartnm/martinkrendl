@@ -1,7 +1,7 @@
 'use client';
 // src/app/admin/login/page.tsx — Enhanced login with password reset
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 const brand = '#884A4A';
@@ -15,6 +15,16 @@ export default function AdminLoginPage() {
   const [mode, setMode] = useState<'login'|'forgot'|'forgot_sent'>('login');
   const [resetEmail, setResetEmail] = useState('');
   const [resetToken, setResetToken] = useState('');
+  const [fontStyle, setFontStyle] = useState('');
+
+  // Load the same global font used in the admin panel
+  useEffect(() => {
+    fetch('/api/admin/font-settings').then(r => r.json()).then(j => {
+      const font = j.font || 'Open Sans';
+      const url = j.url || `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;600;700;800&display=swap`;
+      setFontStyle(`@import url('${url}'); * { font-family: '${font}', sans-serif !important; }`);
+    }).catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +52,7 @@ export default function AdminLoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4" style={{backgroundColor:'#F7F4F4'}}>
+      {fontStyle && <style>{fontStyle}</style>}
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-[4px]" style={{backgroundColor:brand}}>

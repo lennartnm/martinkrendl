@@ -247,15 +247,17 @@ export default function SeoPage() {
               <h2 className="font-bold text-[#2F2F2F]">{group.title}</h2>
               <p className="mt-0.5 text-xs text-[#6B6B6B]">{group.description}</p>
             </div>
-            <div className="grid gap-5 p-5 md:grid-cols-2">
+            <div className="grid gap-5 p-5 md:grid-cols-2 md:items-start">
               {group.fields.map((field) => {
-                const val   = seo[field.key] ?? '';
+                const val     = seo[field.key] ?? '';
                 const isDirty = dirty.has(field.key);
-                const isWide  = field.type === 'textarea';
+                // Textareas and URL fields with hints are always full width to prevent misalignment
+                const isWide  = field.type === 'textarea' || field.type === 'url';
 
                 return (
-                  <div key={field.key} className={isWide ? 'md:col-span-2' : ''}>
-                    <div className="mb-1.5 flex items-center gap-2">
+                  <div key={field.key} className={`flex flex-col gap-1.5 ${isWide ? 'md:col-span-2' : ''}`}>
+                    {/* Label row — fixed min-height so columns stay aligned */}
+                    <div className="flex min-h-[24px] flex-wrap items-center gap-2">
                       <label className="text-sm font-semibold text-[#2F2F2F]">{field.label}</label>
                       {field.recommended && (
                         <span className="text-[10px] text-[#6B6B6B]">({field.recommended})</span>
@@ -267,7 +269,8 @@ export default function SeoPage() {
                         </span>
                       )}
                     </div>
-                    {field.hint && <p className="mb-1.5 text-xs text-[#6B6B6B]">{field.hint}</p>}
+                    {/* Hint — always reserve space with min-height */}
+                    <p className="min-h-[16px] text-xs text-[#6B6B6B] leading-tight">{field.hint ?? ''}</p>
 
                     {field.type === 'select' ? (
                       <SelectField value={val} options={field.options!} onChange={(v) => handleChange(field.key, v)} isDirty={isDirty} />
