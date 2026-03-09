@@ -220,7 +220,12 @@ function generatePageFile(pageId: string, label: string): string {
 
 // ─── POST: create page ────────────────────────────────────────────────────────
 
-export async function POST(req: NextRequest) {
+// POST disabled
+export async function POST() {
+  return NextResponse.json({ error: "Automatic page creation is disabled. Add pages directly in the codebase." }, { status: 405 });
+}
+
+export async function _POST_DISABLED(req: NextRequest) {
   const session = await getAdminSession();
   if (!session) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   if (!GITHUB_TOKEN || !GITHUB_REPO) return NextResponse.json({ error: 'GITHUB_TOKEN und GITHUB_REPO env vars fehlen' }, { status: 500 });

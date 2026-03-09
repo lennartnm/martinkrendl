@@ -15,7 +15,15 @@ export async function GET() {
   return NextResponse.json({ ok: true, data });
 }
 
-export async function POST(req: NextRequest) {
+// POST (page creation/duplication) has been disabled.
+export async function POST() {
+  return NextResponse.json(
+    { error: 'Page creation is disabled. Pages are managed directly in the codebase.' },
+    { status: 405 }
+  );
+}
+
+export async function _POST_DISABLED(req: NextRequest) {
   const session = await getAdminSession();
   if (!session) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   const body = await req.json().catch(() => ({}));

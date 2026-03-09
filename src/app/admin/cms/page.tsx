@@ -6,7 +6,7 @@ import {
   Save, CheckCircle, AlertCircle, Loader2, Upload, Eye, EyeOff,
   ChevronDown, ChevronRight, Palette, Image as ImageIcon, Video,
   Link as LinkIcon, Type, GripVertical, FileText, Plus, Trash2,
-  Globe, X, ArrowRight, Copy, Bold, Italic, Layout, Settings,
+  Globe, X, ArrowRight, Bold, Italic, Layout, Settings,
   AlignLeft, Hash,
 } from 'lucide-react';
 
@@ -849,13 +849,13 @@ function SectionPreview({type,content,instance}:{type:string;content:CM;instance
   </div>);
 }
 
-function SectionRow({section,content,dirty,onChange,onUpload,onToggleHide,isDragging,onDragStart,onDragOver,onDrop,onDragEnd,onDuplicate,onDelete,duplicating}:{
+function SectionRow({section,content,dirty,onChange,onUpload,onToggleHide,isDragging,onDragStart,onDragOver,onDrop,onDragEnd,onDelete}:{
   section:SectInstance;content:CM;dirty:Set<string>;
   onChange:(key:string,val:string)=>void;
   onUpload:(file:File)=>Promise<string>;
   onToggleHide:()=>void;isDragging:boolean;
   onDragStart:()=>void;onDragOver:(e:React.DragEvent)=>void;onDrop:()=>void;onDragEnd:()=>void;
-  onDuplicate:()=>void;onDelete:()=>void;duplicating?:boolean;
+  onDelete:()=>void;
 }) {
   const [open,setOpen]=useState(false);
   const [openGroups,setOpenGroups]=useState<Record<string,boolean>>({});
@@ -881,7 +881,7 @@ function SectionRow({section,content,dirty,onChange,onUpload,onToggleHide,isDrag
 
   return (
     <div draggable onDragStart={onDragStart} onDragOver={onDragOver} onDrop={onDrop} onDragEnd={onDragEnd}
-      className={`rounded-[4px] border transition ${isDragging?'opacity-40 scale-[0.98]':''} ${duplicating?'opacity-60':''} ${section.hidden?'border-dashed border-neutral-200 bg-neutral-50/50':'border-neutral-200 bg-white'}`}>
+      className={`rounded-[4px] border transition ${isDragging?'opacity-40 scale-[0.98]':''} ${section.hidden?'border-dashed border-neutral-200 bg-neutral-50/50':'border-neutral-200 bg-white'}`}>
       <div className="flex items-center gap-2 px-4 py-3">
         <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-neutral-300 hover:text-neutral-400"/>
         <button type="button" onClick={()=>setOpen(v=>!v)} className="flex flex-1 items-center gap-2 text-left min-w-0">
@@ -891,9 +891,7 @@ function SectionRow({section,content,dirty,onChange,onUpload,onToggleHide,isDrag
           {fields.length===0&&<span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] text-neutral-400">keine Felder</span>}
         </button>
         <div className="flex shrink-0 items-center gap-0.5">
-          <button type="button" onClick={onDuplicate} disabled={duplicating} title="Duplizieren" className="flex h-7 w-7 items-center justify-center rounded text-neutral-300 transition hover:bg-neutral-100 hover:text-[#884A4A] disabled:opacity-40">
-            {duplicating?<Loader2 className="h-3.5 w-3.5 animate-spin text-[#884A4A]"/>:<Copy className="h-3.5 w-3.5"/>}
-          </button>
+
           <button type="button" onClick={onToggleHide} title={section.hidden?'Einblenden':'Ausblenden'} className="flex h-7 w-7 items-center justify-center rounded text-neutral-300 transition hover:bg-neutral-100 hover:text-[#884A4A]">
             {section.hidden?<Eye className="h-3.5 w-3.5"/>:<EyeOff className="h-3.5 w-3.5"/>}
           </button>
@@ -973,147 +971,6 @@ function AddSectionDialog({onAdd,onClose}:{onAdd:(type:string,label:string)=>voi
   );
 }
 
-function NewPageDialog({pages,onAdd,onClose}:{pages:CmsPage[];onAdd:(label:string,path:string,sourceId?:string)=>void;onClose:()=>void}) {
-  const [label,setLabel]=useState('');
-  const [slug,setSlug]=useState('');
-  const [src,setSrc]=useState('');
-  const [slugTouched,setSlugTouched]=useState(false);
-  const realPages=pages.filter(p=>!p.id.startsWith('component_')&&!p.id.startsWith('quiz_'));
-
-  const toSlug=(v:string)=>v.toLowerCase()
-    .replace(/[äöüß]/g,(c:string)=>({'ä':'ae','ö':'oe','ü':'ue','ß':'ss'}[c]||c))
-    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
-
-  const handleLabel=(v:string)=>{setLabel(v);if(!slugTouched)setSlug(toSlug(v));};
-  const handleSlug=(v:string)=>{setSlugTouched(true);setSlug(v.toLowerCase().replace(/[^a-z0-9-]/g,'').replace(/^-+/,''));};
-  const canSubmit=label.trim().length>0&&slug.length>0;
-  const finalPath=`/p/${slug}`;
-
-  return (
-    <Modal title="" onClose={onClose}>
-      <div className="mb-5">
-        <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl" style={{backgroundColor:'#884A4A18'}}>
-          <FileText className="h-4 w-4" style={{color:'#884A4A'}}/>
-        </div>
-        <h2 className="text-base font-bold text-neutral-900">Neue Seite anlegen</h2>
-        <p className="mt-0.5 text-xs text-neutral-500">Seite ist sofort nach dem Anlegen online erreichbar.</p>
-      </div>
-
-      <div className="space-y-4">
-        {/* Name */}
-        <div>
-          <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-neutral-400">Seitenname</label>
-          <input autoFocus value={label} onChange={e=>handleLabel(e.target.value)}
-            placeholder="z.B. Herbst Landingpage"
-            className="h-10 w-full rounded-lg border-2 border-neutral-200 bg-neutral-50 px-3.5 text-sm font-medium text-neutral-800 outline-none transition placeholder:text-neutral-400 focus:border-[#884A4A] focus:bg-white"/>
-        </div>
-
-        {/* URL slug */}
-        <div>
-          <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-neutral-400">URL-Pfad</label>
-          <div className="flex items-stretch overflow-hidden rounded-lg border-2 border-neutral-200 bg-neutral-50 transition focus-within:border-[#884A4A] focus-within:bg-white">
-            <span className="flex select-none items-center border-r border-neutral-200 bg-neutral-100 px-3 font-mono text-xs text-neutral-400">/p/</span>
-            <input value={slug} onChange={e=>handleSlug(e.target.value)} placeholder="herbst-landingpage"
-              className="h-10 flex-1 bg-transparent px-3 font-mono text-sm text-neutral-800 outline-none placeholder:text-neutral-400"/>
-          </div>
-          {slug.length>0&&(
-            <p className="mt-1 flex items-center gap-1.5 text-[11px] text-neutral-400">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400"/>
-              <span>Erreichbar unter: <span className="font-mono text-neutral-600">{finalPath}</span></span>
-            </p>
-          )}
-        </div>
-
-        {/* Source template */}
-        <div>
-          <label className="mb-1.5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-neutral-400">
-            Vorlage <span className="rounded-full border border-neutral-200 px-1.5 py-0.5 text-[10px] font-normal normal-case tracking-normal">optional</span>
-          </label>
-          <div className="max-h-44 space-y-1 overflow-y-auto">
-            <button type="button" onClick={()=>setSrc('')}
-              className={`flex w-full items-center gap-3 rounded-lg border-2 px-3 py-2 text-left transition ${src===''?'border-[#884A4A] bg-[#FDF8F8]':'border-neutral-200 bg-neutral-50 hover:border-neutral-300 hover:bg-white'}`}>
-              <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition ${src===''?'border-[#884A4A] bg-[#884A4A]':'border-neutral-300'}`}>
-                {src===''&&<div className="h-1.5 w-1.5 rounded-full bg-white"/>}
-              </div>
-              <span className={`text-sm ${src===''?'font-semibold text-[#884A4A]':'font-medium text-neutral-700'}`}>Leere Seite</span>
-              <span className="text-xs text-neutral-400">Sektionen selbst hinzufügen</span>
-            </button>
-            {realPages.map(p=>(
-              <button key={p.id} type="button" onClick={()=>setSrc(p.id)}
-                className={`flex w-full items-center gap-3 rounded-lg border-2 px-3 py-2 text-left transition ${src===p.id?'border-[#884A4A] bg-[#FDF8F8]':'border-neutral-200 bg-neutral-50 hover:border-neutral-300 hover:bg-white'}`}>
-                <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition ${src===p.id?'border-[#884A4A] bg-[#884A4A]':'border-neutral-300'}`}>
-                  {src===p.id&&<div className="h-1.5 w-1.5 rounded-full bg-white"/>}
-                </div>
-                <span className={`flex-1 truncate text-sm ${src===p.id?'font-semibold text-[#884A4A]':'font-medium text-neutral-700'}`}>{p.label}</span>
-                <span className="shrink-0 font-mono text-[10px] text-neutral-400">{p.path}</span>
-                {src===p.id&&<CheckCircle className="h-3.5 w-3.5 shrink-0 text-[#884A4A]"/>}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <button onClick={()=>{if(canSubmit){onAdd(label.trim(),finalPath,src||undefined);onClose();}}} disabled={!canSubmit}
-        className="mt-5 flex h-10 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-40" style={{backgroundColor:'#884A4A'}}>
-        <Plus className="h-4 w-4"/>
-        {src?'Seite duplizieren & anlegen':'Neue Seite erstellen'}
-      </button>
-    </Modal>
-  );
-}
-function NewQuizDialog({pages,onAdd,onClose}:{pages:CmsPage[];onAdd:(label:string,sourceId:string)=>void;onClose:()=>void}) {
-  const [label,setLabel]=useState('');
-  const [src,setSrc]=useState('component_quiz');
-  const quizPages=[{id:'component_quiz',label:'Standard Quiz'},...pages.filter(p=>p.id.startsWith('quiz_'))];
-  const canSubmit=label.trim().length>0;
-  return (
-    <Modal title="" onClose={onClose}>
-      <div className="mb-5">
-        <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50">
-          <Hash className="h-4 w-4 text-emerald-600"/>
-        </div>
-        <h2 className="text-base font-bold text-neutral-900">Quiz-Variante anlegen</h2>
-        <p className="mt-0.5 text-xs text-neutral-500">Erstelle eine eigene Fragebogen-Variante zum A/B-Testen.</p>
-      </div>
-
-      <div className="space-y-4">
-        {/* Name */}
-        <div>
-          <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-neutral-400">Bezeichnung</label>
-          <input autoFocus value={label} onChange={e=>setLabel(e.target.value)}
-            placeholder="z.B. Quiz Herbst 2025"
-            className="h-10 w-full rounded-lg border-2 border-neutral-200 bg-neutral-50 px-3.5 text-sm font-medium text-neutral-800 outline-none transition placeholder:text-neutral-400 focus:border-emerald-500 focus:bg-white"/>
-        </div>
-
-        {/* Source */}
-        <div>
-          <label className="mb-1.5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-neutral-400">
-            Kopieren von <span className="rounded-full border border-neutral-200 px-1.5 py-0.5 text-[10px] font-normal normal-case tracking-normal">optional</span>
-          </label>
-          <div className="space-y-1">
-            {quizPages.map(q=>(
-              <button key={q.id} type="button" onClick={()=>setSrc(q.id)}
-                className={`flex w-full items-center gap-3 rounded-lg border-2 px-3 py-2 text-left transition ${src===q.id?'border-emerald-500 bg-emerald-50':'border-neutral-200 bg-neutral-50 hover:border-neutral-300 hover:bg-white'}`}>
-                <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition ${src===q.id?'border-emerald-500 bg-emerald-500':'border-neutral-300'}`}>
-                  {src===q.id&&<div className="h-1.5 w-1.5 rounded-full bg-white"/>}
-                </div>
-                <span className={`flex-1 truncate text-sm ${src===q.id?'font-semibold text-emerald-700':'font-medium text-neutral-700'}`}>{q.label}</span>
-                {q.id==='component_quiz'&&<span className="shrink-0 rounded-full bg-neutral-100 px-1.5 py-0.5 text-[10px] text-neutral-400">Standard</span>}
-                {src===q.id&&<CheckCircle className="h-3.5 w-3.5 shrink-0 text-emerald-500"/>}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <button onClick={()=>{if(canSubmit){onAdd(label.trim(),src);onClose();}}} disabled={!canSubmit}
-        className="mt-5 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-40">
-        <Plus className="h-4 w-4"/> Quiz-Variante erstellen
-      </button>
-    </Modal>
-  );
-}
-
 function FontPanel({currentFont,onSave}:{currentFont:string;onSave:(f:string)=>void}) {
   const [sel,setSel]=useState(currentFont);const [saving,setSaving]=useState(false);
   useEffect(()=>{setSel(currentFont);},[currentFont]);
@@ -1177,14 +1034,10 @@ export default function CmsPage() {
   const [savedAt,setSavedAt]=useState<Date|null>(null);
   const [pageDropOpen,setPageDropOpen]=useState(false);
   const [showAddSection,setShowAddSection]=useState(false);
-  const [showNewPage,setShowNewPage]=useState(false);
-  const [showNewQuiz,setShowNewQuiz]=useState(false);
   const [showFontPanel,setShowFontPanel]=useState(false);
   const [currentFont,setCurrentFont]=useState('Open Sans');
   const [headerEnabled,setHeaderEnabled]=useState(true);
   const [footerEnabled,setFooterEnabled]=useState(true);
-  const [duplicatingId,setDuplicatingId]=useState<string|null>(null);
-  const [buildStatus,setBuildStatus]=useState<{state:'building'|'done'|'deleting';label:string;path?:string}|null>(null);
   const draggingId=useRef<string|null>(null);
   const pageDropRef=useRef<HTMLDivElement>(null);
 
@@ -1277,21 +1130,6 @@ export default function CmsPage() {
   };
   const onDragEnd=()=>{draggingId.current=null;};
 
-  const duplicateSection=async(s:SectInstance)=>{
-    if(!selectedPage||isComp(selectedPage.id))return;
-    setDuplicatingId(s.id);
-    try {
-      const res=await fetch('/api/admin/sections',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({page_id:selectedPage.id,section_type:s.section_type,label:s.label+' (Kopie)',source_instance:s.section_instance})});
-      const json=await res.json();
-      if(json.ok){
-        const ns={...json.data,hidden:true};
-        setSections(p=>{const idx=p.findIndex(x=>x.id===s.id);const n=[...p];n.splice(idx+1,0,ns);return n;});
-        const sc:CM={};const def=SECT_MAP[s.section_type];
-        if(def){for(const f of def.fields){const sk=resolveKey(f,s.section_instance);const dk=resolveKey(f,json.data.section_instance);if(content[sk]!==undefined)sc[dk]=content[sk];}}
-        setContent(p=>({...p,...sc}));
-      }
-    } finally{setDuplicatingId(null);}
-  };
 
   const deleteSection=async(s:SectInstance)=>{
     if(!confirm(`Sektion "${s.label}" wirklich löschen?`))return;
@@ -1305,38 +1143,6 @@ export default function CmsPage() {
     const json=await res.json();if(json.ok)setSections(p=>[...p,json.data]);
   };
 
-  const createPage=async(label:string,path:string,sourceId?:string)=>{
-    // Extract slug from /p/<slug>
-    const slug=path.replace(/^\/p\//,'');
-    setBuildStatus({state:'building',label});
-    const res=await fetch('/api/admin/github-page',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({label,slug,source_page:sourceId})});
-    const json=await res.json();
-    if(json.ok){
-      setPages(p=>[...p,json.data]);
-      setSelectedPage(json.data);
-      setBuildStatus({state:'done',label,path:json.path});
-      setTimeout(()=>setBuildStatus(null),8000);
-    } else {
-      setBuildStatus(null);
-      alert('Fehler: '+(json.error||'Seite konnte nicht angelegt werden'));
-    }
-  };
-
-  const deletePage=async(page:CmsPage)=>{
-    if(page.is_system)return;
-    if(!confirm(`Seite "${page.label}" wirklich löschen?\n\nDie Seite wird sofort aus GitHub entfernt und ist nach dem nächsten Build (~60s) nicht mehr erreichbar.`))return;
-    const res=await fetch('/api/admin/github-page',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:page.id})});
-    const json=await res.json().catch(()=>({}));
-    if(json.ok){
-      setPages(p=>{const n=p.filter(x=>x.id!==page.id);setSelectedPage(n[0]||null);return n;});
-      setBuildStatus({state:'deleting',label:page.label});
-      setTimeout(()=>setBuildStatus(null),6000);
-    } else {
-      alert('Fehler beim Löschen: '+(json.error||'Unbekannter Fehler'));
-    }
-  };
-
   const totalDirty=dirty.size;
   const isNormal=selectedPage&&!isComp(selectedPage.id)&&!isQuiz(selectedPage.id);
   const realPages=pages.filter(p=>!p.id.startsWith('component_')&&!p.id.startsWith('quiz_'));
@@ -1346,27 +1152,6 @@ export default function CmsPage() {
   return (
     <>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(currentFont)}:wght@400;600;700;800&display=swap'); *{font-family:'${currentFont}',sans-serif!important}`}</style>
-      {/* Build Status Banner */}
-      {buildStatus&&(
-        <div className={`fixed bottom-5 right-5 z-[100] flex items-center gap-3 rounded-xl px-4 py-3 shadow-2xl text-sm font-semibold transition-all ${buildStatus.state==='done'?'bg-emerald-600 text-white':buildStatus.state==='deleting'?'bg-red-500 text-white':'bg-[#884A4A] text-white'}`}>
-          {buildStatus.state==='building'&&<Loader2 className="h-4 w-4 animate-spin shrink-0"/>}
-          {buildStatus.state==='done'&&<CheckCircle className="h-4 w-4 shrink-0"/>}
-          {buildStatus.state==='deleting'&&<Trash2 className="h-4 w-4 shrink-0"/>}
-          <div>
-            {buildStatus.state==='building'&&<span>Seite "{buildStatus.label}" wird in GitHub erstellt…</span>}
-            {buildStatus.state==='done'&&<span>✓ Seite "{buildStatus.label}" ist live — Vercel baut gerade (~60s)</span>}
-            {buildStatus.state==='deleting'&&<span>Seite "{buildStatus.label}" gelöscht — Vercel baut gerade</span>}
-          </div>
-          <button onClick={()=>setBuildStatus(null)} className="ml-2 opacity-70 hover:opacity-100"><X className="h-3.5 w-3.5"/></button>
-        </div>
-      )}
-      {showAddSection&&<AddSectionDialog onAdd={addSection} onClose={()=>setShowAddSection(false)}/>}
-      {showNewPage&&<NewPageDialog pages={pages} onAdd={createPage} onClose={()=>setShowNewPage(false)}/>}
-      {showNewQuiz&&<NewQuizDialog pages={pages} onAdd={async(label,srcId)=>{
-        const res=await fetch('/api/admin/quiz-configs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({label,source_id:srcId})});
-        const json=await res.json();
-        if(json.ok){const np:CmsPage={...json.data,path:'(Quiz-Variante)',is_system:false};setPages(prev=>[...prev,np]);setSelectedPage(np);}
-      }} onClose={()=>setShowNewQuiz(false)}/>}
 
       <div className="space-y-5 pb-10">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -1408,7 +1193,6 @@ export default function CmsPage() {
                       </div>
                       <span className={`flex-1 min-w-0 truncate text-sm ${selectedPage?.id===p.id?'font-semibold text-[#884A4A]':'font-medium text-neutral-700'}`}>{p.label}</span>
                       <span className="font-mono text-[10px] text-neutral-400 shrink-0">{p.path}</span>
-                      {!p.is_system&&<button type="button" onClick={e=>{e.stopPropagation();deletePage(p);}} className="opacity-0 group-hover:opacity-100 ml-1 flex h-5 w-5 items-center justify-center rounded text-red-400 hover:bg-red-50 hover:text-red-500 transition"><Trash2 className="h-3 w-3"/></button>}
                     </div>
                   ))}
                 </>}
@@ -1421,7 +1205,6 @@ export default function CmsPage() {
                         <Hash className={`h-3.5 w-3.5 ${selectedPage?.id===p.id?'text-[#884A4A]':'text-neutral-400'}`}/>
                       </div>
                       <span className={`flex-1 min-w-0 truncate text-sm ${selectedPage?.id===p.id?'font-semibold text-[#884A4A]':'font-medium text-neutral-700'}`}>{p.label}</span>
-                      {!p.is_system&&<button type="button" onClick={e=>{e.stopPropagation();deletePage(p);}} className="opacity-0 group-hover:opacity-100 ml-1 flex h-5 w-5 items-center justify-center rounded text-red-400 hover:bg-red-50 hover:text-red-500 transition"><Trash2 className="h-3 w-3"/></button>}
                     </div>
                   ))}
                 </>}
@@ -1437,15 +1220,6 @@ export default function CmsPage() {
                     </div>
                   ))}
                 </>}
-                <div className="mx-3 my-1 border-t border-neutral-100"/>
-                <button type="button" onClick={()=>{setPageDropOpen(false);setShowNewPage(true);}} className="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm font-semibold text-[#884A4A] transition hover:bg-[#FDF8F8]">
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#884A4A]/10"><Plus className="h-3.5 w-3.5 text-[#884A4A]"/></div>
-                  Neue Seite anlegen
-                </button>
-                <button type="button" onClick={()=>{setPageDropOpen(false);setShowNewQuiz(true);}} className="flex w-full items-center gap-2.5 px-3 py-2.5 mb-1 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50">
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-emerald-100"><Plus className="h-3.5 w-3.5 text-emerald-600"/></div>
-                  Quiz-Variante anlegen
-                </button>
               </div>
             )}
           </div>
@@ -1483,8 +1257,7 @@ export default function CmsPage() {
                 isDragging={draggingId.current===section.id}
                 onDragStart={()=>onDragStart(section.id)} onDragOver={onDragOver}
                 onDrop={()=>onDrop(section.id)} onDragEnd={onDragEnd}
-                onDuplicate={()=>duplicateSection(section)} onDelete={()=>deleteSection(section)}
-                duplicating={duplicatingId===section.id}/>
+                onDelete={()=>deleteSection(section)}/>
             ))}
             {isNormal&&(
               <button type="button" onClick={()=>setShowAddSection(true)} className="flex w-full items-center justify-center gap-2 rounded-[4px] border-2 border-dashed border-neutral-200 py-4 text-sm font-medium text-neutral-400 transition hover:border-[#884A4A] hover:text-[#884A4A]">
