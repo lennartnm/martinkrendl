@@ -458,10 +458,17 @@ export default function AnalyticsPage() {
   const [funnelLoading, setFunnelLoading] = useState(true);
   const [selectedQuizId, setSelectedQuizId] = useState<string>('all');
   const [quizList, setQuizList] = useState<{id:string;label:string}[]>([]);
+  const [quizDropOpen, setQuizDropOpen] = useState(false);
+  const quizDropRef = useRef<HTMLDivElement>(null);
 
   // Changelog
   const [changelog, setChangelog]   = useState<ChangelogEntry[]>([]);
   const [clLoading, setClLoading]   = useState(true);
+
+  useEffect(()=>{
+    const h=(e:MouseEvent)=>{if(quizDropRef.current&&!quizDropRef.current.contains(e.target as Node))setQuizDropOpen(false);};
+    document.addEventListener('mousedown',h);return()=>document.removeEventListener('mousedown',h);
+  },[]);
 
   const diffDays = Math.round((new Date(toDate).getTime() - new Date(fromDate).getTime()) / 86400000) + 1;
 
@@ -501,7 +508,11 @@ export default function AnalyticsPage() {
   useEffect(() => { loadChangelog(); }, []);
   useEffect(() => {
     fetch('/api/admin/quiz-configs').then(r=>r.json()).then(j=>{
-      if(j.ok) setQuizList([{id:'all',label:'Alle Quizze'},...(j.data||[])]);
+      if(j.ok) {
+        // Filter out quiz_* variant pages (CMS-created), only keep hardcoded/component quizzes
+        const filtered = (j.data||[]).filter((q:any)=>!q.id.startsWith('quiz_'));
+        setQuizList([{id:'all',label:'Alle Quizze'},...filtered]);
+      }
     }).catch(()=>{});
   }, []);
 
@@ -625,13 +636,31 @@ export default function AnalyticsPage() {
             {/* ── Quiz Selector ── */}
             {quizList.length > 1 && (
               <div className="flex items-center gap-3 rounded-[4px] border border-neutral-200 bg-white px-4 py-3 shadow-sm">
-                <BarChart2 className="h-4 w-4 shrink-0" style={{ color: brand }} />
-                <span className="text-sm font-semibold text-neutral-600">Quiz-Variante:</span>
-                <select value={selectedQuizId} onChange={e=>{setSelectedQuizId(e.target.value);}}
-                  className="h-9 flex-1 max-w-xs rounded-[4px] border border-neutral-200 px-3 text-sm outline-none focus:border-[#884A4A]">
-                  {quizList.map(q=><option key={q.id} value={q.id}>{q.label}</option>)}
-                </select>
-                <span className="text-xs text-neutral-400">Funnel-Daten werden nach Quiz gefiltert</span>
+                <BarChart2 className="h-4 w-4 shrink-0 text-neutral-400" />
+                <span className="text-sm font-semibold text-neutral-600">Quiz:</span>
+                <div ref={quizDropRef} className="relative">
+                  <button type="button" onClick={()=>setQuizDropOpen(v=>!v)}
+                    className={`flex h-9 items-center gap-2 rounded-[4px] border bg-white pl-3 pr-2.5 text-sm font-medium text-neutral-700 shadow-sm transition min-w-[180px] ${quizDropOpen?'border-[#884A4A] ring-2 ring-[#884A4A]/10':'border-neutral-200 hover:border-neutral-300'}`}>
+                    <span className="flex-1 truncate text-left">
+                      {quizList.find(q=>q.id===selectedQuizId)?.label??'Alle Quizze'}
+                    </span>
+                    <ChevronDown className={`h-4 w-4 shrink-0 text-neutral-400 transition-transform ${quizDropOpen?'rotate-180':''}`}/>
+                  </button>
+                  {quizDropOpen&&(
+                    <div className="absolute left-0 top-full z-50 mt-1.5 min-w-full overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-xl">
+                      {quizList.map(q=>(
+                        <button key={q.id} type="button"
+                          onClick={()=>{setSelectedQuizId(q.id);setQuizDropOpen(false);}}
+                          className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition ${selectedQuizId===q.id?'bg-[#FDF8F8] font-semibold text-[#884A4A]':'text-neutral-700 hover:bg-neutral-50'}`}>
+                          {selectedQuizId===q.id&&<span className="h-1.5 w-1.5 rounded-full bg-[#884A4A] shrink-0"/>}
+                          {selectedQuizId!==q.id&&<span className="h-1.5 w-1.5 rounded-full bg-transparent shrink-0"/>}
+                          {q.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <span className="text-xs text-neutral-400 hidden md:block">Funnel-Daten werden nach Quiz gefiltert</span>
               </div>
             )}
 

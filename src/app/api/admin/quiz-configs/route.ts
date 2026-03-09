@@ -13,10 +13,9 @@ export async function GET() {
   const session = await getAdminSession();
   if (!session) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
-  // Always include the default/standard quiz
+  // Only include the real standard quiz — no "default" placeholder
   const staticQuizzes = [
     { id: 'component_quiz', label: 'Standard Quiz', path: '(Komponente)', is_system: true },
-    { id: 'default', label: 'Default Quiz', path: '(Hardcoded)', is_system: true },
   ];
 
   // Auto-discover any quiz_ids that have tracking events but aren't in the static list

@@ -1,7 +1,7 @@
 'use client';
 // src/app/admin/cms/page.tsx — Enhanced CMS with grouped fields, bold/italic, font selector, header/footer toggle, quiz management
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Save, CheckCircle, AlertCircle, Loader2, Upload, Eye, EyeOff,
   ChevronDown, ChevronRight, Palette, Image as ImageIcon, Video,
@@ -323,7 +323,7 @@ const SECT_TYPES: {type:string;label:string;addable:boolean;fields:Field[]}[] = 
     {section_key:'links',field_key:'header_cta',label:'Button Link',type:'link',group:'links'},
     {section_key:'colors',field_key:'header_bg',label:'Hintergrundfarbe',type:'color',group:'colors'},
   ]},
-  {type:'component_topbar',label:'TopHeader',addable:false,fields:[
+  {type:'component_topbar',label:'Ankündigungsleiste',addable:false,fields:[
     {section_key:'header',field_key:'topbar_text',label:'Text',type:'text',group:'text'},
     {section_key:'header',field_key:'topbar_bg',label:'Hintergrundfarbe',type:'color',group:'colors'},
     {section_key:'header',field_key:'topbar_color',label:'Textfarbe',type:'color',group:'colors'},
@@ -634,7 +634,7 @@ const SECT_DESCRIPTIONS:Record<string,string>={
   'quiz':'Interaktiver Quiz-Funnel zur Lead-Generierung',
   'component_quiz':'Quiz-Fragen, Formular und Farben',
   'component_header':'Logo, CTA-Button und Hintergrundfarbe',
-  'component_topbar':'Ankündigungsleiste oben auf der Seite',
+  'component_topbar':'Schmal einblendbare Ankündigungsleiste oben auf der Seite',
   'component_footer':'Kontaktinfos, Links und Social Media',
   'component_cookie':'Cookie-Zustimmungsbanner',
   'danke_header':'Logo und Navigation der Danke-Seite',
@@ -655,266 +655,525 @@ const SECT_DESCRIPTIONS:Record<string,string>={
 const SECT_MAP = Object.fromEntries(SECT_TYPES.map(s=>[s.type,s]));
 
 
-// ── Visual Section Previews ───────────────────────────────────────────────────
+// ── Visual Section Previews ─────────────────────────────────────────────────
+// Renders a pixel-accurate miniature replica of each section.
+// A ResizeObserver measures the actual container width at runtime so the
+// CSS scale() transform fills it exactly — no guesswork, no fixed ratios.
 function SectionPreview({type,content,instance}:{type:string;content:CM;instance:string}) {
+  const containerRef=React.useRef<HTMLDivElement>(null);
+  const [containerW,setContainerW]=React.useState(0);
+  React.useEffect(()=>{
+    const el=containerRef.current;if(!el)return;
+    const obs=new ResizeObserver(([e])=>{const w=e.contentRect.width;if(w>0)setContainerW(Math.round(w));});
+    obs.observe(el);setContainerW(el.getBoundingClientRect().width||0);
+    return()=>obs.disconnect();
+  },[]);
+
   const ci=(inst:string,f:string)=>content[`${inst}::${f}`]||'';
   const cv=(sk:string,fk:string)=>content[`${sk}::${fk}`]||'';
   const brand=cv('colors','brand')||'#884A4A';
-  const gray='#6B6B6B';
+  const lightGray=cv('colors','light_gray')||'#6B6B6B';
+  const graphite=cv('colors','graphite')||'#2F2F2F';
 
   // Normalize type for legacy variants
   const t=type.replace(/_legacy$/,'');
 
-  const Pill=({label}:{label:string})=>(
-    <div className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold text-white" style={{backgroundColor:brand}}>{label}</div>
-  );
-  const MockBtn=({label}:{label:string})=>(
-    <div className="inline-flex items-center rounded-[4px] px-3 py-1.5 text-[11px] font-bold text-white" style={{backgroundColor:brand}}>{label||'Button'}</div>
-  );
-  const MockImg=({src,className}:{src?:string;className?:string})=>src?(
-    <div className={`overflow-hidden rounded-[4px] bg-neutral-100 ${className||''}`}><img src={src} className="h-full w-full object-cover" alt=""/></div>
-  ):<div className={`rounded-[4px] bg-neutral-200 flex items-center justify-center text-neutral-400 text-[10px] ${className||''}`}>Kein Bild</div>;
-  const Stars=()=><div className="flex gap-0.5">{[1,2,3,4,5].map(i=><span key={i} className="text-[#D4AF37] text-[10px]">★</span>)}</div>;
+  // Virtual canvas = real page desktop width (max-w-[1200px] + padding ≈ 1200px)
+  const CANVAS=1200;
+  // Scale fills the container exactly once measured; show nothing until we know the width
+  const SCALE=containerW>0?containerW/CANVAS:0;
+  const PH=Math.round;
 
-  const wrapClass="pointer-events-none select-none rounded-[4px] border border-dashed border-neutral-200 bg-neutral-50/60 p-3 mb-3 overflow-hidden";
+  // Outer shell: measured by ResizeObserver, height set dynamically per section
+  // outer() renders the measuring shell — ref is on this element
+  const outer=(h:number,children:React.ReactNode)=>(
+    <div ref={containerRef} className="pointer-events-none select-none mb-3 overflow-hidden rounded-[4px] border border-dashed border-neutral-200 bg-neutral-50/40" style={{height:SCALE>0?PH(h*SCALE):0}}>
+      {SCALE>0&&children}
+    </div>
+  );
+  const W=CANVAS;
 
   if(t==='hero') {
     const img=ci(instance,'image')||cv('images','hero');
-    const title=ci(instance,'title')||cv('hero','title')||'Deine Überschrift';
+    const title=ci(instance,'title')||cv('hero','title')||'Deine Überschrift hier';
+    const sub=ci(instance,'subtitle')||cv('hero','subtitle')||'Unterzeile mit mehr Details';
     const cta=ci(instance,'cta_label')||cv('hero','cta_label')||'Jetzt anfragen';
-    return(<div className={wrapClass}>
-      <div className="relative h-20 overflow-hidden rounded-[4px]" style={{background:img?'#111':`linear-gradient(135deg,${brand}88,${brand}44)`}}>
-        {img&&<img src={img} className="absolute inset-0 h-full w-full object-cover opacity-60" alt=""/>}
-        <div className="absolute inset-x-0 bottom-0 p-2 text-center">
-          <div className="text-[11px] font-extrabold text-white leading-tight line-clamp-2">{title}</div>
-          <div className="mt-1.5"><MockBtn label={cta}/></div>
+    const H=PH(W*6/16); // 16:6 aspect
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',position:'relative',background:img?'#111':`linear-gradient(160deg,${brand}cc,${brand}66)`}}>
+        {img&&<img src={img} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:0.55}} alt=""/>}
+        <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,0.7) 0%,rgba(0,0,0,0.15) 60%,transparent 100%)'}}/>
+        <div style={{position:'absolute',bottom:0,left:0,right:0,padding:'32px 80px',textAlign:'center',color:'white'}}>
+          <div style={{fontSize:38,fontWeight:900,lineHeight:1.15,textShadow:'0 2px 8px rgba(0,0,0,0.4)'}}>{title}</div>
+          <div style={{fontSize:15,marginTop:12,opacity:0.85,maxWidth:600,margin:'12px auto 0'}}>{sub}</div>
+          <div style={{marginTop:20,display:'flex',justifyContent:'center'}}>
+            <span style={{backgroundColor:brand,color:'white',padding:'12px 28px',borderRadius:4,fontWeight:700,fontSize:15}}>{cta}</span>
+          </div>
+          <div style={{marginTop:16,color:'rgba(255,255,255,0.9)',fontSize:13}}>★★★★★ &nbsp; 100+ Schüler vor Ort &amp; online</div>
         </div>
       </div>
-    </div>);
+    );
   }
   if(t==='image_text'||t==='image_text_1'||t==='image_text_2') {
-    const img=ci(instance,'image')||cv('images','section1');
-    const title=ci(instance,'title')||cv(instance,'title')||'Überschrift';
-    return(<div className={wrapClass}>
-      <div className="flex gap-2 items-center">
-        <MockImg src={img} className="h-14 w-14 shrink-0"/>
-        <div className="flex-1 min-w-0">
-          <div className="text-[11px] font-bold text-neutral-800 line-clamp-1">{title||'Überschrift'}</div>
-          <div className="mt-0.5 space-y-0.5">{[1,2,3].map(i=><div key={i} className="flex items-center gap-1"><span className="h-2 w-2 rounded-full shrink-0" style={{backgroundColor:brand}}/><div className="h-1.5 w-20 rounded-full bg-neutral-200"/></div>)}</div>
-          <div className="mt-1.5"><MockBtn label={ci(instance,'cta_label')||'Mehr erfahren'}/></div>
+    const isRight=t==='image_text_2';
+    const img=ci(instance,'image')||(isRight?cv('images','section2'):cv('images','section1'));
+    const title=ci(instance,'title')||(isRight?cv('image_text_2','title'):cv('image_text_1','title'))||'Deine Stimme kann mehr';
+    const text=ci(instance,'text')||(isRight?cv('image_text_2','text'):cv('image_text_1','text'))||'Beschreibungstext der Sektion.';
+    const cta=ci(instance,'cta_label')||(isRight?cv('image_text_2','cta_label'):cv('image_text_1','cta_label'))||'Jetzt anfragen';
+    const bullets=t!=='image_text_2'?[
+      ci(instance,'bullet_1')||cv('image_text_1','bullet_1')||'Mehr Stimmumfang',
+      ci(instance,'bullet_2')||cv('image_text_1','bullet_2')||'Klarerer Klang',
+      ci(instance,'bullet_3')||cv('image_text_1','bullet_3')||'Persönliche Begleitung',
+    ]:[];
+    const H=320;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',display:'flex',alignItems:'center',gap:48,padding:'32px 80px',backgroundColor:'white'}}>
+        {!isRight&&<div style={{flex:'0 0 42%',aspectRatio:'1',borderRadius:4,overflow:'hidden',backgroundColor:'#e5e7eb'}}>
+          {img?<img src={img} style={{width:'100%',height:'100%',objectFit:'cover'}} alt=""/>:<div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',color:'#aaa',fontSize:12}}>Kein Bild</div>}
+        </div>}
+        <div style={{flex:1}}>
+          <div style={{fontSize:26,fontWeight:900,color:'#111',lineHeight:1.2}}>{title}</div>
+          <div style={{fontSize:13,marginTop:10,color:lightGray,lineHeight:1.7,WebkitLineClamp:3,overflow:'hidden',display:'-webkit-box',WebkitBoxOrient:'vertical'}}>{text}</div>
+          {bullets.length>0&&<div style={{marginTop:12,display:'flex',flexDirection:'column',gap:6}}>
+            {bullets.map((b,i)=><div key={i} style={{display:'flex',alignItems:'center',gap:8}}>
+              <div style={{width:18,height:18,borderRadius:'50%',backgroundColor:brand,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <span style={{color:'white',fontSize:10,fontWeight:900}}>✓</span>
+              </div>
+              <span style={{fontSize:12,color:graphite}}>{b}</span>
+            </div>)}
+          </div>}
+          <div style={{marginTop:16}}>
+            <span style={{backgroundColor:brand,color:'white',padding:'10px 22px',borderRadius:4,fontWeight:700,fontSize:13}}>{cta}</span>
+          </div>
         </div>
+        {isRight&&<div style={{flex:'0 0 42%',aspectRatio:'1',borderRadius:4,overflow:'hidden',backgroundColor:'#e5e7eb'}}>
+          {img?<img src={img} style={{width:'100%',height:'100%',objectFit:'cover'}} alt=""/>:<div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',color:'#aaa',fontSize:12}}>Kein Bild</div>}
+        </div>}
       </div>
-    </div>);
+    );
   }
   if(t==='quote') {
-    const q=ci(instance,'quote')||cv('quote_section','quote')||'„Dein Zitat hier"';
+    const q=ci(instance,'quote')||cv('quote_section','quote')||'„Singen soll nicht schwerer werden – sondern freier."';
     const bg=ci(instance,'bg')||cv('images','quote_bg');
-    return(<div className={wrapClass}>
-      <div className="relative rounded-[4px] overflow-hidden p-3" style={{background:bg?'#333':`${brand}dd`}}>
-        {bg&&<img src={bg} className="absolute inset-0 h-full w-full object-cover opacity-30" alt=""/>}
-        <p className="relative text-[11px] italic font-semibold text-white text-center line-clamp-2">"{q}"</p>
-      </div>
-    </div>);
-  }
-  if(t==='flowing_text') {
-    const text=ci(instance,'text')||cv('flowing_text','text')||'Dein Fließtext...';
-    return(<div className={wrapClass}>
-      <div className="rounded-[4px] p-3" style={{backgroundColor:brand}}>
-        <p className="text-[11px] text-white text-center font-medium line-clamp-2">{text}</p>
-      </div>
-    </div>);
-  }
-  if(t==='final_cta') {
-    const title=ci(instance,'title')||cv('final_cta','title')||'Abschluss CTA';
-    const img=ci(instance,'image')||cv('images','final_cta');
-    return(<div className={wrapClass}>
-      <div className="relative rounded-[4px] overflow-hidden p-3" style={{background:img?'#333':`${brand}bb`}}>
-        {img&&<img src={img} className="absolute inset-0 h-full w-full object-cover opacity-30" alt=""/>}
-        <div className="relative text-center">
-          <div className="text-[11px] font-bold text-white line-clamp-1">{title}</div>
-          <div className="mt-1.5"><MockBtn label={ci(instance,'cta_label')||'Jetzt anfragen'}/></div>
+    const H=180;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',position:'relative',backgroundColor:bg?'#333':brand,display:'flex',alignItems:'center',justifyContent:'center',padding:'40px 120px'}}>
+        {bg&&<img src={bg} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:0.3}} alt=""/>}
+        <div style={{position:'relative',textAlign:'center',color:'white'}}>
+          <div style={{fontSize:12,fontWeight:700,letterSpacing:'0.15em',textTransform:'uppercase',marginBottom:16,opacity:0.7}}>{cv('quote_section','label')||'Meine Haltung im Unterricht'}</div>
+          <div style={{fontSize:20,fontStyle:'italic',fontWeight:600,lineHeight:1.5}}>{q}</div>
         </div>
       </div>
-    </div>);
+    );
   }
-  if(t==='logos'||t==='logos_legacy') {
-    const label=ci(instance,'label')||cv('logos_section','label')||'Bekannt aus';
-    return(<div className={wrapClass}>
-      <div className="text-center">
-        <div className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{color:brand}}>{label}</div>
-        <div className="flex justify-center gap-2">{[1,2,3].map(i=><div key={i} className="h-8 w-16 rounded-[4px] border border-neutral-200 bg-white flex items-center justify-center"><div className="h-3 w-10 rounded bg-neutral-200"/></div>)}</div>
+  if(t==='flowing_text') {
+    const text=ci(instance,'text')||cv('flowing_text','text')||'Ob du sicherer intonieren, freier in die Höhe kommen oder mit mehr Freude singen möchtest...';
+    const H=140;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:'white',display:'flex',alignItems:'center',justifyContent:'center',padding:'32px 120px'}}>
+        <div style={{fontSize:17,lineHeight:1.7,textAlign:'center',color:lightGray,fontStyle:'normal'}}>{text}</div>
       </div>
-    </div>);
+    );
   }
-  if(t==='feature_cards_3'||t==='feature_cards_3_legacy') {
-    return(<div className={wrapClass}>
-      <div className="grid grid-cols-3 gap-1.5">
-        {[1,2,3].map(i=>{
-          const title=ci(instance+i,'title')||cv(`feature_card_${i}`,'title')||`Feature ${i}`;
-          return(<div key={i} className="rounded-[4px] p-2 text-center text-white" style={{backgroundColor:brand}}>
-            <div className="mx-auto mb-1 h-5 w-5 rounded bg-white/20"/>
-            <div className="text-[9px] font-bold line-clamp-1">{title}</div>
-          </div>);
-        })}
+  if(t==='final_cta') {
+    const title=ci(instance,'title')||cv('final_cta','title')||'Lass uns schauen, was in deiner Stimme steckt';
+    const text=ci(instance,'text')||cv('final_cta','text')||'Ein persönliches Kennenlerngespräch ist der beste erste Schritt.';
+    const cta=ci(instance,'cta_label')||cv('final_cta','cta_label')||'Jetzt anfragen';
+    const img=ci(instance,'image')||cv('images','final_cta');
+    const H=200;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',display:'flex',alignItems:'center',gap:48,padding:'28px 80px',backgroundColor:'white'}}>
+        <div style={{flex:'0 0 30%',aspectRatio:'16/9',borderRadius:4,overflow:'hidden',backgroundColor:'#e5e7eb'}}>
+          {img?<img src={img} style={{width:'100%',height:'100%',objectFit:'cover'}} alt=""/>:<div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',color:'#aaa',fontSize:12}}>Kein Bild</div>}
+        </div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:22,fontWeight:900,color:'#111',lineHeight:1.2}}>{title}</div>
+          <div style={{fontSize:12,marginTop:8,color:lightGray,lineHeight:1.6}}>{text}</div>
+          <div style={{marginTop:14}}>
+            <span style={{backgroundColor:brand,color:'white',padding:'10px 22px',borderRadius:4,fontWeight:700,fontSize:13}}>{cta}</span>
+          </div>
+        </div>
       </div>
-    </div>);
+    );
   }
-  if(t==='feature_cards_4'||t==='feature_cards_4_legacy') {
-    const title=ci(instance+'h','title')||cv('features_2_heading','title')||'Was dich erwartet';
-    return(<div className={wrapClass}>
-      <div className="text-[11px] font-bold text-center mb-2 line-clamp-1">{title}</div>
-      <div className="grid grid-cols-4 gap-1">
-        {[1,2,3,4].map(i=>{
-          const t2=ci(instance+i,'title')||cv(`feature2_card_${i}`,'title')||`Punkt ${i}`;
-          return(<div key={i} className="rounded-[4px] p-1.5 text-center text-white" style={{backgroundColor:brand}}>
-            <div className="mx-auto mb-0.5 h-4 w-4 rounded bg-white/20"/>
-            <div className="text-[8px] font-bold line-clamp-1">{t2}</div>
-          </div>);
-        })}
+  if(t==='logos') {
+    const label=ci(instance,'label')||cv('logos_section','label')||'Bekannt aus Unterricht, Bühne und Ausbildung';
+    const logo1=cv('images','logo1');const logo2=cv('images','logo2');
+    const H=140;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:'white',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:20,padding:'20px 80px'}}>
+        <div style={{fontSize:11,fontWeight:700,letterSpacing:'0.18em',textTransform:'uppercase',color:brand}}>{label}</div>
+        <div style={{display:'flex',gap:24,alignItems:'center',justifyContent:'center'}}>
+          {[logo1,logo2].map((l,i)=><div key={i} style={{width:180,height:80,border:'1px solid #e5e7eb',borderRadius:4,backgroundColor:'white',display:'flex',alignItems:'center',justifyContent:'center',padding:12}}>
+            {l?<img src={l} style={{maxHeight:52,maxWidth:150,objectFit:'contain'}} alt=""/>:<div style={{width:120,height:20,backgroundColor:'#e5e7eb',borderRadius:4}}/>}
+          </div>)}
+        </div>
       </div>
-    </div>);
+    );
   }
-  if(t==='reviews'||t==='reviews_legacy') {
-    return(<div className={wrapClass}>
-      <div className="text-[11px] font-bold text-center mb-2">{ci(instance,'title')||cv('reviews','title')||'Stimmen'}</div>
-      <div className="grid grid-cols-3 gap-1.5">
-        {[1,2,3].map(i=>{
-          const text=ci(instance+i,'text')||cv(`review_${i}`,'text')||'Bewertungstext...';
-          return(<div key={i} className="rounded-[4px] bg-neutral-100 p-2">
-            <Stars/>
-            <p className="mt-0.5 text-[9px] line-clamp-2 text-neutral-600">{text}</p>
-          </div>);
-        })}
+  if(t==='feature_cards_3') {
+    const cards=[1,2,3].map(i=>({
+      title:ci(instance+i,'title')||cv(`feature_card_${i}`,'title')||`Feature ${i}`,
+      text:ci(instance+i,'text')||cv(`feature_card_${i}`,'text')||'Beschreibungstext der Karte.',
+    }));
+    const H=210;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:'white',display:'flex',gap:20,padding:'28px 80px',alignItems:'stretch'}}>
+        {cards.map((c,i)=><div key={i} style={{flex:1,backgroundColor:brand,borderRadius:4,padding:'22px 18px',textAlign:'center',color:'white',display:'flex',flexDirection:'column',alignItems:'center',gap:8}}>
+          <div style={{width:44,height:44,borderRadius:4,backgroundColor:'rgba(255,255,255,0.15)',border:'1px solid rgba(255,255,255,0.2)',marginBottom:4}}/>
+          <div style={{fontSize:15,fontWeight:800,lineHeight:1.2}}>{c.title}</div>
+          <div style={{fontSize:11,opacity:0.85,lineHeight:1.6}}>{c.text}</div>
+        </div>)}
       </div>
-    </div>);
+    );
   }
-  if(t==='about'||t==='about_legacy') {
+  if(t==='feature_cards_4') {
+    const heading=ci(instance+'h','title')||cv('features_2_heading','title')||'Was dich im Gesangsunterricht erwartet';
+    const cards=[1,2,3,4].map(i=>({
+      title:ci(instance+i,'title')||cv(`feature2_card_${i}`,'title')||`Punkt ${i}`,
+      text:ci(instance+i,'text')||cv(`feature2_card_${i}`,'text')||'Kurze Beschreibung.',
+    }));
+    const H=240;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:'white',padding:'28px 80px'}}>
+        <div style={{fontSize:20,fontWeight:900,textAlign:'center',color:'#111',marginBottom:20}}>{heading}</div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14}}>
+          {cards.map((c,i)=><div key={i} style={{backgroundColor:brand,borderRadius:4,padding:'16px 12px',color:'white',display:'flex',flexDirection:'column',alignItems:'center',gap:6,textAlign:'center'}}>
+            <div style={{width:36,height:36,borderRadius:4,backgroundColor:'rgba(255,255,255,0.15)',border:'1px solid rgba(255,255,255,0.2)'}}/>
+            <div style={{fontSize:12,fontWeight:700,lineHeight:1.3}}>{c.title}</div>
+            <div style={{fontSize:10,opacity:0.8,lineHeight:1.5}}>{c.text}</div>
+          </div>)}
+        </div>
+      </div>
+    );
+  }
+  if(t==='reviews') {
+    const title=ci(instance,'title')||cv('reviews','title')||'Stimmen von Schülern';
+    const reviews=[1,2,3].map(i=>({
+      text:ci(instance+i,'text')||cv(`review_${i}`,'text')||'Sehr empfehlenswert! Martin ist ein toller Lehrer.',
+      author:ci(instance+i,'author')||cv(`review_${i}`,'author')||`Schüler ${i}`,
+    }));
+    const H=230;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:'white',padding:'28px 80px'}}>
+        <div style={{fontSize:22,fontWeight:900,textAlign:'center',color:'#111',marginBottom:20}}>{title}</div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
+          {reviews.map((r,i)=><div key={i} style={{backgroundColor:'#f5f5f5',borderRadius:4,padding:'16px 14px'}}>
+            <div style={{color:'#D4AF37',fontSize:13,letterSpacing:1,marginBottom:6}}>★★★★★</div>
+            <div style={{fontSize:11,lineHeight:1.65,color:graphite,display:'-webkit-box',WebkitLineClamp:3,overflow:'hidden',WebkitBoxOrient:'vertical'}}>{r.text}</div>
+            <div style={{fontSize:11,fontWeight:700,color:brand,marginTop:8}}>– {r.author}</div>
+          </div>)}
+        </div>
+      </div>
+    );
+  }
+  if(t==='about') {
     const img=ci(instance,'image')||cv('images','about');
-    const title=ci(instance,'title')||cv('about','title')||'Über mich';
-    return(<div className={wrapClass}>
-      <div className="flex gap-2 items-center">
-        <div className="h-12 w-12 rounded-full shrink-0 overflow-hidden bg-neutral-200">{img&&<img src={img} className="h-full w-full object-cover" alt=""/>}</div>
-        <div><div className="text-[11px] font-bold line-clamp-1">{title}</div><div className="mt-0.5 space-y-0.5">{[0,1,2].map(j=><div key={j} className="h-1.5 rounded-full bg-neutral-200" style={{width:`${70-j*15}%`}}/>)}</div></div>
+    const label=ci(instance,'label')||cv('about','label')||'Über Martin';
+    const title=ci(instance,'title')||cv('about','title')||'Von der eigenen Suche zur Arbeit mit Sängern';
+    const text=ci(instance,'text_1')||cv('about','text_1')||'Mein eigener Wendepunkt kam, als mir jemand in kurzer Zeit etwas gezeigt hat, das ich nach Monaten bei anderen Lehrern nicht geschafft hatte.';
+    const H=260;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:'white',display:'flex',alignItems:'center',gap:48,padding:'32px 80px'}}>
+        <div style={{flex:'0 0 42%',aspectRatio:'1',borderRadius:4,overflow:'hidden',backgroundColor:'#e5e7eb'}}>
+          {img?<img src={img} style={{width:'100%',height:'100%',objectFit:'cover'}} alt=""/>:<div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',color:'#aaa',fontSize:12}}>Kein Bild</div>}
+        </div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:11,fontWeight:700,letterSpacing:'0.18em',textTransform:'uppercase',color:brand,marginBottom:10}}>{label}</div>
+          <div style={{fontSize:22,fontWeight:900,color:'#111',lineHeight:1.2,marginBottom:12}}>{title}</div>
+          <div style={{fontSize:12,color:lightGray,lineHeight:1.7}}>{text}</div>
+        </div>
       </div>
-    </div>);
+    );
   }
-  if(t==='video_carousel'||t==='video_carousel_legacy') {
-    const title=ci(instance,'title')||cv('video_section','title')||'Videos';
-    return(<div className={wrapClass}>
-      <div className="text-[11px] font-bold mb-2">{title}</div>
-      <div className="flex gap-1.5 overflow-hidden">{[1,2,3].map(i=><div key={i} className="h-12 w-20 shrink-0 rounded-[4px] bg-neutral-800 flex items-center justify-center"><span className="text-white text-[16px]">▶</span></div>)}</div>
-    </div>);
-  }
-  if(t==='testimonials'||t==='testimonials_legacy') {
-    return(<div className={wrapClass}>
-      <div className="grid grid-cols-2 gap-1.5">
-        {[1,2].map(i=><div key={i} className="rounded-[4px] bg-neutral-800 p-2 flex items-center justify-center"><span className="text-white text-[12px]">▶</span></div>)}
+  if(t==='video_carousel') {
+    const title=ci(instance,'title')||cv('video_section','title')||'Hör und sieh selbst';
+    const thumbs=[cv('videos','carousel_1_thumb'),cv('videos','carousel_2_thumb'),cv('videos','carousel_3_thumb')];
+    const H=190;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:'white',padding:'24px 80px'}}>
+        <div style={{fontSize:20,fontWeight:900,color:'#111',marginBottom:16}}>{title}</div>
+        <div style={{display:'flex',gap:16}}>
+          {thumbs.map((th,i)=><div key={i} style={{flex:1,aspectRatio:'16/9',borderRadius:4,backgroundColor:'#1a1a1a',overflow:'hidden',position:'relative',display:'flex',alignItems:'center',justifyContent:'center'}}>
+            {th&&<img src={th} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:0.7}} alt=""/>}
+            <span style={{position:'relative',color:'white',fontSize:24}}>▶</span>
+          </div>)}
+        </div>
       </div>
-    </div>);
+    );
+  }
+  if(t==='testimonials') {
+    const q1=cv('testimonial_1','quote')||'„Martin Krendl ist ein absoluter Meister seines Fachs"';
+    const q2=cv('testimonial_2','quote')||'„Was der präsentiert ist wow"';
+    const th1=cv('videos','testimonial_1_thumb');const th2=cv('videos','testimonial_2_thumb');
+    const H=200;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:'white',padding:'24px 80px',display:'flex',gap:24}}>
+        {[[th1,q1,cv('testimonial_1','author')],[th2,q2,cv('testimonial_2','author')]].map(([th,q,auth],i)=>(
+          <div key={i} style={{flex:1,borderRadius:4,overflow:'hidden',backgroundColor:'#111',position:'relative',display:'flex',alignItems:'flex-end'}}>
+            {th&&<img src={th as string} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:0.5}} alt=""/>}
+            <div style={{position:'relative',padding:'12px 14px',color:'white',background:'linear-gradient(to top,rgba(0,0,0,0.8),transparent)'}}>
+              <div style={{fontSize:11,fontStyle:'italic',lineHeight:1.4,marginBottom:4,WebkitLineClamp:2,overflow:'hidden',display:'-webkit-box',WebkitBoxOrient:'vertical'}}>{q}</div>
+              <div style={{fontSize:10,opacity:0.7}}>{auth}</div>
+            </div>
+            <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-60%)',width:36,height:36,borderRadius:'50%',backgroundColor:'rgba(255,255,255,0.9)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <span style={{color:'#111',fontSize:14}}>▶</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   }
   if(t==='quiz') {
     const quizBg=ci(instance,'bg_color')||cv('colors','quiz_bg')||'#F7F7F7';
-    return(<div className={wrapClass}>
-      <div className="rounded-[4px] p-3" style={{backgroundColor:quizBg}}>
-        <div className="text-[11px] font-bold text-center mb-1" style={{color:quizBg==='#F7F7F7'||quizBg.toLowerCase()==='#f7f7f7'?'#111':'#111'}}>Quiz</div>
-        <div className="grid grid-cols-2 gap-1.5">{[1,2].map(i=><div key={i} className="h-8 rounded-[4px] border-2 border-neutral-300 bg-white"/>)}</div>
+    const q1=cv('quiz_q1','question')||'Bereit für deine unverbindliche Probestunde?';
+    const H=220;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:quizBg,padding:'28px 140px',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:14}}>
+        <div style={{fontSize:20,fontWeight:800,color:'#111',textAlign:'center'}}>{q1}</div>
+        <div style={{fontSize:12,color:lightGray,textAlign:'center'}}>Tippe einfach auf eine Antwort, um deine Anfrage zu starten.</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginTop:8,width:'100%'}}>
+          {[cv('quiz_q1','option_1')||'Ja, ich bin gespannt',cv('quiz_q1','option_2')||'Noch unsicher'].map((opt,i)=>(
+            <div key={i} style={{borderRadius:4,border:`2px solid ${i===0?brand:'#e5e7eb'}`,backgroundColor:i===0?brand+'10':'white',padding:'12px 8px',textAlign:'center',fontWeight:600,fontSize:13,color:i===0?brand:'#555'}}>
+              {opt}
+            </div>
+          ))}
+        </div>
       </div>
-    </div>);
+    );
   }
   if(t==='component_topbar') {
     const text=cv('header','topbar_text')||'Gesangsunterricht in Steyr oder online 🎶';
     const bg=cv('header','topbar_bg')||'#e0e0e0';
     const color=cv('header','topbar_color')||'#333333';
-    return(<div className={wrapClass}>
-      <div className="flex items-center justify-center gap-2 rounded-[4px] px-3 py-2 text-[11px] font-medium" style={{backgroundColor:bg,color}}>
-        <span className="line-clamp-1">{text}</span>
-        <span className="text-[10px] opacity-60">✕</span>
+    const H=36;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:bg,display:'flex',alignItems:'center',justifyContent:'center',gap:12,padding:'0 40px'}}>
+        <span style={{fontSize:13,color,fontWeight:500}}>{text}</span>
+        <span style={{fontSize:13,color,opacity:0.5}}>✕</span>
       </div>
-    </div>);
+    );
   }
-  // New section types
+  if(t==='component_header') {
+    const logo=cv('header','logo_text')||'MARTIN KRENDL';
+    const cta=cv('header','cta_label')||'Kostenloses Kennenlernen';
+    const bg=cv('header','header_bg')||cv('colors','header_bg')||brand;
+    const H=60;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:bg,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 80px'}}>
+        <span style={{color:'white',fontWeight:900,fontSize:15,letterSpacing:2}}>{logo}</span>
+        <span style={{backgroundColor:'white',color:bg,padding:'8px 18px',borderRadius:4,fontWeight:700,fontSize:12}}>{cta}</span>
+      </div>
+    );
+  }
+  if(t==='component_footer') {
+    const logo=cv('footer','logo_text')||'MARTIN KRENDL';
+    const tagline=cv('footer','tagline')||'Gesangsunterricht in Steyr und online.';
+    const bg=cv('footer','bg_color')||'#F1F5F9';
+    const textColor=cv('footer','text_color')||'#111827';
+    const linkColor=cv('footer','link_color')||brand;
+    const H=120;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:bg,padding:'28px 80px',display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+        <div>
+          <div style={{fontWeight:900,fontSize:14,letterSpacing:2,color:textColor}}>{logo}</div>
+          <div style={{fontSize:11,color:textColor,opacity:0.6,marginTop:4}}>{tagline}</div>
+        </div>
+        <div style={{display:'flex',gap:16}}>
+          <span style={{fontSize:11,color:linkColor,textDecoration:'underline'}}>Impressum</span>
+          <span style={{fontSize:11,color:linkColor,textDecoration:'underline'}}>Datenschutz</span>
+        </div>
+      </div>
+    );
+  }
+  if(t==='component_cookie') {
+    const msg=cv('cookie','message')||'Wir verwenden Cookies zu Statistik- und Marketingzwecken.';
+    const acceptLabel=cv('cookie','accept_label')||'Akzeptieren';
+    const bg=cv('cookie','bg_color')||'#ffffff';
+    const H=80;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:bg,border:'1px solid #e5e7eb',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 80px',gap:40}}>
+        <span style={{fontSize:12,color:'#374151',flex:1}}>{msg}</span>
+        <span style={{backgroundColor:'#1f2937',color:'white',padding:'8px 18px',borderRadius:4,fontSize:12,fontWeight:600,whiteSpace:'nowrap'}}>{acceptLabel}</span>
+      </div>
+    );
+  }
+  if(t==='component_quiz') {
+    const q1=cv('quiz_q1','question')||'Bereit für deine unverbindliche Probestunde?';
+    const quizBg=cv('colors','quiz_bg')||'#F7F7F7';
+    const H=200;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:quizBg,padding:'28px 140px',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:14}}>
+        <div style={{fontSize:18,fontWeight:800,color:'#111',textAlign:'center'}}>{q1}</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginTop:8,width:'100%'}}>
+          {[cv('quiz_q1','option_1')||'Ja, ich bin gespannt',cv('quiz_q1','option_2')||'Noch unsicher'].map((opt,i)=>(
+            <div key={i} style={{border:`2px solid ${i===0?brand:'#e5e7eb'}`,backgroundColor:i===0?brand+'15':'white',borderRadius:4,padding:'12px',textAlign:'center',fontWeight:600,fontSize:12,color:i===0?brand:'#555'}}>
+              {opt}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  // ── Generic section types ──────────────────────────────────────────────────
   if(t==='cta_banner') {
     const bg=ci(instance,'bg_color')||brand;
-    return(<div className={wrapClass}>
-      <div className="rounded-[4px] p-3 text-center" style={{backgroundColor:bg}}>
-        <div className="text-[11px] font-bold text-white line-clamp-1">{ci(instance,'title')||'CTA Überschrift'}</div>
-        <div className="mt-1.5"><MockBtn label={ci(instance,'cta_label')||'Jetzt starten'}/></div>
+    const title=ci(instance,'title')||'CTA Überschrift';
+    const cta=ci(instance,'cta_label')||'Jetzt starten';
+    const H=120;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:14}}>
+        <div style={{fontSize:22,fontWeight:900,color:'white',textAlign:'center'}}>{title}</div>
+        <span style={{backgroundColor:'rgba(255,255,255,0.9)',color:bg,padding:'10px 24px',borderRadius:4,fontWeight:700,fontSize:13}}>{cta}</span>
       </div>
-    </div>);
+    );
   }
-  if(t==='stats_row') return(<div className={wrapClass}>
-    <div className="grid grid-cols-4 gap-1.5 text-center">
-      {[1,2,3,4].map(i=><div key={i} className="rounded-[4px] p-2" style={{backgroundColor:brand+'11'}}>
-        <div className="text-sm font-extrabold" style={{color:brand}}>{ci(instance,`stat_${i}_number`)||'100+'}</div>
-        <div className="text-[9px] text-neutral-500">{ci(instance,`stat_${i}_label`)||`Statistik ${i}`}</div>
-      </div>)}
-    </div>
-  </div>);
-  if(t==='faq') return(<div className={wrapClass}>
-    <div className="text-[11px] font-bold mb-2">{ci(instance,'title')||'Häufige Fragen'}</div>
-    {[1,2,3].map(i=><div key={i} className="border-b border-neutral-200 py-1.5 flex items-center justify-between">
-      <span className="text-[10px] text-neutral-700 line-clamp-1">{ci(instance+i,'question')||`Frage ${i}`}</span>
-      <span className="text-neutral-300 text-xs">+</span>
-    </div>)}
-  </div>);
-  if(t==='steps') return(<div className={wrapClass}>
-    <div className="text-[11px] font-bold mb-2">{ci(instance,'title')||'So funktioniert es'}</div>
-    <div className="space-y-1.5">{[1,2,3].map(i=><div key={i} className="flex items-center gap-2">
-      <div className="h-5 w-5 shrink-0 rounded-full flex items-center justify-center text-white text-[10px] font-bold" style={{backgroundColor:brand}}>{i}</div>
-      <span className="text-[10px] text-neutral-700 line-clamp-1">{ci(instance+i,'title')||`Schritt ${i}`}</span>
-    </div>)}</div>
-  </div>);
-  if(t==='text_columns') return(<div className={wrapClass}>
-    <div className="text-[11px] font-bold text-center mb-2">{ci(instance,'title')||'Überschrift'}</div>
-    <div className="grid grid-cols-2 gap-2">{['col_1','col_2'].map((col,i)=><div key={i}>
-      <div className="text-[10px] font-bold mb-1">{ci(instance,`${col}_title`)||`Spalte ${i+1}`}</div>
-      <div className="space-y-0.5">{[1,2,3].map(j=><div key={j} className="h-1.5 w-full rounded-full bg-neutral-200"/>)}</div>
-    </div>)}</div>
-  </div>);
+  if(t==='stats_row') {
+    const H=110;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:'white',display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,padding:'20px 80px',alignItems:'center'}}>
+        {[1,2,3,4].map(i=><div key={i} style={{textAlign:'center',borderRadius:4,backgroundColor:brand+'11',padding:'12px 8px'}}>
+          <div style={{fontSize:24,fontWeight:900,color:brand}}>{ci(instance,`stat_${i}_number`)||'100+'}</div>
+          <div style={{fontSize:11,color:lightGray,marginTop:2}}>{ci(instance,`stat_${i}_label`)||`Statistik ${i}`}</div>
+        </div>)}
+      </div>
+    );
+  }
+  if(t==='faq') {
+    const H=190;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:'white',padding:'24px 80px'}}>
+        <div style={{fontSize:20,fontWeight:900,color:'#111',marginBottom:14}}>{ci(instance,'title')||'Häufige Fragen'}</div>
+        {[1,2,3].map(i=><div key={i} style={{borderBottom:'1px solid #e5e7eb',padding:'10px 0',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <span style={{fontSize:13,color:'#374151'}}>{ci(instance+i,'question')||`Frage ${i}`}</span>
+          <span style={{color:'#aaa',fontSize:18}}>+</span>
+        </div>)}
+      </div>
+    );
+  }
+  if(t==='steps') {
+    const H=180;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:'white',padding:'24px 80px'}}>
+        <div style={{fontSize:20,fontWeight:900,color:'#111',marginBottom:14}}>{ci(instance,'title')||'So funktioniert es'}</div>
+        <div style={{display:'flex',flexDirection:'column',gap:10}}>
+          {[1,2,3].map(i=><div key={i} style={{display:'flex',alignItems:'center',gap:12}}>
+            <div style={{width:28,height:28,borderRadius:'50%',backgroundColor:brand,color:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:900,flexShrink:0}}>{i}</div>
+            <div style={{fontSize:13,color:'#374151'}}>{ci(instance+i,'title')||`Schritt ${i}`}</div>
+          </div>)}
+        </div>
+      </div>
+    );
+  }
+  if(t==='checklist') {
+    const H=200;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:'white',padding:'24px 80px'}}>
+        <div style={{fontSize:20,fontWeight:900,color:'#111',marginBottom:14}}>{ci(instance,'title')||'Checkliste'}</div>
+        <div style={{display:'flex',flexDirection:'column',gap:8}}>
+          {[1,2,3,4].map(i=><div key={i} style={{display:'flex',alignItems:'center',gap:10}}>
+            <div style={{width:20,height:20,borderRadius:3,backgroundColor:brand,color:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:900,flexShrink:0}}>✓</div>
+            <div style={{fontSize:13,color:'#374151'}}>{ci(instance+i,'item')||`Punkt ${i}`}</div>
+          </div>)}
+        </div>
+      </div>
+    );
+  }
+  if(t==='text_centered') {
+    const H=160;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:'white',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,padding:'24px 160px',textAlign:'center'}}>
+        {ci(instance,'label')&&<div style={{fontSize:10,fontWeight:700,letterSpacing:'0.18em',textTransform:'uppercase',color:brand}}>{ci(instance,'label')}</div>}
+        <div style={{fontSize:22,fontWeight:900,color:'#111',lineHeight:1.2}}>{ci(instance,'title')||'Überschrift'}</div>
+        <div style={{fontSize:12,color:lightGray,lineHeight:1.6}}>{ci(instance,'text')||'Beschreibungstext...'}</div>
+        <span style={{backgroundColor:brand,color:'white',padding:'10px 22px',borderRadius:4,fontWeight:700,fontSize:12,marginTop:4}}>{ci(instance,'cta_label')||'Mehr erfahren'}</span>
+      </div>
+    );
+  }
+  if(t==='pricing') {
+    const H=200;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:'white',padding:'24px 80px'}}>
+        <div style={{fontSize:18,fontWeight:900,textAlign:'center',color:'#111',marginBottom:16}}>{ci(instance,'title')||'Preisübersicht'}</div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14}}>
+          {[1,2,3].map(i=><div key={i} style={{border:i===2?`2px solid ${brand}`:'1px solid #e5e7eb',borderRadius:4,padding:'14px 10px',textAlign:'center',backgroundColor:i===2?brand+'08':'white'}}>
+            <div style={{fontSize:12,fontWeight:700,color:'#111'}}>{ci(instance+i,'name')||`Paket ${i}`}</div>
+            <div style={{fontSize:22,fontWeight:900,color:brand,margin:'6px 0'}}>{ci(instance+i,'price')||'€99'}</div>
+          </div>)}
+        </div>
+      </div>
+    );
+  }
+  if(t==='image_gallery') {
+    const H=160;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:'white',padding:'20px 80px'}}>
+        <div style={{fontSize:18,fontWeight:900,color:'#111',marginBottom:12}}>{ci(instance,'title')||'Galerie'}</div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
+          {[1,2,3].map(i=>{const img=ci(instance+i,'image');return(<div key={i} style={{aspectRatio:'1',borderRadius:4,overflow:'hidden',backgroundColor:'#e5e7eb'}}>
+            {img&&<img src={img} style={{width:'100%',height:'100%',objectFit:'cover'}} alt=""/>}
+          </div>);})}
+        </div>
+      </div>
+    );
+  }
+  if(t==='text_columns') {
+    const H=160;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:'white',padding:'24px 80px'}}>
+        <div style={{fontSize:18,fontWeight:900,textAlign:'center',color:'#111',marginBottom:14}}>{ci(instance,'title')||'Überschrift'}</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:24}}>
+          {['col_1','col_2'].map((col,i)=><div key={i}>
+            <div style={{fontSize:14,fontWeight:700,color:'#111',marginBottom:8}}>{ci(instance,`${col}_title`)||`Spalte ${i+1}`}</div>
+            <div style={{display:'flex',flexDirection:'column',gap:4}}>{[1,2,3].map(j=><div key={j} style={{height:8,backgroundColor:'#e5e7eb',borderRadius:4,width:j===1?'100%':j===2?'80%':'60%'}}/>)}</div>
+          </div>)}
+        </div>
+      </div>
+    );
+  }
   if(t==='image_fullwidth') {
-    const img=ci(instance,'image');
-    const title=ci(instance,'title');
-    return(<div className={wrapClass}>
-      <div className="relative h-16 rounded-[4px] overflow-hidden bg-neutral-200">
-        {img&&<img src={img} className="absolute inset-0 h-full w-full object-cover" alt=""/>}
-        {title&&<div className="absolute inset-0 flex items-center justify-center bg-black/40"><span className="text-[11px] font-bold text-white">{title}</span></div>}
+    const img=ci(instance,'image');const title=ci(instance,'title');
+    const H=130;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',position:'relative',backgroundColor:'#e5e7eb',overflow:'hidden'}}>
+        {img&&<img src={img} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover'}} alt=""/>}
+        {title&&<div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',backgroundColor:'rgba(0,0,0,0.35)'}}>
+          <span style={{color:'white',fontSize:20,fontWeight:900,textAlign:'center',padding:'0 80px'}}>{title}</span>
+        </div>}
       </div>
-    </div>);
+    );
   }
-  if(t==='checklist') return(<div className={wrapClass}>
-    <div className="text-[11px] font-bold mb-2">{ci(instance,'title')||'Checkliste'}</div>
-    <div className="space-y-1">{[1,2,3,4].map(i=><div key={i} className="flex items-center gap-1.5">
-      <span className="h-3.5 w-3.5 shrink-0 rounded flex items-center justify-center text-white text-[9px]" style={{backgroundColor:brand}}>✓</span>
-      <span className="text-[10px] text-neutral-700 line-clamp-1">{ci(instance+i,'item')||`Punkt ${i}`}</span>
-    </div>)}</div>
-  </div>);
-  if(t==='image_gallery') return(<div className={wrapClass}>
-    <div className="text-[11px] font-bold mb-2">{ci(instance,'title')||'Galerie'}</div>
-    <div className="grid grid-cols-3 gap-1.5">{[1,2,3].map(i=><div key={i}>
-      <MockImg src={ci(instance+i,'image')} className="h-14 w-full"/>
-      {ci(instance+i,'caption')&&<div className="mt-0.5 text-[9px] text-center text-neutral-500 line-clamp-1">{ci(instance+i,'caption')}</div>}
-    </div>)}</div>
-  </div>);
-  if(t==='text_centered') return(<div className={wrapClass}>
-    <div className="text-center">
-      {ci(instance,'label')&&<div className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{color:brand}}>{ci(instance,'label')}</div>}
-      <div className="text-[11px] font-bold line-clamp-1">{ci(instance,'title')||'Überschrift'}</div>
-      <div className="mt-0.5 space-y-0.5 mb-2">{[1,2].map(j=><div key={j} className="h-1.5 rounded-full bg-neutral-200 mx-auto" style={{width:`${80-j*20}%`}}/>)}</div>
-      <MockBtn label={ci(instance,'cta_label')||'Mehr erfahren'}/>
-    </div>
-  </div>);
-  if(t==='pricing') return(<div className={wrapClass}>
-    <div className="text-[11px] font-bold text-center mb-2">{ci(instance,'title')||'Preisübersicht'}</div>
-    <div className="grid grid-cols-3 gap-1.5">{[1,2,3].map(i=><div key={i} className={`rounded-[4px] p-2 text-center border ${i===2?'border-2':'border-neutral-200'}`} style={i===2?{borderColor:brand}:{}}>
-      <div className="text-[9px] font-bold mb-0.5">{ci(instance+i,'name')||`Paket ${i}`}</div>
-      <div className="text-sm font-extrabold" style={{color:brand}}>{ci(instance+i,'price')||'€99'}</div>
-    </div>)}</div>
-  </div>);
-  // Fallback
-  return(<div className={`${wrapClass} text-center`}>
-    <div className="text-[10px] text-neutral-400 py-2">Vorschau nicht verfügbar</div>
+  if(t==='danke_header') {
+    const logo=cv('danke_header','logo_text')||cv('header','logo_text')||'MARTIN KRENDL';
+    const bg=cv('colors','header_bg')||brand;
+    const H=60;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:bg,display:'flex',alignItems:'center',padding:'0 80px'}}>
+        <span style={{color:'white',fontWeight:900,fontSize:15,letterSpacing:2}}>{logo}</span>
+      </div>
+    );
+  }
+  if(t==='danke_hero'||t==='danke') {
+    const title=cv('danke_hero','title')||'Deine Nachricht ist erfolgreich angekommen';
+    const sub=cv('danke_hero','subtitle')||'Danke für dein Interesse am Gesangsunterricht.';
+    const H=180;
+    return outer(H,
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:'white',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,padding:'28px 120px',textAlign:'center'}}>
+        <div style={{width:40,height:40,borderRadius:'50%',backgroundColor:brand,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <span style={{color:'white',fontSize:18}}>✓</span>
+        </div>
+        <div style={{fontSize:20,fontWeight:900,color:'#111',lineHeight:1.3}}>{title}</div>
+        <div style={{fontSize:12,color:lightGray,lineHeight:1.6,maxWidth:500}}>{sub}</div>
+      </div>
+    );
+  }
+  // Fallback – generic placeholder
+  return(<div ref={containerRef} className="pointer-events-none select-none mb-3 overflow-hidden rounded-[4px] border border-dashed border-neutral-200 bg-neutral-50/40">
+    <div className="flex items-center justify-center py-6 text-xs text-neutral-400">Vorschau nicht verfügbar</div>
   </div>);
 }
+
+
 
 function SectionRow({section,content,dirty,onChange,onUpload,onToggleHide,isDragging,onDragStart,onDragOver,onDrop,onDragEnd,onDelete}:{
   section:SectInstance;content:CM;dirty:Set<string>;
@@ -1081,14 +1340,14 @@ function FontPanel({currentFont,onSave}:{currentFont:string;onSave:(f:string)=>v
 
 const COMPONENT_PAGES: CmsPage[] = [
   {id:'component_header',label:'Header',path:'(Komponente)',is_system:true},
-  {id:'component_topbar',label:'TopHeader',path:'(Komponente)',is_system:true},
+  {id:'component_topbar',label:'Ankündigungsleiste',path:'(Komponente)',is_system:true},
   {id:'component_footer',label:'Footer',path:'(Komponente)',is_system:true},
   {id:'component_cookie',label:'Cookie Banner',path:'(Komponente)',is_system:true},
   {id:'component_quiz',label:'Quiz (Standard)',path:'(Komponente)',is_system:true},
 ];
 const COMPONENT_SECTIONS: Record<string,SectInstance> = {
   'component_header':{id:'virtual_header',page_id:'component_header',section_instance:'header',section_type:'component_header',label:'Header',sort_order:0,hidden:false},
-  'component_topbar':{id:'virtual_topbar',page_id:'component_topbar',section_instance:'topbar',section_type:'component_topbar',label:'TopHeader',sort_order:0,hidden:false},
+  'component_topbar':{id:'virtual_topbar',page_id:'component_topbar',section_instance:'topbar',section_type:'component_topbar',label:'Ankündigungsleiste',sort_order:0,hidden:false},
   'component_footer':{id:'virtual_footer',page_id:'component_footer',section_instance:'footer',section_type:'component_footer',label:'Footer',sort_order:0,hidden:false},
   'component_cookie':{id:'virtual_cookie',page_id:'component_cookie',section_instance:'cookie',section_type:'component_cookie',label:'Cookie Banner',sort_order:0,hidden:false},
   'component_quiz':{id:'virtual_quiz',page_id:'component_quiz',section_instance:'quiz_section',section_type:'component_quiz',label:'Quiz Einstellungen',sort_order:0,hidden:false},
@@ -1318,7 +1577,7 @@ export default function CmsPage() {
         {isNormal&&(
           <div className="flex items-center gap-5 rounded-[4px] border border-neutral-200 bg-white px-4 py-3">
             <span className="text-sm font-semibold text-neutral-600">Sichtbar auf dieser Seite:</span>
-            {([['TopHeader',topbarEnabled,setTopbarEnabled],['Header',headerEnabled,setHeaderEnabled],['Footer',footerEnabled,setFooterEnabled]] as const).map(([lbl,val,setter])=>(
+            {([['Ankündigungsleiste',topbarEnabled,setTopbarEnabled],['Header',headerEnabled,setHeaderEnabled],['Footer',footerEnabled,setFooterEnabled]] as const).map(([lbl,val,setter])=>(
               <label key={lbl} className="flex cursor-pointer items-center gap-2.5 select-none">
                 <button type="button" role="switch" aria-checked={val} onClick={()=>{(setter as (v:boolean)=>void)(!val);setDirty(p=>new Set([...p,'__settings__']));}}
                   className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none ${val?'bg-[#884A4A]':'bg-neutral-200'}`}>
