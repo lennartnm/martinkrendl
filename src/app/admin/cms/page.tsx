@@ -473,14 +473,14 @@ const SECT_TYPES: {type:string;label:string;addable:boolean;fields:Field[]}[] = 
     {section_key:'danke_hero',field_key:'cta_link',label:'Button Link',type:'link',group:'links'},
   ]},
   // ── 10 neue generische Sektionen ────────────────────────────────────────────
-  {type:'cta_banner',label:'CTA Banner (zentriert)',addable:true,fields:[
+  {type:'cta_banner',label:'CTA Banner (zentriert)',addable:false,fields:[
     {section_key:'__INST__',field_key:'title',label:'Überschrift',type:'text',group:'text'},
     {section_key:'__INST__',field_key:'text',label:'Text',type:'textarea',group:'text'},
     {section_key:'__INST__',field_key:'cta_label',label:'Button Text',type:'text',group:'text'},
     {section_key:'__INST__',field_key:'cta_link',label:'Button Link',type:'link',group:'links'},
     {section_key:'__INST__',field_key:'bg_color',label:'Hintergrundfarbe',type:'color',group:'colors'},
   ]},
-  {type:'stats_row',label:'Statistik-Zeile',addable:true,fields:[
+  {type:'stats_row',label:'Statistik-Zeile',addable:false,fields:[
     {section_key:'__INST__',field_key:'stat_1_number',label:'Zahl 1',type:'text',group:'text'},
     {section_key:'__INST__',field_key:'stat_1_label',label:'Label 1',type:'text',group:'text'},
     {section_key:'__INST__',field_key:'stat_2_number',label:'Zahl 2',type:'text',group:'text'},
@@ -490,7 +490,7 @@ const SECT_TYPES: {type:string;label:string;addable:boolean;fields:Field[]}[] = 
     {section_key:'__INST__',field_key:'stat_4_number',label:'Zahl 4',type:'text',group:'text'},
     {section_key:'__INST__',field_key:'stat_4_label',label:'Label 4',type:'text',group:'text'},
   ]},
-  {type:'faq',label:'FAQ',addable:true,fields:[
+  {type:'faq',label:'FAQ',addable:false,fields:[
     {section_key:'__INST__',field_key:'title',label:'Überschrift',type:'text',group:'text'},
     {section_key:'__INST__1',field_key:'question',label:'Frage 1',type:'text',group:'text'},
     {section_key:'__INST__1',field_key:'answer',label:'Antwort 1',type:'textarea',group:'text'},
@@ -503,7 +503,7 @@ const SECT_TYPES: {type:string;label:string;addable:boolean;fields:Field[]}[] = 
     {section_key:'__INST__5',field_key:'question',label:'Frage 5',type:'text',group:'text'},
     {section_key:'__INST__5',field_key:'answer',label:'Antwort 5',type:'textarea',group:'text'},
   ]},
-  {type:'steps',label:'Schritt-für-Schritt',addable:true,fields:[
+  {type:'steps',label:'Schritt-für-Schritt',addable:false,fields:[
     {section_key:'__INST__',field_key:'title',label:'Überschrift',type:'text',group:'text'},
     {section_key:'__INST__',field_key:'text',label:'Unterzeile',type:'textarea',group:'text'},
     {section_key:'__INST__1',field_key:'title',label:'Schritt 1 – Titel',type:'text',group:'text'},
@@ -515,19 +515,19 @@ const SECT_TYPES: {type:string;label:string;addable:boolean;fields:Field[]}[] = 
     {section_key:'__INST__4',field_key:'title',label:'Schritt 4 – Titel',type:'text',group:'text'},
     {section_key:'__INST__4',field_key:'text',label:'Schritt 4 – Text',type:'textarea',group:'text'},
   ]},
-  {type:'text_columns',label:'Text (2 Spalten)',addable:true,fields:[
+  {type:'text_columns',label:'Text (2 Spalten)',addable:false,fields:[
     {section_key:'__INST__',field_key:'title',label:'Überschrift',type:'text',group:'text'},
     {section_key:'__INST__',field_key:'col_1_title',label:'Spalte 1 – Titel',type:'text',group:'text'},
     {section_key:'__INST__',field_key:'col_1_text',label:'Spalte 1 – Text',type:'textarea',group:'text'},
     {section_key:'__INST__',field_key:'col_2_title',label:'Spalte 2 – Titel',type:'text',group:'text'},
     {section_key:'__INST__',field_key:'col_2_text',label:'Spalte 2 – Text',type:'textarea',group:'text'},
   ]},
-  {type:'image_fullwidth',label:'Vollbreites Bild',addable:true,fields:[
+  {type:'image_fullwidth',label:'Vollbreites Bild',addable:false,fields:[
     {section_key:'__INST__',field_key:'image',label:'Bild',type:'image',group:'media',hint:'Empfohlen: 1920×600px'},
     {section_key:'__INST__',field_key:'title',label:'Overlay Text',type:'text',group:'text'},
     {section_key:'__INST__',field_key:'overlay_opacity',label:'Overlay Stärke (0–1)',type:'text',group:'settings',hint:'z.B. 0.4'},
   ]},
-  {type:'checklist',label:'Checkliste',addable:true,fields:[
+  {type:'checklist',label:'Checkliste',addable:false,fields:[
     {section_key:'__INST__',field_key:'title',label:'Überschrift',type:'text',group:'text'},
     {section_key:'__INST__',field_key:'text',label:'Einleitungstext',type:'textarea',group:'text'},
     {section_key:'__INST__1',field_key:'item',label:'Punkt 1',type:'text',group:'text'},
@@ -539,7 +539,7 @@ const SECT_TYPES: {type:string;label:string;addable:boolean;fields:Field[]}[] = 
     {section_key:'__INST__',field_key:'cta_label',label:'Button Text',type:'text',group:'text'},
     {section_key:'__INST__',field_key:'cta_link',label:'Button Link',type:'link',group:'links'},
   ]},
-  {type:'image_gallery',label:'Bildgalerie (3er)',addable:true,fields:[
+  {type:'image_gallery',label:'Bildgalerie (3er)',addable:false,fields:[
     {section_key:'__INST__',field_key:'title',label:'Überschrift',type:'text',group:'text'},
     {section_key:'__INST__1',field_key:'image',label:'Bild 1',type:'image',group:'media'},
     {section_key:'__INST__1',field_key:'caption',label:'Bildunterschrift 1',type:'text',group:'text'},
@@ -548,14 +548,14 @@ const SECT_TYPES: {type:string;label:string;addable:boolean;fields:Field[]}[] = 
     {section_key:'__INST__3',field_key:'image',label:'Bild 3',type:'image',group:'media'},
     {section_key:'__INST__3',field_key:'caption',label:'Bildunterschrift 3',type:'text',group:'text'},
   ]},
-  {type:'text_centered',label:'Text zentriert',addable:true,fields:[
+  {type:'text_centered',label:'Text zentriert',addable:false,fields:[
     {section_key:'__INST__',field_key:'label',label:'Kleines Label',type:'text',group:'text'},
     {section_key:'__INST__',field_key:'title',label:'Überschrift',type:'text',group:'text'},
     {section_key:'__INST__',field_key:'text',label:'Text',type:'textarea',group:'text'},
     {section_key:'__INST__',field_key:'cta_label',label:'Button Text',type:'text',group:'text'},
     {section_key:'__INST__',field_key:'cta_link',label:'Button Link',type:'link',group:'links'},
   ]},
-  {type:'pricing',label:'Preisübersicht',addable:true,fields:[
+  {type:'pricing',label:'Preisübersicht',addable:false,fields:[
     {section_key:'__INST__',field_key:'title',label:'Überschrift',type:'text',group:'text'},
     {section_key:'__INST__',field_key:'text',label:'Unterzeile',type:'textarea',group:'text'},
     {section_key:'__INST__1',field_key:'name',label:'Paket 1 – Name',type:'text',group:'text'},

@@ -128,7 +128,6 @@ export default function AdminLoginPage() {
             </>
           )}
         </div>
-        <p className="mt-6 text-center text-xs text-[#6B6B6B]">Nur für autorisierte Nutzer</p>
       </div>
     </div>
   );

@@ -432,7 +432,12 @@ export default function AnalyticsPage() {
     { label: '30T', days: 30 },
     { label: '90T', days: 90 },
   ];
+  // Special ranges identified by string key (not days)
+  type SpecialRange = 'today' | '3h' | null;
   const [activeRange, setActiveRange] = useState<number | null>(30);
+  const [activeSpecial, setActiveSpecial] = useState<SpecialRange>(null);
+  // For sub-day precision we pass ISO timestamps directly to the API
+  const [sinceISO, setSinceISO] = useState<string | null>(null);
 
   const setQuickRange = (days: number) => {
     const to   = new Date();
@@ -440,10 +445,32 @@ export default function AnalyticsPage() {
     setFromDate(toDateInputVal(from));
     setToDate(toDateInputVal(to));
     setActiveRange(days);
+    setActiveSpecial(null);
+    setSinceISO(null);
+  };
+
+  const setTodayRange = () => {
+    const now = new Date();
+    const startOfDay = new Date(now); startOfDay.setHours(0, 0, 0, 0);
+    setFromDate(toDateInputVal(now));
+    setToDate(toDateInputVal(now));
+    setSinceISO(startOfDay.toISOString());
+    setActiveRange(null);
+    setActiveSpecial('today');
+  };
+
+  const setLast3hRange = () => {
+    const now = new Date();
+    const threeHAgo = new Date(now.getTime() - 3 * 3600000);
+    setFromDate(toDateInputVal(threeHAgo));
+    setToDate(toDateInputVal(now));
+    setSinceISO(threeHAgo.toISOString());
+    setActiveRange(null);
+    setActiveSpecial('3h');
   };
 
   const handleCustomRange = (from: string, to: string) => {
-    setFromDate(from); setToDate(to); setActiveRange(null);
+    setFromDate(from); setToDate(to); setActiveRange(null); setActiveSpecial(null); setSinceISO(null);
   };
 
   // Pageview stats
@@ -474,24 +501,30 @@ export default function AnalyticsPage() {
   const loadPageviews = useCallback(async () => {
     setPvLoading(true); setError('');
     try {
-      const res  = await fetch(`/api/admin/pageview?from=${fromDate}&to=${toDate}`);
+      const url = sinceISO
+        ? `/api/admin/pageview?since=${encodeURIComponent(sinceISO)}&to=${toDate}`
+        : `/api/admin/pageview?from=${fromDate}&to=${toDate}`;
+      const res  = await fetch(url);
       const json = await res.json();
       if (!json.ok) throw new Error(json.error);
       setStats(json);
     } catch (e: any) { setError(e.message); }
     finally { setPvLoading(false); }
-  }, [fromDate, toDate]);
+  }, [fromDate, toDate, sinceISO]);
 
   const loadFunnel = useCallback(async () => {
     setFunnelLoading(true);
     try {
       const qParam = selectedQuizId && selectedQuizId !== 'all' ? `&quiz_id=${selectedQuizId}` : '';
-      const res  = await fetch(`/api/admin/quiz-funnel?from=${fromDate}&to=${toDate}${qParam}`);
+      const url = sinceISO
+        ? `/api/admin/quiz-funnel?since=${encodeURIComponent(sinceISO)}&to=${toDate}${qParam}`
+        : `/api/admin/quiz-funnel?from=${fromDate}&to=${toDate}${qParam}`;
+      const res  = await fetch(url);
       const json = await res.json();
       if (json.ok) { setFunnelCounts(json.stepCounts || {}); setFunnelDaily(json.daily || []); }
     } catch {}
     finally { setFunnelLoading(false); }
-  }, [fromDate, toDate, selectedQuizId]);
+  }, [fromDate, toDate, sinceISO, selectedQuizId]);
 
   const loadChangelog = async () => {
     setClLoading(true);
@@ -544,6 +577,16 @@ export default function AnalyticsPage() {
           </div>
           {/* Date controls */}
           <div className="flex flex-wrap items-center gap-2">
+            <button onClick={setLast3hRange}
+              className="rounded-[4px] px-3 py-1.5 text-sm font-semibold transition"
+              style={{ backgroundColor: activeSpecial === '3h' ? brand : '#F3F4F6', color: activeSpecial === '3h' ? 'white' : '#4A4A4A' }}>
+              3h
+            </button>
+            <button onClick={setTodayRange}
+              className="rounded-[4px] px-3 py-1.5 text-sm font-semibold transition"
+              style={{ backgroundColor: activeSpecial === 'today' ? brand : '#F3F4F6', color: activeSpecial === 'today' ? 'white' : '#4A4A4A' }}>
+              Heute
+            </button>
             {RANGES.map(r => (
               <button key={r.days} onClick={() => setQuickRange(r.days)}
                 className="rounded-[4px] px-3 py-1.5 text-sm font-semibold transition"

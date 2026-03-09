@@ -9,6 +9,10 @@ export const dynamic = 'force-dynamic';
 // POST: track a pageview (public, no auth required)
 export async function POST(req: NextRequest) {
   try {
+    // Skip tracking if the request comes from an admin session
+    const adminSession = await getAdminSession();
+    if (adminSession) return NextResponse.json({ ok: true, skipped: true });
+
     const body = await req.json().catch(() => ({}));
     const page = body.page || '/';
     const referrer = body.referrer || req.headers.get('referer') || null;
@@ -43,14 +47,17 @@ export async function GET(req: NextRequest) {
   const session = await getAdminSession();
   if (!session) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
-  // Support ?from=YYYY-MM-DD&to=YYYY-MM-DD or legacy ?days=N
+  // Support ?since=ISO (sub-day precision) or ?from=YYYY-MM-DD&to=YYYY-MM-DD or legacy ?days=N
+  const sinceParam = req.nextUrl.searchParams.get('since');
   const fromParam = req.nextUrl.searchParams.get('from');
   const toParam   = req.nextUrl.searchParams.get('to');
   const legacyDays = parseInt(req.nextUrl.searchParams.get('days') || '30', 10);
 
-  const since = fromParam
-    ? new Date(fromParam + 'T00:00:00').toISOString()
-    : new Date(Date.now() - legacyDays * 86400000).toISOString();
+  const since = sinceParam
+    ? new Date(sinceParam).toISOString()
+    : fromParam
+      ? new Date(fromParam + 'T00:00:00').toISOString()
+      : new Date(Date.now() - legacyDays * 86400000).toISOString();
   const until = toParam
     ? new Date(toParam + 'T23:59:59').toISOString()
     : new Date().toISOString();
