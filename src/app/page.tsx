@@ -208,7 +208,6 @@ export default async function Page() {
   // Layout settings (header/footer/topbar visibility)
   const showHeader = cms["layout::show_header"] !== "false";
   const showFooter = cms["layout::show_footer"] !== "false";
-  const showTopbar = cms["layout::show_topbar"] !== "false";
 
   // Header from CMS component (fallback to home page values)
   const headerLogoText = headerCms["header::logo_text"] || c("header::logo_text") || "MARTIN KRENDL";
@@ -673,7 +672,7 @@ export default async function Page() {
         input[type='range']::-moz-range-thumb { height: 14px; width: 14px; border: 2px solid white; border-radius: 9999px; background: var(--brand); cursor: pointer; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
       `}</style>
 
-      {showHeader && showTopbar && headerShowTopbar && (
+      {showHeader && headerShowTopbar && (
         <TopHeader text={headerTopbarText} bgColor={headerTopbarBg} textColor={headerTopbarColor} />
       )}
 

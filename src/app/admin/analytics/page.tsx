@@ -30,7 +30,6 @@ const FUNNEL_STEPS = [
 ];
 
 const ENTRY_COLOR = { color: brand, bg: '#FDF4F4' };
-function getCat(_val: string) { return ENTRY_COLOR; }
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 function toDateInputVal(d: Date) {
@@ -266,7 +265,7 @@ function FunnelTimeline({
           {viewPts.map((pt, i) => {
             const entries = changelogByDate[pt.date];
             if (!entries?.length) return null;
-            const cat = getCat(entries[0].category);
+            const cat = ENTRY_COLOR;
             return (
               <g key={i}>
                 <line x1={pt.x} y1={0} x2={pt.x} y2={H} stroke={cat.color} strokeWidth="1.5" strokeDasharray="3 3" opacity="0.6" />
@@ -381,7 +380,7 @@ function ChangelogPanel({ entries, onAdd, onDelete, loading }: {
 
           <div className="space-y-1">
             {entries.map(entry => {
-              const cat  = getCat(entry.category);
+              const cat = ENTRY_COLOR;
               const date = new Date(entry.created_at);
               return (
                 <div key={entry.id} className="group relative flex gap-4 rounded-[4px] px-2 py-2.5 transition hover:bg-neutral-50">
