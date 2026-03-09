@@ -6,7 +6,7 @@ import {
   Save, CheckCircle, AlertCircle, Loader2, Upload, Eye, EyeOff,
   ChevronDown, ChevronRight, Palette, Image as ImageIcon, Video,
   Link as LinkIcon, Type, GripVertical, FileText, Plus, Trash2,
-  Globe, X, ArrowRight, Bold, Italic, Layout, Settings,
+  Globe, X, ArrowRight, Layout, Settings,
   AlignLeft, Hash,
 } from 'lucide-react';
 
@@ -98,56 +98,129 @@ function MediaField({ label, hint, type, value, isDirty, onChange, onUpload }: {
   );
 }
 
-function RichToolbar({ value, onChange, taRef }: { value: string; onChange: (v: string)=>void; taRef?: React.RefObject<HTMLTextAreaElement> }) {
-  const wrap = (b: string, a: string) => {
-    if (taRef?.current) {
-      const el = taRef.current;
-      const s = el.selectionStart, e = el.selectionEnd;
-      const sel = value.substring(s, e);
-      const nv = value.substring(0,s)+b+sel+a+value.substring(e);
-      onChange(nv);
-      setTimeout(()=>{ el.focus(); el.setSelectionRange(s+b.length, s+b.length+sel.length); },0);
-    } else {
-      onChange(value+b+a);
-    }
-  };
-  return (
-    <div className="flex items-center gap-1 mb-1">
-      <button type="button" title="Fett" onClick={()=>wrap('**','**')} className="flex h-6 w-6 items-center justify-center rounded border border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50 hover:text-neutral-800 transition"><Bold className="h-3 w-3"/></button>
-      <button type="button" title="Kursiv" onClick={()=>wrap('*','*')} className="flex h-6 w-6 items-center justify-center rounded border border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50 hover:text-neutral-800 transition"><Italic className="h-3 w-3"/></button>
-      <span className="ml-1 text-[10px] text-neutral-400">**fett** *kursiv*</span>
-    </div>
-  );
-}
+// ── Robust Rich Text Field ────────────────────────────────────────────────────
+// Stores Markdown (**bold**, *italic*) — renders it visually in a textarea
+// using native Selection API for reliable cursor-position-aware wrapping.
+// Toggle behavior: selecting formatted text removes the markers; unformatted text adds them.
+function RichTextField({
+  label, hint, value, isDirty, multiline, onChange,
+}: {
+  label: string; hint?: string; value: string; isDirty: boolean; multiline?: boolean; onChange: (v:string)=>void;
+}) {
+  const ref = useRef<HTMLTextAreaElement|HTMLInputElement>(null);
 
-function TextField({ label, hint, type, value, isDirty, onChange }: { label: string; hint?: string; type: 'text'|'textarea'|'link'; value: string; isDirty: boolean; onChange: (v: string)=>void }) {
-  const taRef = useRef<HTMLTextAreaElement>(null);
+  const applyMarker = (marker: string) => {
+    const el = ref.current;
+    if (!el) return;
+    const s = el.selectionStart ?? 0;
+    const e = el.selectionEnd ?? 0;
+    const sel = value.slice(s, e);
+    const m = marker.length;
+
+    // Check if selection is already wrapped with this marker
+    const before = value.slice(s - m, s);
+    const after  = value.slice(e, e + m);
+    if (before === marker && after === marker) {
+      // Unwrap: remove surrounding markers
+      const nv = value.slice(0, s-m) + sel + value.slice(e+m);
+      onChange(nv);
+      setTimeout(() => { el.focus(); el.setSelectionRange(s-m, e-m); }, 0);
+      return;
+    }
+    // Check if the selection itself starts/ends with the marker
+    if (sel.startsWith(marker) && sel.endsWith(marker) && sel.length >= m*2) {
+      const inner = sel.slice(m, -m);
+      const nv = value.slice(0, s) + inner + value.slice(e);
+      onChange(nv);
+      setTimeout(() => { el.focus(); el.setSelectionRange(s, s + inner.length); }, 0);
+      return;
+    }
+    // Wrap selection
+    const nv = value.slice(0, s) + marker + sel + marker + value.slice(e);
+    onChange(nv);
+    setTimeout(() => { el.focus(); el.setSelectionRange(s + m, e + m); }, 0);
+  };
+
+  const borderColor = isDirty ? '#F59E0B' : '#E5E7EB';
+
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-2">
-        {type==='link'?<LinkIcon className="h-3.5 w-3.5 text-neutral-400"/>:<Type className="h-3.5 w-3.5 text-neutral-400"/>}
+        <Type className="h-3.5 w-3.5 text-neutral-400"/>
         <span className="text-sm font-semibold text-neutral-800">{label}</span>
-        {type==='link'&&<span className="rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-600">Link</span>}
-        {isDirty&&<DirtyBadge/>}
+        {isDirty && <DirtyBadge/>}
       </div>
-      {hint&&<p className="pl-5 text-xs text-neutral-400">{hint}</p>}
+      {hint && <p className="pl-5 text-xs text-neutral-400">{hint}</p>}
       <div className="pl-5">
-        {type==='textarea'?(
-          <><RichToolbar value={value} onChange={onChange} taRef={taRef}/><textarea ref={taRef} value={value} onChange={e=>onChange(e.target.value)} rows={3} className="w-full resize-y rounded-[4px] border px-3 py-2 text-sm outline-none focus:border-[#884A4A]" style={{borderColor:isDirty?'#F59E0B':'#E5E7EB'}}/></>
-        ):type==='link'?(
-          <div className="flex gap-2">
-            <input type="text" value={value} onChange={e=>onChange(e.target.value)} placeholder="#quiz oder https://..." className="h-10 flex-1 rounded-[4px] border px-3 font-mono text-sm outline-none focus:border-[#884A4A]" style={{borderColor:isDirty?'#F59E0B':'#E5E7EB'}}/>
-            {value&&<a href={value} target={value.startsWith('http')?'_blank':'_self'} rel="noopener noreferrer" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[4px] border border-neutral-200 text-neutral-400 hover:bg-neutral-50"><Eye className="h-4 w-4"/></a>}
-          </div>
-        ):(
-          <div className="space-y-1">
-            <RichToolbar value={value} onChange={onChange}/>
-            <input type="text" value={value} onChange={e=>onChange(e.target.value)} className="h-10 w-full rounded-[4px] border px-3 text-sm outline-none focus:border-[#884A4A]" style={{borderColor:isDirty?'#F59E0B':'#E5E7EB'}}/>
+        {/* Formatting toolbar */}
+        <div className="flex items-center gap-1 mb-1.5">
+          <button type="button" title="Fett (Auswahl markieren, dann klicken)"
+            onMouseDown={e=>{e.preventDefault();applyMarker('**');}}
+            className="flex h-7 w-7 items-center justify-center rounded-[4px] border border-neutral-200 bg-white font-bold text-[13px] text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition">B</button>
+          <button type="button" title="Kursiv (Auswahl markieren, dann klicken)"
+            onMouseDown={e=>{e.preventDefault();applyMarker('*');}}
+            className="flex h-7 w-7 items-center justify-center rounded-[4px] border border-neutral-200 bg-white italic text-[13px] text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition">I</button>
+          <span className="ml-2 text-[10px] text-neutral-400">Text markieren → B oder I</span>
+        </div>
+        {multiline ? (
+          <textarea
+            ref={ref as React.RefObject<HTMLTextAreaElement>}
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            rows={3}
+            className="w-full resize-y rounded-[4px] border px-3 py-2 text-sm outline-none focus:border-[#884A4A]"
+            style={{borderColor}}
+          />
+        ) : (
+          <input
+            ref={ref as React.RefObject<HTMLInputElement>}
+            type="text"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            className="h-10 w-full rounded-[4px] border px-3 text-sm outline-none focus:border-[#884A4A]"
+            style={{borderColor}}
+          />
+        )}
+        {/* Live preview of rendered output */}
+        {value && /\*\*|^\*[^*]|\*$/.test(value) && (
+          <div className="mt-1 rounded-[4px] bg-neutral-50 px-2.5 py-1.5 text-xs text-neutral-500 border border-neutral-100">
+            <span className="text-[10px] uppercase tracking-wide text-neutral-400 mr-1.5">Vorschau:</span>
+            {value.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/).map((part,i)=>{
+              if(part.startsWith('**')&&part.endsWith('**'))return<strong key={i} className="text-neutral-700">{part.slice(2,-2)}</strong>;
+              if(part.startsWith('*')&&part.endsWith('*'))return<em key={i} className="text-neutral-700">{part.slice(1,-1)}</em>;
+              return<span key={i}>{part}</span>;
+            })}
           </div>
         )}
       </div>
     </div>
   );
+}
+
+function TextField({ label, hint, type, value, isDirty, onChange }: { label: string; hint?: string; type: 'text'|'textarea'|'link'; value: string; isDirty: boolean; onChange: (v: string)=>void }) {
+  if (type === 'link') {
+    return (
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-2">
+          <LinkIcon className="h-3.5 w-3.5 text-neutral-400"/>
+          <span className="text-sm font-semibold text-neutral-800">{label}</span>
+          <span className="rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-600">Link</span>
+          {isDirty && <DirtyBadge/>}
+        </div>
+        {hint && <p className="pl-5 text-xs text-neutral-400">{hint}</p>}
+        <div className="pl-5 flex gap-2">
+          <input type="text" value={value} onChange={e=>onChange(e.target.value)} placeholder="#quiz oder https://..."
+            className="h-10 flex-1 rounded-[4px] border px-3 font-mono text-sm outline-none focus:border-[#884A4A]"
+            style={{borderColor: isDirty?'#F59E0B':'#E5E7EB'}}/>
+          {value && <a href={value} target={value.startsWith('http')?'_blank':'_self'} rel="noopener noreferrer"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[4px] border border-neutral-200 text-neutral-400 hover:bg-neutral-50">
+            <Eye className="h-4 w-4"/>
+          </a>}
+        </div>
+      </div>
+    );
+  }
+  return <RichTextField label={label} hint={hint} value={value} isDirty={isDirty} multiline={type==='textarea'} onChange={onChange}/>;
 }
 
 function QuizSelectorField({ value, isDirty, onChange }: { value: string; isDirty: boolean; onChange: (v:string)=>void }) {
@@ -388,12 +461,8 @@ const SECT_TYPES: {type:string;label:string;addable:boolean;fields:Field[]}[] = 
     {section_key:'colors',field_key:'brand',label:'Akzentfarbe',type:'color',group:'colors'},
     {section_key:'colors',field_key:'quiz_bg',label:'Hintergrundfarbe',type:'color',group:'colors'},
   ]},
-  {type:'header',label:'Header & Navigation',addable:false,fields:[
-    {section_key:'header',field_key:'logo_text',label:'Logo Text',type:'text',group:'text'},
-    {section_key:'header',field_key:'cta_label',label:'Button Text',type:'text',group:'text'},
-    {section_key:'links',field_key:'header_cta',label:'Button Link',type:'link',group:'links'},
-    {section_key:'colors',field_key:'header_bg',label:'Hintergrundfarbe',type:'color',group:'colors'},
-  ]},
+  // 'header' on pages has no editable fields — editing happens in the Header component
+  {type:'header',label:'Header',addable:false,fields:[]},
   {type:'logos_legacy',label:'Logo-Leiste',addable:false,fields:[
     {section_key:'logos_section',field_key:'label',label:'Label',type:'text',group:'text'},
     {section_key:'images',field_key:'logo1',label:'Logo 1',type:'image',group:'media'},
@@ -1611,6 +1680,7 @@ export default function CmsPage() {
           </div>
         )}
       </div>
+      {showAddSection&&<AddSectionDialog onAdd={addSection} onClose={()=>setShowAddSection(false)}/>}
     </>
   );
 }
