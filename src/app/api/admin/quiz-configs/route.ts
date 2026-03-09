@@ -24,13 +24,15 @@ export async function GET() {
     .select('quiz_id')
     .not('quiz_id', 'is', null);
 
+  // Also pre-exclude legacy "default" id
+  const EXCLUDED_IDS = new Set(['default']);
   const knownIds = new Set(staticQuizzes.map(q => q.id));
   const discovered: { id: string; label: string; path: string; is_system: boolean }[] = [];
 
   if (eventRows) {
     const uniqueIds = [...new Set(eventRows.map((r: any) => r.quiz_id as string))];
     for (const qid of uniqueIds) {
-      if (!knownIds.has(qid)) {
+      if (!knownIds.has(qid) && !EXCLUDED_IDS.has(qid)) {
         discovered.push({ id: qid, label: qid, path: '(Hardcoded)', is_system: true });
         knownIds.add(qid);
       }

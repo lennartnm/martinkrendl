@@ -280,16 +280,10 @@ const SECT_TYPES: {type:string;label:string;addable:boolean;fields:Field[]}[] = 
     {section_key:'__INST__3',field_key:'author',label:'Bewertung 3 – Autor',type:'text',group:'text'},
   ]},
   {type:'quiz',label:'Quiz',addable:true,fields:[
-    {section_key:'__INST__',field_key:'quiz_id',label:'Quiz auswählen',type:'text',group:'settings'},
     {section_key:'__INST__',field_key:'bg_color',label:'Hintergrundfarbe der Sektion',type:'color',group:'colors'},
   ]},
-  {type:'global_colors',label:'Globale Farben',addable:true,fields:[
-    {section_key:'colors',field_key:'brand',label:'Brand-Farbe',type:'color',group:'colors'},
-    {section_key:'colors',field_key:'graphite',label:'Textfarbe dunkel',type:'color',group:'colors'},
-    {section_key:'colors',field_key:'dark_gray',label:'Textfarbe mittel',type:'color',group:'colors'},
-    {section_key:'colors',field_key:'light_gray',label:'Textfarbe hell',type:'color',group:'colors'},
-    {section_key:'colors',field_key:'quiz_bg',label:'Quiz-Hintergrund',type:'color',group:'colors'},
-  ]},
+  // global_colors is managed via the Farben panel in the toolbar, not as a section
+  {type:'global_colors',label:'Globale Farben',addable:false,fields:[]},
   // Legacy types
   {type:'hero_legacy',label:'Hero',addable:false,fields:[
     {section_key:'hero',field_key:'title',label:'Überschrift',type:'text',group:'text'},
@@ -903,14 +897,35 @@ function SectionPreview({type,content,instance}:{type:string;content:CM;instance
   }
   if(t==='quiz') {
     const quizBg=ci(instance,'bg_color')||cv('colors','quiz_bg')||'#F7F7F7';
-    const title=cv('quiz_section','title')||'Bereit für deine Probestunde?';
-    const subtitle=cv('quiz_section','subtitle')||'Beantworte 3 kurze Fragen – dauert nur 1 Minute.';
-    const H=220;
+    const q1=cv('quiz_q1','question')||'Bereit für deine unverbindliche Probestunde?';
+    const q1sub=cv('quiz_q1','subtitle')||'Tippe einfach auf eine Antwort, um deine Anfrage zu starten.';
+    const opt1=cv('quiz_q1','option_1')||'Ja, ich bin gespannt';
+    const opt2=cv('quiz_q1','option_2')||'Noch unsicher';
+    const img1=cv('quiz_q1','img_1')||'/option11.jpg';
+    const img2=cv('quiz_q1','img_2')||'/option22.jpg';
+    const progress=25;
+    const H=380;
     return outer(H,
-      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:quizBg,padding:'28px 140px',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12}}>
-        <div style={{fontSize:20,fontWeight:800,color:'#111',textAlign:'center',lineHeight:1.3}}>{title}</div>
-        {subtitle&&<div style={{fontSize:12,color:lightGray,textAlign:'center',lineHeight:1.5}}>{subtitle}</div>}
-        <div style={{backgroundColor:brand,color:'white',borderRadius:4,padding:'10px 24px',fontWeight:700,fontSize:13,marginTop:8}}>Quiz starten</div>
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:quizBg,padding:'32px 160px 40px',display:'flex',flexDirection:'column',alignItems:'center',gap:0}}>
+        {/* Progress bar */}
+        <div style={{width:'100%',maxWidth:520,height:8,backgroundColor:'#e5e7eb',borderRadius:99,overflow:'hidden',marginBottom:28}}>
+          <div style={{width:`${progress}%`,height:'100%',backgroundColor:brand,borderRadius:99}}/>
+        </div>
+        {/* Question */}
+        <div style={{fontSize:22,fontWeight:800,color:'#2F2F2F',textAlign:'center',lineHeight:1.3,maxWidth:540,marginBottom:10}}>{q1}</div>
+        <div style={{fontSize:12,color:'#6B6B6B',textAlign:'center',marginBottom:22}}>{q1sub}</div>
+        {/* Image cards */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,width:'100%',maxWidth:520}}>
+          {[{opt:opt1,img:img1},{opt:opt2,img:img2}].map(({opt,img},i)=>(
+            <div key={i} style={{borderRadius:4,overflow:'hidden',border:'1px solid #e5e7eb',backgroundColor:'white'}}>
+              <div style={{width:'100%',aspectRatio:'1',backgroundColor:'#d1d5db',backgroundImage:`url(${img})`,backgroundSize:'cover',backgroundPosition:'center',position:'relative'}}>
+                <div style={{position:'absolute',bottom:0,left:0,right:0,padding:'8px 6px',backgroundColor:`${brand}E6`,textAlign:'center'}}>
+                  <span style={{color:'white',fontWeight:700,fontSize:11,lineHeight:1.2}}>{opt}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -971,18 +986,33 @@ function SectionPreview({type,content,instance}:{type:string;content:CM;instance
     );
   }
   if(t==='component_quiz') {
-    // component_quiz: title/subtitle stored under quiz_section::{field}, bg under colors::quiz_bg
-    const title=cv('quiz_section','title')||'Bereit für deine Probestunde?';
-    const subtitle=cv('quiz_section','subtitle')||'Beantworte 3 kurze Fragen – dauert nur 1 Minute.';
+    // Realistic quiz step-0 preview using actual CMS content
     const quizBg=cv('colors','quiz_bg')||'#F7F7F7';
-    const btnLabel=cv('quiz_section','cta_label')||'Starten';
-    const H=220;
+    const q1=cv('quiz_q1','question')||'Bereit für deine unverbindliche Probestunde?';
+    const q1sub=cv('quiz_q1','subtitle')||'Tippe einfach auf eine Antwort, um deine Anfrage zu starten.';
+    const opt1=cv('quiz_q1','option_1')||'Ja, ich bin gespannt';
+    const opt2=cv('quiz_q1','option_2')||'Noch unsicher';
+    const img1=cv('quiz_q1','img_1')||'/option11.jpg';
+    const img2=cv('quiz_q1','img_2')||'/option22.jpg';
+    const progress=25;
+    const H=380;
     return outer(H,
-      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:quizBg,padding:'28px 140px',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12}}>
-        <div style={{fontSize:20,fontWeight:800,color:'#111',textAlign:'center',lineHeight:1.3}}>{title}</div>
-        {subtitle&&<div style={{fontSize:12,color:'#6b7280',textAlign:'center',lineHeight:1.5,maxWidth:500}}>{subtitle}</div>}
-        <div style={{display:'flex',gap:12,marginTop:6}}>
-          <div style={{backgroundColor:brand,color:'white',borderRadius:4,padding:'10px 24px',fontWeight:700,fontSize:13}}>{btnLabel}</div>
+      <div style={{width:W,height:H,transform:`scale(${SCALE})`,transformOrigin:'top left',backgroundColor:quizBg,padding:'32px 160px 40px',display:'flex',flexDirection:'column',alignItems:'center',gap:0}}>
+        <div style={{width:'100%',maxWidth:520,height:8,backgroundColor:'#e5e7eb',borderRadius:99,overflow:'hidden',marginBottom:28}}>
+          <div style={{width:`${progress}%`,height:'100%',backgroundColor:brand,borderRadius:99}}/>
+        </div>
+        <div style={{fontSize:22,fontWeight:800,color:'#2F2F2F',textAlign:'center',lineHeight:1.3,maxWidth:540,marginBottom:10}}>{q1}</div>
+        <div style={{fontSize:12,color:'#6B6B6B',textAlign:'center',marginBottom:22}}>{q1sub}</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,width:'100%',maxWidth:520}}>
+          {[{opt:opt1,img:img1},{opt:opt2,img:img2}].map(({opt,img},i)=>(
+            <div key={i} style={{borderRadius:4,overflow:'hidden',border:'1px solid #e5e7eb',backgroundColor:'white'}}>
+              <div style={{width:'100%',aspectRatio:'1',backgroundColor:'#d1d5db',backgroundImage:`url(${img})`,backgroundSize:'cover',backgroundPosition:'center',position:'relative'}}>
+                <div style={{position:'absolute',bottom:0,left:0,right:0,padding:'8px 6px',backgroundColor:`${brand}E6`,textAlign:'center'}}>
+                  <span style={{color:'white',fontWeight:700,fontSize:11,lineHeight:1.2}}>{opt}</span>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -1272,39 +1302,86 @@ function AddSectionDialog({onAdd,onClose}:{onAdd:(type:string,label:string)=>voi
   );
 }
 
+// Build a single Google Fonts URL that loads ALL fonts at once for previews
+const ALL_FONTS_URL = 'https://fonts.googleapis.com/css2?' +
+  GOOGLE_FONTS.map(f=>`family=${encodeURIComponent(f.name)}:wght@400;600;700;800`).join('&') +
+  '&display=swap';
+
 function FontPanel({currentFont,onSave}:{currentFont:string;onSave:(f:string)=>void}) {
-  const [sel,setSel]=useState(currentFont);const [saving,setSaving]=useState(false);
+  const [sel,setSel]=useState(currentFont);
+  const [saving,setSaving]=useState(false);
+  const [fontsLoaded,setFontsLoaded]=useState(false);
   useEffect(()=>{setSel(currentFont);},[currentFont]);
-  // Preload all font stylesheets so previews render correctly
+  // Load all fonts in a single request so previews actually render
   useEffect(()=>{
-    GOOGLE_FONTS.forEach(f=>{
-      if(!document.querySelector(`link[href="${f.url}"]`)){
-        const link=document.createElement('link');link.rel='stylesheet';link.href=f.url;document.head.appendChild(link);
-      }
-    });
+    if(document.getElementById('cms-all-fonts-link'))return setFontsLoaded(true);
+    const link=document.createElement('link');
+    link.id='cms-all-fonts-link';link.rel='stylesheet';link.href=ALL_FONTS_URL;
+    link.onload=()=>setFontsLoaded(true);
+    document.head.appendChild(link);
   },[]);
   const selFont=GOOGLE_FONTS.find(f=>f.name===sel)||GOOGLE_FONTS[0];
   const save=async()=>{setSaving(true);await fetch('/api/admin/font-settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({font:sel,url:selFont.url})});setSaving(false);onSave(sel);};
   return (
     <div className="rounded-[4px] border border-neutral-200 bg-white p-5 space-y-4 shadow-sm">
       <div className="flex items-center gap-2"><Type className="h-4 w-4 text-neutral-400"/><h3 className="font-bold text-neutral-800 text-sm">Globale Schriftart</h3><span className="ml-auto text-xs text-neutral-400">Gilt für alle öffentlichen Seiten</span></div>
-      <div className="grid grid-cols-1 gap-1.5 max-h-64 overflow-y-auto pr-1">
+      {!fontsLoaded&&<p className="text-xs text-neutral-400 text-center py-2">Schriftarten werden geladen…</p>}
+      <div className={`grid grid-cols-1 gap-1.5 max-h-64 overflow-y-auto pr-1 transition-opacity ${fontsLoaded?'opacity-100':'opacity-0'}`}>
         {GOOGLE_FONTS.map(f=>(
           <button key={f.name} type="button" onClick={()=>setSel(f.name)}
             className={`rounded-[4px] border px-4 py-2.5 text-left transition flex items-center gap-3 ${sel===f.name?'border-[#884A4A] bg-[#FDF8F8]':'border-neutral-100 hover:border-neutral-300 hover:bg-neutral-50'}`}>
             <span className={`text-xs w-24 shrink-0 ${sel===f.name?'font-semibold text-[#884A4A]':'text-neutral-400'}`}>{f.name}</span>
-            <span className="text-sm text-neutral-700" style={{fontFamily:f.name}}>{f.preview}</span>
+            {/* Preview text in THIS font - works because all fonts are loaded */}
+            <span style={{fontFamily:`'${f.name}', sans-serif`,fontSize:14,color:'#374151',flex:1}}>{f.preview}</span>
             {sel===f.name&&<CheckCircle className="h-3.5 w-3.5 shrink-0 ml-auto text-[#884A4A]"/>}
           </button>
         ))}
       </div>
       <div className="rounded-[4px] bg-neutral-50 border border-neutral-100 px-4 py-3">
         <p className="text-[10px] uppercase tracking-wider text-neutral-400 mb-2">Vorschau — {sel}</p>
-        <p className="text-xl font-bold leading-tight" style={{fontFamily:sel}}>Sing freier, sicherer</p>
-        <p className="text-sm text-neutral-500 mt-1" style={{fontFamily:sel}}>und mit mehr Ausdruck durch die Voiceation Methode.</p>
+        <p className="text-xl font-bold leading-tight" style={{fontFamily:`'${sel}', sans-serif`}}>Sing freier, sicherer</p>
+        <p className="text-sm text-neutral-500 mt-1" style={{fontFamily:`'${sel}', sans-serif`}}>und mit mehr Ausdruck durch die Voiceation Methode.</p>
       </div>
       <button onClick={save} disabled={saving} className="h-10 w-full rounded-[4px] text-sm font-semibold text-white disabled:opacity-40 flex items-center justify-center gap-2" style={{backgroundColor:brand}}>
         {saving?<Loader2 className="h-4 w-4 animate-spin"/>:<Save className="h-4 w-4"/>}{saving?'Wird gespeichert...':'Schriftart übernehmen'}
+      </button>
+    </div>
+  );
+}
+
+function ColorPanel({content,onChange,onSave,saving}:{content:CM;onChange:(k:string,v:string)=>void;onSave:()=>void;saving:boolean}) {
+  const fields=[
+    {key:'colors::brand',     label:'Brand-Farbe',       hint:'Buttons, Akzente, Links'},
+    {key:'colors::quiz_bg',   label:'Quiz Hintergrund',  hint:'Hintergrundfarbe der Quiz-Sektion'},
+    {key:'colors::graphite',  label:'Textfarbe dunkel',  hint:'Haupt-Fließtext'},
+    {key:'colors::dark_gray', label:'Textfarbe mittel',  hint:'Sekundäre Überschriften'},
+    {key:'colors::light_gray',label:'Textfarbe hell',    hint:'Untertitel, Subtexte'},
+  ];
+  return (
+    <div className="rounded-[4px] border border-neutral-200 bg-white p-5 space-y-4 shadow-sm">
+      <div className="flex items-center gap-2">
+        <Palette className="h-4 w-4 text-neutral-400"/>
+        <h3 className="font-bold text-neutral-800 text-sm">Globale Farben</h3>
+        <span className="ml-auto text-xs text-neutral-400">Gilt für alle öffentlichen Seiten</span>
+      </div>
+      <div className="space-y-3">
+        {fields.map(f=>{
+          const val=content[f.key]||'';
+          return (
+            <div key={f.key} className="flex items-center gap-3">
+              <input type="color" value={val||'#884A4A'} onChange={e=>onChange(f.key,e.target.value)}
+                className="h-9 w-9 shrink-0 cursor-pointer rounded-[4px] border border-neutral-200 p-0.5"/>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-neutral-700">{f.label}</div>
+                <div className="text-xs text-neutral-400">{f.hint}</div>
+              </div>
+              <code className="text-[10px] text-neutral-400 font-mono">{val||'—'}</code>
+            </div>
+          );
+        })}
+      </div>
+      <button onClick={onSave} disabled={saving} className="h-10 w-full rounded-[4px] text-sm font-semibold text-white disabled:opacity-40 flex items-center justify-center gap-2" style={{backgroundColor:brand}}>
+        {saving?<Loader2 className="h-4 w-4 animate-spin"/>:<Save className="h-4 w-4"/>}{saving?'Wird gespeichert...':'Farben speichern & live'}
       </button>
     </div>
   );
@@ -1338,6 +1415,7 @@ export default function CmsPage() {
   const [pageDropOpen,setPageDropOpen]=useState(false);
   const [showAddSection,setShowAddSection]=useState(false);
   const [showFontPanel,setShowFontPanel]=useState(false);
+  const [showColorPanel,setShowColorPanel]=useState(false);
   const [currentFont,setCurrentFont]=useState('Open Sans');
   const [headerEnabled,setHeaderEnabled]=useState(true);
   const [footerEnabled,setFooterEnabled]=useState(true);
@@ -1501,6 +1579,19 @@ export default function CmsPage() {
             <button type="button" onClick={()=>setShowFontPanel(v=>!v)} className="flex h-9 items-center gap-1.5 rounded-[4px] border border-neutral-200 px-3 text-sm text-neutral-600 transition hover:bg-neutral-50">
               <Type className="h-4 w-4"/> Schriftart
             </button>
+            <button type="button" onClick={()=>{
+              const opening=!showColorPanel;
+              setShowColorPanel(v=>!v);setShowFontPanel(false);
+              if(opening){
+                // Load global colors from home page into local content state
+                fetch('/api/admin/content?page=home').then(r=>r.json()).then(j=>{
+                  if(j.ok){const updates:CM={};for(const e of(j.data||[])){if(e.section_key==='colors')updates[`${e.section_key}::${e.field_key}`]=e.value;}
+                  setContent(p=>({...p,...updates}));}
+                }).catch(()=>{});
+              }
+            }} className={`flex h-9 items-center gap-1.5 rounded-[4px] border px-3 text-sm transition ${showColorPanel?'border-[#884A4A] bg-[#FDF8F8] text-[#884A4A]':'border-neutral-200 text-neutral-600 hover:bg-neutral-50'}`}>
+              <Palette className="h-4 w-4"/> Farben
+            </button>
             {savedAt&&totalDirty===0&&<span className="flex items-center gap-1.5 text-sm text-emerald-600"><CheckCircle className="h-4 w-4"/>{savedAt.toLocaleTimeString('de-AT',{hour:'2-digit',minute:'2-digit'})} gespeichert</span>}
             {totalDirty>0&&<span className="flex items-center gap-1.5 text-sm text-amber-600"><AlertCircle className="h-4 w-4"/>{totalDirty} ungespeichert</span>}
             <button onClick={handleSave} disabled={saving||totalDirty===0} className="flex items-center gap-2 rounded-[4px] px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-40" style={{backgroundColor:brand}}>
@@ -1509,7 +1600,18 @@ export default function CmsPage() {
           </div>
         </div>
 
-        {showFontPanel&&<FontPanel currentFont={currentFont} onSave={f=>{setCurrentFont(f);setShowFontPanel(false);}}/>}
+        <div className="grid gap-4" style={{gridTemplateColumns:showFontPanel||showColorPanel?'1fr':'',display:showFontPanel||showColorPanel?'grid':'none'}}>
+          {showFontPanel&&<FontPanel currentFont={currentFont} onSave={f=>{setCurrentFont(f);setShowFontPanel(false);}}/>}
+          {showColorPanel&&<ColorPanel content={content} onChange={handleChange} onSave={async()=>{
+            // Save color keys directly to page=home so they affect the live site
+            const colorKeys=Object.keys(content).filter(k=>k.startsWith('colors::'));
+            if(colorKeys.length){
+              const updates=colorKeys.map(k=>{const[sk,fk]=k.split('::');return{section_key:sk,field_key:fk,value:content[k]??''};});
+              await fetch('/api/admin/content',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({page:'home',updates})});
+            }
+            setDirty(new Set());setSavedAt(new Date());
+          }} saving={saving}/>}
+        </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <div ref={pageDropRef} className="relative">
