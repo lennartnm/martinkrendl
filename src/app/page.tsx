@@ -242,26 +242,7 @@ export default async function Page() {
   const ci = (instance: string, field: string) =>
     cms[`${instance}::${field}`] ?? FALLBACK[`${instance}::${field}`] ?? "";
 
-  const bulletPoints = [c("image_text_1::bullet_1"), c("image_text_1::bullet_2"), c("image_text_1::bullet_3")];
-
-  const featureCards = [
-    { icon: featureIcons[0], title: c("feature_card_1::title"), text: c("feature_card_1::text") },
-    { icon: featureIcons[1], title: c("feature_card_2::title"), text: c("feature_card_2::text") },
-    { icon: featureIcons[2], title: c("feature_card_3::title"), text: c("feature_card_3::text") },
-  ];
-
-  const secondFeatureCards = [
-    { icon: secondFeatureIcons[0], title: c("feature2_card_1::title"), text: c("feature2_card_1::text") },
-    { icon: secondFeatureIcons[1], title: c("feature2_card_2::title"), text: c("feature2_card_2::text") },
-    { icon: secondFeatureIcons[2], title: c("feature2_card_3::title"), text: c("feature2_card_3::text") },
-    { icon: secondFeatureIcons[3], title: c("feature2_card_4::title"), text: c("feature2_card_4::text") },
-  ];
-
-  const reviews = [
-    { text: c("review_1::text"), author: c("review_1::author") },
-    { text: c("review_2::text"), author: c("review_2::author") },
-    { text: c("review_3::text"), author: c("review_3::author") },
-  ];
+  // Pre-computed arrays removed: each renderer now reads instance-aware content via ci()
 
   // sectionRenderers: jeder Typ bekommt seine section_instance übergeben
   // Legacy-Sektionen haben instance == type (z.B. "hero"), neue haben UUIDs (z.B. "image_text_abc123")
@@ -312,169 +293,209 @@ export default async function Page() {
         </section>
       );
     },
-    logos: (instance) => (
-      <section key="logos" className="py-12 md:py-14">
-        <div className={sectionWidth}>
-          <div className="mx-auto mb-8 max-w-3xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: brandColor }}>
-              {c("logos_section::label")}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
-            {[c("images::logo1"), c("images::logo2")].map((logo, index) => (
-              <div key={index} className="flex h-28 w-[min(100%,260px)] items-center justify-center rounded-[4px] border border-neutral-200 bg-white p-4 md:h-32">
-                <CmsImage src={logo} alt={`Logo ${index + 1}`} width={180} height={80} className="max-h-14 w-auto object-contain md:max-h-16" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    ),
-    feature_cards_3: (instance) => (
-      <section key="feature_cards_3" className="pt-8 pb-14 md:pt-10 md:pb-20">
-        <div className={sectionWidth}>
-          <div className="grid gap-4 md:grid-cols-3 md:gap-6">
-            {featureCards.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div key={item.title} className="rounded-[4px] px-6 py-8 text-center text-white" style={{ backgroundColor: brandColor }}>
-                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[4px] border border-white/20 bg-white/10">
-                    <Icon className="h-7 w-7 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-white/90">{item.text}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-    ),
-    image_text_1: (instance) => (
-      <section key="image_text_1" className="py-14 md:py-20">
-        <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
-          <div className="relative aspect-square overflow-hidden rounded-[4px]">
-            <CmsImage src={c("images::section1")} alt="Gesangsunterricht mit Martin Krendl" fill className="object-cover" />
-          </div>
-          <div>
-            <h2 className="text-3xl font-extrabold md:text-4xl">{c("image_text_1::title")}</h2>
-            <p className="mt-4 text-base leading-8" style={{ color: lightGray }}>{c("image_text_1::text")}</p>
-            <div className="mt-6 space-y-3">
-              {bulletPoints.map((point) => (
-                <div key={point} className="flex items-start gap-3">
-                  <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: brandColor }}>
-                    <Check className="h-3.5 w-3.5 text-white" />
-                  </div>
-                  <p className="text-sm leading-7" style={{ color: graphite }}>{point}</p>
+    logos: (instance) => {
+      const label = ci(instance,'label') || c("logos_section::label");
+      const logos = [
+        ci(instance,'logo_1') || c("images::logo1"),
+        ci(instance,'logo_2') || c("images::logo2"),
+      ].filter(Boolean);
+      return (
+        <section key={instance} className="py-12 md:py-14">
+          <div className={sectionWidth}>
+            <div className="mx-auto mb-8 max-w-3xl text-center">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: brandColor }}>{label}</p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
+              {logos.map((logo, index) => (
+                <div key={index} className="flex h-28 w-[min(100%,260px)] items-center justify-center rounded-[4px] border border-neutral-200 bg-white p-4 md:h-32">
+                  <CmsImage src={logo} alt={`Logo ${index + 1}`} width={180} height={80} className="max-h-14 w-auto object-contain md:max-h-16" />
                 </div>
               ))}
             </div>
-            <div className="mt-8">
-              <a href={c("links::image_text_1_cta")}>
-                <Button className="rounded-[4px] px-6 py-3 font-semibold text-white hover:opacity-95" style={{ backgroundColor: brandColor }}>
-                  {c("image_text_1::cta_label")}
-                </Button>
-              </a>
+          </div>
+        </section>
+      );
+    },
+    feature_cards_3: (instance) => {
+      const cards = [1,2,3].map((n,i) => ({
+        icon: featureIcons[i],
+        title: ci(instance+n,'title') || c(`feature_card_${n}::title`),
+        text:  ci(instance+n,'text')  || c(`feature_card_${n}::text`),
+      }));
+      return (
+        <section key={instance} className="pt-8 pb-14 md:pt-10 md:pb-20">
+          <div className={sectionWidth}>
+            <div className="grid gap-4 md:grid-cols-3 md:gap-6">
+              {cards.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.title} className="rounded-[4px] px-6 py-8 text-center text-white" style={{ backgroundColor: brandColor }}>
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[4px] border border-white/20 bg-white/10">
+                      <Icon className="h-7 w-7 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold">{item.title}</h3>
+                    <p className="mt-3 text-sm leading-7 text-white/90">{item.text}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
-        </div>
-      </section>
-    ),
-    quote: (instance) => (
-      <section key="quote" className="py-14 md:py-20">
-        <div className="relative aspect-[4/5] w-full overflow-hidden md:aspect-[16/6]">
-          <CmsImage src={c("images::quote_bg")} alt="Martin Krendl" fill className="object-cover" />
-          <div className="absolute inset-0 bg-black/45" />
-          <div className={`${sectionWidth} absolute inset-0 flex items-center`}>
-            <div className="max-w-3xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">{c("quote_section::label")}</p>
-              <blockquote className="mt-4 text-2xl font-bold leading-relaxed text-white md:text-4xl">
-                {c("quote_section::quote")}
-              </blockquote>
+        </section>
+      );
+    },
+    image_text_1: (instance) => {
+      const img      = ci(instance,'image')     || c("images::section1");
+      const title    = ci(instance,'title')     || c("image_text_1::title");
+      const text     = ci(instance,'text')      || c("image_text_1::text");
+      const ctaLabel = ci(instance,'cta_label') || c("image_text_1::cta_label");
+      const ctaLink  = ci(instance,'cta_link')  || c("links::image_text_1_cta");
+      const bp = [
+        ci(instance,'bullet_1') || c("image_text_1::bullet_1"),
+        ci(instance,'bullet_2') || c("image_text_1::bullet_2"),
+        ci(instance,'bullet_3') || c("image_text_1::bullet_3"),
+      ].filter(Boolean);
+      return (
+        <section key={instance} className="py-14 md:py-20">
+          <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
+            <div className="relative aspect-square overflow-hidden rounded-[4px]">
+              <CmsImage src={img} alt="Gesangsunterricht mit Martin Krendl" fill className="object-cover" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-extrabold md:text-4xl">{title}</h2>
+              <p className="mt-4 text-base leading-8" style={{ color: lightGray }}>{text}</p>
+              {bp.length > 0 && (
+                <div className="mt-6 space-y-3">
+                  {bp.map((point) => (
+                    <div key={point} className="flex items-start gap-3">
+                      <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: brandColor }}>
+                        <Check className="h-3.5 w-3.5 text-white" />
+                      </div>
+                      <p className="text-sm leading-7" style={{ color: graphite }}>{point}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {ctaLabel && (
+                <div className="mt-8">
+                  <a href={ctaLink || '#'}>
+                    <Button className="rounded-[4px] px-6 py-3 font-semibold text-white hover:opacity-95" style={{ backgroundColor: brandColor }}>
+                      {ctaLabel}
+                    </Button>
+                  </a>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      </section>
-    ),
+        </section>
+      );
+    },
+    quote: (instance) => {
+      const bg    = ci(instance,'bg')    || c("images::quote_bg");
+      const label = ci(instance,'label') || c("quote_section::label");
+      const quote = ci(instance,'quote') || c("quote_section::quote");
+      return (
+        <section key={instance} className="py-14 md:py-20">
+          <div className="relative aspect-[4/5] w-full overflow-hidden md:aspect-[16/6]">
+            <CmsImage src={bg} alt="Martin Krendl" fill className="object-cover" />
+            <div className="absolute inset-0 bg-black/45" />
+            <div className={`${sectionWidth} absolute inset-0 flex items-center`}>
+              <div className="max-w-3xl">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">{label}</p>
+                <blockquote className="mt-4 text-2xl font-bold leading-relaxed text-white md:text-4xl">{quote}</blockquote>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    },
     video_carousel: (instance) => (
       <VideoCarousel
-        key="video_carousel"
-        title={c("video_section::title")}
-        text={c("video_section::text")}
+        key={instance}
+        title={ci(instance,'title') || c("video_section::title")}
+        text={ci(instance,'text')   || c("video_section::text")}
         brandColor={brandColor}
         videos={[
-          { src: c("videos::carousel_1_src"), thumbnail: c("videos::carousel_1_thumb") },
-          { src: c("videos::carousel_2_src"), thumbnail: c("videos::carousel_2_thumb") },
-          { src: c("videos::carousel_3_src"), thumbnail: c("videos::carousel_3_thumb") },
+          { src: ci(instance,'video_1_src')   || c("videos::carousel_1_src"), thumbnail: ci(instance,'video_1_thumb')   || c("videos::carousel_1_thumb") },
+          { src: ci(instance,'video_2_src')   || c("videos::carousel_2_src"), thumbnail: ci(instance,'video_2_thumb')   || c("videos::carousel_2_thumb") },
+          { src: ci(instance,'video_3_src')   || c("videos::carousel_3_src"), thumbnail: ci(instance,'video_3_thumb')   || c("videos::carousel_3_thumb") },
         ]}
       />
     ),
-    image_text_2: (instance) => (
-      <section key="image_text_2" className="py-14 md:py-20">
-        <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
-          <div className="order-2 md:order-1">
-            <h2 className="text-3xl font-extrabold md:text-4xl">{c("image_text_2::title")}</h2>
-            <p className="mt-4 text-base leading-8" style={{ color: lightGray }}>{c("image_text_2::text")}</p>
-            <div className="mt-6 space-y-3">
-              {bulletPoints.map((point) => (
-                <div key={point} className="flex items-start gap-3">
-                  <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: brandColor }}>
-                    <Check className="h-3.5 w-3.5 text-white" />
-                  </div>
-                  <p className="text-sm leading-7" style={{ color: graphite }}>{point}</p>
+    image_text_2: (instance) => {
+      const title    = ci(instance,'title')     || c("image_text_2::title");
+      const text     = ci(instance,'text')      || c("image_text_2::text");
+      const ctaLabel = ci(instance,'cta_label') || c("image_text_2::cta_label");
+      const ctaLink  = ci(instance,'cta_link')  || c("links::image_text_2_cta");
+      const img      = ci(instance,'image')     || c("images::section2");
+      return (
+        <section key={instance} className="py-14 md:py-20">
+          <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
+            <div className="order-2 md:order-1">
+              <h2 className="text-3xl font-extrabold md:text-4xl">{title}</h2>
+              <p className="mt-4 text-base leading-8" style={{ color: lightGray }}>{text}</p>
+              {ctaLabel && (
+                <div className="mt-8">
+                  <a href={ctaLink || '#'}>
+                    <Button className="rounded-[4px] px-6 py-3 font-semibold text-white hover:opacity-95" style={{ backgroundColor: brandColor }}>
+                      {ctaLabel}
+                    </Button>
+                  </a>
                 </div>
-              ))}
+              )}
             </div>
-            <div className="mt-8">
-              <a href={c("links::image_text_2_cta")}>
+            <div className="order-1 relative aspect-square overflow-hidden rounded-[4px] md:order-2">
+              <CmsImage src={img} alt="Martin Krendl im Gesangsunterricht" fill className="object-cover" />
+            </div>
+          </div>
+        </section>
+      );
+    },
+    feature_cards_4: (instance) => {
+      const heading = ci(instance+'h','title') || c("features_2_heading::title");
+      const subtext = ci(instance+'h','text')  || c("features_2_heading::text");
+      const cards = [1,2,3,4].map((n,i) => ({
+        icon: secondFeatureIcons[i],
+        title: ci(instance+n,'title') || c(`feature2_card_${n}::title`),
+        text:  ci(instance+n,'text')  || c(`feature2_card_${n}::text`),
+      }));
+      const ctaLink = c("links::features_2_cta");
+      return (
+        <section key={instance} className="py-14 md:py-20">
+          <div className={sectionWidth}>
+            <div className="mx-auto mb-10 max-w-3xl text-center">
+              <h2 className="text-3xl font-extrabold md:text-4xl">{heading}</h2>
+              <p className="mt-4" style={{ color: lightGray }}>{subtext}</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 md:gap-6">
+              {cards.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.title} className="rounded-[4px] px-5 py-7 text-center text-white" style={{ backgroundColor: brandColor }}>
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[4px] border border-white/20 bg-white/10">
+                      <Icon className="h-7 w-7 text-white" />
+                    </div>
+                    <h3 className="text-lg font-bold">{item.title}</h3>
+                    <p className="mt-3 text-sm leading-7 text-white/90">{item.text}</p>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-8 text-center">
+              <a href={ctaLink}>
                 <Button className="rounded-[4px] px-6 py-3 font-semibold text-white hover:opacity-95" style={{ backgroundColor: brandColor }}>
-                  {c("image_text_2::cta_label")}
+                  Zum Kennenlern-Quiz
                 </Button>
               </a>
             </div>
           </div>
-          <div className="order-1 relative aspect-square overflow-hidden rounded-[4px] md:order-2">
-            <CmsImage src={c("images::section2")} alt="Martin Krendl im Gesangsunterricht" fill className="object-cover" />
-          </div>
-        </div>
-      </section>
-    ),
-    feature_cards_4: (instance) => (
-      <section key="feature_cards_4" className="py-14 md:py-20">
-        <div className={sectionWidth}>
-          <div className="mx-auto mb-10 max-w-3xl text-center">
-            <h2 className="text-3xl font-extrabold md:text-4xl">{c("features_2_heading::title")}</h2>
-            <p className="mt-4" style={{ color: lightGray }}>{c("features_2_heading::text")}</p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 md:gap-6">
-            {secondFeatureCards.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div key={item.title} className="rounded-[4px] px-5 py-7 text-center text-white" style={{ backgroundColor: brandColor }}>
-                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[4px] border border-white/20 bg-white/10">
-                    <Icon className="h-7 w-7 text-white" />
-                  </div>
-                  <h3 className="text-lg font-bold">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-white/90">{item.text}</p>
-                </div>
-              );
-            })}
-          </div>
-          <div className="mt-8 text-center">
-            <a href={c("links::features_2_cta")}>
-              <Button className="rounded-[4px] px-6 py-3 font-semibold text-white hover:opacity-95" style={{ backgroundColor: brandColor }}>
-                Zum Kennenlern-Quiz
-              </Button>
-            </a>
-          </div>
-        </div>
-      </section>
-    ),
+        </section>
+      );
+    },
     flowing_text: (instance) => (
-      <section key="flowing_text" className="py-14 md:py-20">
+      <section key={instance} className="py-14 md:py-20">
         <div className={sectionWidth}>
           <div className="mx-auto max-w-4xl text-center">
-            <p className="text-lg leading-9 md:text-xl" style={{ color: darkGray }}>{c("flowing_text::text")}</p>
+            <p className="text-lg leading-9 md:text-xl" style={{ color: darkGray }}>{ci(instance,'text') || c("flowing_text::text")}</p>
           </div>
         </div>
       </section>
@@ -486,65 +507,78 @@ export default async function Page() {
     ),
     testimonials: (instance) => (
       <TestimonialVideos
-        key="testimonials"
-        t1label={c("testimonial_1::label")} t1quote={c("testimonial_1::quote")} t1author={c("testimonial_1::author")}
-        t1src={c("videos::testimonial_1_src")} t1thumb={c("videos::testimonial_1_thumb")}
-        t2label={c("testimonial_2::label")} t2quote={c("testimonial_2::quote")} t2author={c("testimonial_2::author")}
-        t2src={c("videos::testimonial_2_src")} t2thumb={c("videos::testimonial_2_thumb")}
+        key={instance}
+        t1label={ci(instance+'1','label')     || c("testimonial_1::label")}
+        t1quote={ci(instance+'1','quote')     || c("testimonial_1::quote")}
+        t1author={ci(instance+'1','author')   || c("testimonial_1::author")}
+        t1src={ci(instance+'1','video_src')   || c("videos::testimonial_1_src")}
+        t1thumb={ci(instance+'1','thumb')     || c("videos::testimonial_1_thumb")}
+        t2label={ci(instance+'2','label')     || c("testimonial_2::label")}
+        t2quote={ci(instance+'2','quote')     || c("testimonial_2::quote")}
+        t2author={ci(instance+'2','author')   || c("testimonial_2::author")}
+        t2src={ci(instance+'2','video_src')   || c("videos::testimonial_2_src")}
+        t2thumb={ci(instance+'2','thumb')     || c("videos::testimonial_2_thumb")}
         brandColor={brandColor}
       />
     ),
     about: (instance) => (
-      <section key="about" className="py-14 md:py-20">
+      <section key={instance} className="py-14 md:py-20">
         <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-2 md:gap-12`}>
           <div className="relative aspect-square overflow-hidden rounded-[4px]">
-            <CmsImage src={c("images::about")} alt="Martin Krendl Portrait" fill className="object-cover" />
+            <CmsImage src={ci(instance,'image') || c("images::about")} alt="Martin Krendl Portrait" fill className="object-cover" />
           </div>
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: brandColor }}>{c("about::label")}</p>
-            <h2 className="mt-3 text-3xl font-extrabold md:text-4xl">{c("about::title")}</h2>
-            <p className="mt-4 text-base leading-8" style={{ color: lightGray }}>{c("about::text_1")}</p>
-            <p className="mt-4 text-base leading-8" style={{ color: lightGray }}>{c("about::text_2")}</p>
-            <p className="mt-4 text-base leading-8" style={{ color: lightGray }}>{c("about::text_3")}</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: brandColor }}>{ci(instance,'label') || c("about::label")}</p>
+            <h2 className="mt-3 text-3xl font-extrabold md:text-4xl">{ci(instance,'title') || c("about::title")}</h2>
+            <p className="mt-4 text-base leading-8" style={{ color: lightGray }}>{ci(instance,'text_1') || c("about::text_1")}</p>
+            <p className="mt-4 text-base leading-8" style={{ color: lightGray }}>{ci(instance,'text_2') || c("about::text_2")}</p>
+            <p className="mt-4 text-base leading-8" style={{ color: lightGray }}>{ci(instance,'text_3') || c("about::text_3")}</p>
           </div>
         </div>
       </section>
     ),
-    reviews: (instance) => (
-      <section key="reviews" className="py-14 md:py-20">
-        <div className={sectionWidth}>
-          <div className="mx-auto mb-10 max-w-2xl text-center">
-            <h2 className="text-3xl font-extrabold md:text-4xl">{c("reviews::title")}</h2>
-          </div>
-          <div className="overflow-x-auto pb-4 [scrollbar-width:none] md:overflow-visible">
-            <div className="flex gap-4 md:grid md:grid-cols-3 md:gap-6">
-              {reviews.map((review, index) => (
-                <div key={index} className="min-w-[88%] rounded-[4px] bg-neutral-100 p-6 md:min-w-0">
-                  <div className="mb-4 flex items-center gap-1">
-                    {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="h-4 w-4 fill-[#D4AF37] text-[#D4AF37]" />)}
+    reviews: (instance) => {
+      const title = ci(instance,'title') || c("reviews::title");
+      const rvs = [1,2,3].map(n => ({
+        text:   ci(instance+n,'text')   || c(`review_${n}::text`),
+        author: ci(instance+n,'author') || c(`review_${n}::author`),
+      }));
+      return (
+        <section key={instance} className="py-14 md:py-20">
+          <div className={sectionWidth}>
+            <div className="mx-auto mb-10 max-w-2xl text-center">
+              <h2 className="text-3xl font-extrabold md:text-4xl">{title}</h2>
+            </div>
+            <div className="overflow-x-auto pb-4 [scrollbar-width:none] md:overflow-visible">
+              <div className="flex gap-4 md:grid md:grid-cols-3 md:gap-6">
+                {rvs.map((review, index) => (
+                  <div key={index} className="min-w-[88%] rounded-[4px] bg-neutral-100 p-6 md:min-w-0">
+                    <div className="mb-4 flex items-center gap-1">
+                      {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="h-4 w-4 fill-[#D4AF37] text-[#D4AF37]" />)}
+                    </div>
+                    <p className="text-sm leading-7" style={{ color: graphite }}>{review.text}</p>
+                    <p className="mt-4 text-sm font-semibold" style={{ color: brandColor }}>– {review.author}</p>
                   </div>
-                  <p className="text-sm leading-7" style={{ color: graphite }}>{review.text}</p>
-                  <p className="mt-4 text-sm font-semibold" style={{ color: brandColor }}>– {review.author}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
-    ),
+        </section>
+      );
+    },
     final_cta: (instance) => (
-      <section key="final_cta" className="pb-20 pt-14 md:pb-24 md:pt-20">
+      <section key={instance} className="pb-20 pt-14 md:pb-24 md:pt-20">
         <div className={`${sectionWidth} grid items-center gap-8 md:grid-cols-3 md:gap-10`}>
           <div className="relative aspect-video overflow-hidden rounded-[4px]">
-            <CmsImage src={c("images::final_cta")} alt="Gesangsunterricht in Steyr" fill className="object-cover" />
+            <CmsImage src={ci(instance,'image') || c("images::final_cta")} alt="Gesangsunterricht in Steyr" fill className="object-cover" />
           </div>
           <div className="md:col-span-2">
-            <h2 className="text-3xl font-extrabold md:text-4xl">{c("final_cta::title")}</h2>
-            <p className="mt-4 max-w-3xl text-base leading-8" style={{ color: lightGray }}>{c("final_cta::text")}</p>
+            <h2 className="text-3xl font-extrabold md:text-4xl">{ci(instance,'title') || c("final_cta::title")}</h2>
+            <p className="mt-4 max-w-3xl text-base leading-8" style={{ color: lightGray }}>{ci(instance,'text') || c("final_cta::text")}</p>
             <div className="mt-8">
-              <a href={c("links::final_cta")}>
+              <a href={ci(instance,'cta_link') || c("links::final_cta")}>
                 <Button variant="secondary" className="rounded-[4px] px-6 py-3 font-semibold text-white">
-                  {c("final_cta::cta_label")}
+                  {ci(instance,'cta_label') || c("final_cta::cta_label")}
                 </Button>
               </a>
             </div>
